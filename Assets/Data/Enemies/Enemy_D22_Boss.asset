@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d91e90e2d610cec4da95fa590abaae04, type: 3}
+  m_Name: Enemy_D22_Boss
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaEnemyData
+  enemyName: "\uACF5\uB3D9\uC758 \uCC9C\uB465\uB8E1 \uBE0C\uB860\uD14C"
+  description: "\uACF5\uB3D9\uC758 \uCC9C\uB465\uB8E1 \uBE0C\uB860\uD14C\uC785\uB2C8\uB2E4."
+  hp: 76000
+  maxMp: 0
+  attack: 1780
+  magic: 1980
+  defense: 1120
+  speed: 5
+  critRate: 0.3
+  goldReward: 34500
+  xpReward: 176000
+  skills:
+  - {fileID: 11400000, guid: 57c71111150a4be4cb94f269740527cb, type: 2}
+  - {fileID: 11400000, guid: b0078b701be2a2948be7e0c19bef32cc, type: 2}

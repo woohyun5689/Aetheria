@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05927dff2e7f15e4a971db18f410ba86, type: 3}
+  m_Name: Rarity_02_Rare
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaRarityData
+  rarityName: "\uD76C\uADC0"
+  rank: 2
+  color: {r: 0.23137255, g: 0.50980395, b: 0.9647059, a: 1}
+  statMultiplier: 1.25
+  dropWeight: 15

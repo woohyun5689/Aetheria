@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d91e90e2d610cec4da95fa590abaae04, type: 3}
+  m_Name: Enemy_D43_Boss
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaEnemyData
+  enemyName: "\uACF5\uD5C8 \uC9C0\uD718\uC790 \uC624\uB974\uD398\uC628"
+  description: "\uACF5\uD5C8 \uC9C0\uD718\uC790 \uC624\uB974\uD398\uC628\uC785\uB2C8\uB2E4."
+  hp: 1634000
+  maxMp: 0
+  attack: 27350
+  magic: 28560
+  defense: 18100
+  speed: 5
+  critRate: 0.42
+  goldReward: 686000
+  xpReward: 4280000
+  skills:
+  - {fileID: 11400000, guid: 74433c1d23a78f148932ca9dc80d8f85, type: 2}
+  - {fileID: 11400000, guid: fa6bed9ba1541d048ae89cfcdd732b73, type: 2}

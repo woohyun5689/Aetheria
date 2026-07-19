@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d91e90e2d610cec4da95fa590abaae04, type: 3}
+  m_Name: Enemy_D27_Boss
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaEnemyData
+  enemyName: "\uACE0\uBB38\uC11C\uC758 \uBC40\uC655 \uC138\uB974\uD39C"
+  description: "\uACE0\uBB38\uC11C\uC758 \uBC40\uC655 \uC138\uB974\uD39C\uC785\uB2C8\uB2E4."
+  hp: 172000
+  maxMp: 0
+  attack: 2950
+  magic: 3560
+  defense: 1980
+  speed: 5
+  critRate: 0.35
+  goldReward: 65000
+  xpReward: 420000
+  skills:
+  - {fileID: 11400000, guid: 4a11f5189ae11894c86b77fe061b3855, type: 2}
+  - {fileID: 11400000, guid: 8bfd96ef415e99645b53c5a8cdfe2c76, type: 2}

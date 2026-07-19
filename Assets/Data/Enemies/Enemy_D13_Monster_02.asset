@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d91e90e2d610cec4da95fa590abaae04, type: 3}
+  m_Name: Enemy_D13_Monster_02
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaEnemyData
+  enemyName: "\uC7A0\uC2DD\uB41C \uBABD\uB839"
+  description: "\uC7A0\uC2DD\uB41C \uBABD\uB839\uC785\uB2C8\uB2E4."
+  hp: 3600
+  maxMp: 0
+  attack: 160
+  magic: 560
+  defense: 210
+  speed: 5
+  critRate: 0.2
+  goldReward: 1520
+  xpReward: 5900
+  skills:
+  - {fileID: 11400000, guid: b337002c648f53041b1d564f7793a26d, type: 2}

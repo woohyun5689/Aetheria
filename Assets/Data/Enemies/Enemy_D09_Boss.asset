@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d91e90e2d610cec4da95fa590abaae04, type: 3}
+  m_Name: Enemy_D09_Boss
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaEnemyData
+  enemyName: "\uC2EC\uD574 \uAE30\uB85D\uAD00 \uB178\uD2F8\uB8E8\uC2A4"
+  description: "\uC2EC\uD574 \uAE30\uB85D\uAD00 \uB178\uD2F8\uB8E8\uC2A4\uC785\uB2C8\uB2E4."
+  hp: 4200
+  maxMp: 0
+  attack: 178
+  magic: 220
+  defense: 124
+  speed: 5
+  critRate: 0.16
+  goldReward: 2850
+  xpReward: 8200
+  skills:
+  - {fileID: 11400000, guid: 8094737cdbb4a3f4eaa4b6a64e715a87, type: 2}
+  - {fileID: 11400000, guid: 8f4b63943cd430745a7ade6d78ee5d7f, type: 2}

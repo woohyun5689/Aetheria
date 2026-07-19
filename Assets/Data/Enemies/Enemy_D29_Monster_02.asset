@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d91e90e2d610cec4da95fa590abaae04, type: 3}
+  m_Name: Enemy_D29_Monster_02
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaEnemyData
+  enemyName: "\uC6D0\uCD08\uC758 \uD30C\uC218\uD575"
+  description: "\uC6D0\uCD08\uC758 \uD30C\uC218\uD575\uC785\uB2C8\uB2E4."
+  hp: 46000
+  maxMp: 0
+  attack: 3900
+  magic: 2800
+  defense: 2520
+  speed: 5
+  critRate: 0.34
+  goldReward: 12600
+  xpReward: 63800
+  skills:
+  - {fileID: 11400000, guid: 6bab3a0f22211bc48a8b52f29ec3d6df, type: 2}

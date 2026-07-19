@@ -1,0 +1,79 @@
+M.K 1 오늘 작업일지 및 수정내역
+작성일: 2026-06-08
+프로젝트: D:\mk.1_UnityCopy_20260529_154119
+Unity 버전: 6000.3.15f1
+
+1. 문제 확인 결과
+- dotnet build 기준 Assembly-CSharp 빌드 성공.
+- 빌드 경고 0개, 오류 0개 확인.
+- Unity Editor.log에서 게임 코드 컴파일 오류, NullReferenceException, MissingReferenceException은 확인되지 않음.
+- Editor.log에 남은 항목:
+  - Licensing access token unavailable: 유니티 라이선스 토큰 갱신 관련 로그로 보이며 현재 코드 오류는 아님.
+  - d3d12 info queue query failed: DX12 디버그 정보 큐 조회 관련 로그로 보이며 현재 빌드 오류는 아님.
+- 프로젝트 폴더는 Git 저장소가 아니어서 git diff 방식의 변경 추적은 불가함.
+- 변경 추적은 파일 수정 시간, 백업 파일, 작업일지 기준으로 관리해야 함.
+
+2. 오늘 수정한 핵심 내용
+- 캐릭터 이미지 8종을 게임 Resources 경로에 적용.
+- 적용 위치:
+  - D:\mk.1_UnityCopy_20260529_154119\Assets\Resources\Portraits
+- 적용 이미지:
+  - monk.png
+  - archer.png
+  - priest.png
+  - rogue.png
+  - bomber.png
+  - mage.png
+  - knight.png
+  - spirit.png
+
+3. 캐릭터별 초상화 연결 수정
+- 성기사: knight
+- 원소술사: mage
+- 그림자 자객: rogue
+- 빛의 사제: priest
+- 폭렬술사: bomber
+- 정령술사: spirit
+- 바람 궁수: archer
+- 무투가: monk
+
+4. 수정한 데이터 파일
+- Assets\Data\Heroes\Hero_Paladin.asset
+- Assets\Data\Heroes\Hero_Elementalist.asset
+- Assets\Data\Heroes\Hero_Rogue.asset
+- Assets\Data\Heroes\Hero_Cleric.asset
+- Assets\Data\Heroes\Hero_Bomber.asset
+- Assets\Data\Heroes\Hero_SpiritCaller.asset
+- Assets\Data\Heroes\Hero_WindArcher.asset
+- Assets\Data\Heroes\Hero_Monk.asset
+
+5. 수정한 코드 파일
+- Assets\Scripts\AetheriaGame.cs
+  - 기본 캐릭터 목록의 portraitResourceName을 새 이미지 파일명으로 변경.
+  - 초상화 UI의 preserveAspect 값을 true로 변경하여 이미지 비율 유지.
+  - 초상화 로딩을 Sprite 우선, Texture2D 대체 방식으로 보강.
+- Assets\Scripts\AetheriaGame.Save.cs
+  - 기존 세이브에 예전 초상화 이름이 남아 있으면 현재 직업 데이터의 새 초상화로 자동 갱신되도록 수정.
+
+6. 엑셀 수정 내용
+- 기존 최신 데이터 엑셀의 캐릭터 시트에서 초상화 리소스 값을 새 파일명으로 갱신 예정.
+- 오늘 작업일지, 문제 점검, 수정 파일, 캐릭터 이미지 적용 내역 시트를 추가 예정.
+- 원본 엑셀은 유지하고 날짜별 최신본으로 저장.
+
+7. 남은 주의점
+- 새 캐릭터 이미지 대부분이 흰색 배경을 포함하고 있어, 어두운 UI에서 흰 사각 배경이 눈에 띌 수 있음.
+- 투명 배경 PNG가 아닌 경우 UI에서 자연스럽게 보이도록 전용 캐릭터 카드 배경이나 마스크 처리가 필요할 수 있음.
+- 캐릭터 선택 화면, 메인 상태 화면, 전투 화면에서 실제 표시 크기와 잘림 여부를 플레이 모드로 확인하는 것이 좋음.
+- 프로젝트가 Git 저장소가 아니므로 작업 후 날짜별 백업과 작업일지를 계속 남기는 것이 안전함.
+
+8. 검증
+- dotnet build D:\mk.1_UnityCopy_20260529_154119\Assembly-CSharp.csproj --no-restore
+- 결과: 성공
+- 경고: 0개
+- 오류: 0개
+
+9. 오늘 백업
+- 캐릭터 이미지 적용 백업:
+  - D:\Unity_Backups\mk1_character_portraits_20260608_181058.zip
+- 오늘 작업일지 폴더:
+  - D:\M.K 1 작업일지 2026-06-08

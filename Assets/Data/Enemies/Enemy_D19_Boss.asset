@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d91e90e2d610cec4da95fa590abaae04, type: 3}
+  m_Name: Enemy_D19_Boss
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaEnemyData
+  enemyName: "\uCC28\uC6D0 \uB300\uC7A5\uC7A5\uC774 \uBAA8\uB974\uB460"
+  description: "\uCC28\uC6D0 \uB300\uC7A5\uC7A5\uC774 \uBAA8\uB974\uB460\uC785\uB2C8\uB2E4."
+  hp: 41000
+  maxMp: 0
+  attack: 1180
+  magic: 980
+  defense: 700
+  speed: 5
+  critRate: 0.24
+  goldReward: 18800
+  xpReward: 92000
+  skills:
+  - {fileID: 11400000, guid: b31e11a594d0578459bbe70c3c352850, type: 2}
+  - {fileID: 11400000, guid: 26d229d08509e454eaf3e9b52eee2bfc, type: 2}

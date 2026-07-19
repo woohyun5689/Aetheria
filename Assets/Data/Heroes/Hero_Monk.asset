@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7579b85982e2864fa07c0769e62d64c, type: 3}
+  m_Name: Hero_Monk
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaHeroClassData
+  heroName: "\uBB34\uD22C\uAC00"
+  description: "\uB2E8\uB828\uB41C \uC721\uCCB4\uC640 \uBE60\uB978 \uC5F0\uACA9\uC73C\uB85C
+    \uC801\uC744 \uC81C\uC555\uD569\uB2C8\uB2E4."
+  portraitResourceName: monk
+  portrait: {fileID: 0}
+  basicAttackUsesMagic: 0
+  maxHp: 130
+  maxMp: 75
+  physicalAttack: 19
+  magicAttack: 4
+  defense: 8
+  critRate: 0.18
+  skills:
+  - {fileID: 11400000, guid: 3ff715b264bcede448704e34d2aef388, type: 2}
+  - {fileID: 11400000, guid: 5da59a81114fee04785fffcd2d73232d, type: 2}
+  - {fileID: 11400000, guid: ee77bce3384f79e4aa914a57fd8f6961, type: 2}

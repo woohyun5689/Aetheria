@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d91e90e2d610cec4da95fa590abaae04, type: 3}
+  m_Name: Enemy_D44_Boss
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaEnemyData
+  enemyName: "\uBB34\uAD00\uC655 \uB808\uAC08\uB9AC\uC628"
+  description: "\uBB34\uAD00\uC655 \uB808\uAC08\uB9AC\uC628\uC785\uB2C8\uB2E4."
+  hp: 1732000
+  maxMp: 0
+  attack: 29000
+  magic: 30280
+  defense: 19200
+  speed: 5
+  critRate: 0.42
+  goldReward: 728000
+  xpReward: 4540000
+  skills:
+  - {fileID: 11400000, guid: 3bf3d534d58234540b997cf335d134d1, type: 2}
+  - {fileID: 11400000, guid: 948e3c87c46e6b340be8d5062abddea2, type: 2}

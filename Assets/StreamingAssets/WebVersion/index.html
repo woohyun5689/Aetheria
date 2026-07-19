@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>에테리아: 공허의 연대기 (Aetheria: Chronicles of the Void)</title>
+  <meta name="description" content="빛바랜 어둠 속 공허의 군주에 맞서 싸우는 고품격 판타지 웹 RPG 게임">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="index.css?v=dungeon-theme-layout-20260602">
+</head>
+<body>
+
+  <div id="game-container">
+    <div id="keyboard-hint-panel" class="keyboard-hint-panel" aria-live="polite"></div>
+    
+    <!-- ==========================================================================
+         1. MAIN MENU SCREEN
+         ========================================================================== -->
+    <div id="screen-main-menu" class="screen active">
+      <div class="game-logo">
+        <h1 class="text-gradient">AETHERIA</h1>
+        <p>공허의 연대기</p>
+      </div>
+
+      <div class="save-slot-panel">
+        <div class="save-slot-title">저장 슬롯 선택</div>
+        <div id="save-slots-grid" class="save-slots-grid"></div>
+      </div>
+
+      <div class="menu-buttons">
+        <button id="btn-new-game" class="btn btn-primary">새 모험 시작</button>
+        <button id="btn-load-game" class="btn btn-secondary" disabled>기록 불러오기</button>
+        <button id="btn-reset-save" class="btn" style="margin-top: 10px; font-size: 0.85rem; padding: 8px;">선택 슬롯 초기화</button>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+         2. TOWN / HUB SCREEN
+         ========================================================================== -->
+    <div id="screen-town" class="screen">
+      <!-- HUD Top Bar -->
+      <div class="town-header">
+        <div class="player-info-hud">
+          <div class="hud-avatar-box">
+            <span id="hud-player-level" class="hud-level-badge">Lv.1</span>
+          </div>
+          <div class="hud-stats-bars">
+            <div style="font-weight: bold; font-size: 0.9rem;" id="hud-player-name">영웅</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 2px;" id="hud-player-class">성기사</div>
+            
+            <!-- HP Bar -->
+            <div class="progress-container" style="margin-bottom: 4px;">
+              <div id="hud-hp-bar" class="progress-bar hp"></div>
+              <span id="hud-hp-text" class="progress-text">100 / 100</span>
+            </div>
+            
+            <!-- MP Bar -->
+            <div class="progress-container" style="margin-bottom: 4px;">
+              <div id="hud-mp-bar" class="progress-bar mp"></div>
+              <span id="hud-mp-text" class="progress-text">50 / 50</span>
+            </div>
+
+            <!-- XP Bar -->
+            <div class="progress-container">
+              <div id="hud-xp-bar" class="progress-bar xp"></div>
+              <span id="hud-xp-text" class="progress-text">0 / 100</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <div class="town-currencies">
+            <span class="gold-display" id="hud-gold">100 G</span>
+          </div>
+          <button id="btn-town-save" class="btn btn-primary" style="padding: 8px 16px;">💾 마을 저장</button>
+          <button id="btn-town-rest" class="btn btn-secondary" style="padding: 8px 16px;">💤 여관 휴식 (25 G)</button>
+        </div>
+      </div>
+
+      <!-- Main Layout Panels -->
+      <div class="town-content">
+        <!-- Sketch UX: Left Character Artwork -->
+        <aside class="town-character-art-panel">
+          <div class="town-character-art-frame">
+            <img src="assets/character-paladin.png" alt="캐릭터 원화" class="town-character-art-image">
+          </div>
+          <div class="town-character-art-caption">
+            <strong>캐릭터 원화</strong>
+            <span id="sketch-character-caption">영웅</span>
+          </div>
+        </aside>
+
+        <!-- Sidebar Navigation -->
+        <div class="town-sidebar">
+          <button class="btn town-tab-btn active sketch-home-btn" data-panel="character">메인</button>
+          <button class="btn town-tab-btn sketch-primary-btn" data-panel="equipment">가방</button>
+          <button class="btn town-tab-btn sketch-primary-btn" data-panel="forge">대장간</button>
+          <button class="btn town-tab-btn sketch-primary-btn" data-panel="skill">스킬강화</button>
+          <button class="btn town-tab-btn sketch-primary-btn" data-panel="adventure">던전</button>
+          <div class="sketch-subnav">
+            <button class="btn town-tab-btn" data-panel="shop">조합</button>
+          </div>
+        </div>
+
+        <!-- Right Content Panels -->
+        <div class="town-tab-content">
+          
+          <!-- Character Panel (Status & Inventory) -->
+          <div id="panel-character" class="town-panel active">
+            <div class="stats-grid">
+              <div class="card">
+                <h3 style="text-align: left; margin-bottom: 12px; font-size: 1.1rem; color: var(--secondary-color);">영웅 능력치</h3>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <div class="stat-box"><span>레벨</span><span id="stat-level" class="value">1</span></div>
+                  <div class="stat-box"><span>생명력</span><span id="stat-hp" class="value">100/100</span></div>
+                  <div class="stat-box"><span>마력 (Mana)</span><span id="stat-mp" class="value">50/50</span></div>
+                  <div class="stat-box"><span>물리 공격력</span><span id="stat-atk-phys" class="value">10</span></div>
+                  <div class="stat-box"><span>마법 주문력</span><span id="stat-atk-magic" class="value">5</span></div>
+                  <div class="stat-box"><span>방어력</span><span id="stat-def" class="value">8</span></div>
+                  <div class="stat-box"><span>기동력 (속도)</span><span id="stat-spd" class="value">10</span></div>
+                  <div class="stat-box highlight"><span>치명타율</span><span id="stat-crit" class="value">5%</span></div>
+                  <div class="stat-box"><span>치명타 피해</span><span id="stat-crit-dmg" class="value">150%</span></div>
+                  <div class="stat-box"><span>회피율</span><span id="stat-evasion" class="value">0%</span></div>
+                  <div class="stat-box"><span>피해 감소</span><span id="stat-damage-reduction" class="value">0%</span></div>
+                  <div class="stat-box"><span>흡혈</span><span id="stat-life-steal" class="value">0%</span></div>
+                  <div class="stat-box"><span>턴 마나 회복</span><span id="stat-mana-regen" class="value">7.5%</span></div>
+                  <div class="stat-box"><span>상태이상 위력</span><span id="stat-status-power" class="value">0%</span></div>
+                  <div class="stat-box"><span>장비 발견</span><span id="stat-item-find" class="value">0%</span></div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3 style="text-align: left; margin-bottom: 12px; font-size: 1.1rem; color: var(--secondary-color);">착용 중인 장비</h3>
+                <div class="equipment-grid">
+                  <div class="equip-slot" id="slot-weapon">
+                    <div class="item-icon-placeholder">🗡️</div>
+                    <div class="equip-slot-details">
+                      <div class="equip-slot-title">무기</div>
+                      <div class="equip-item-name" style="color: var(--text-muted)">장착 안 됨</div>
+                    </div>
+                  </div>
+                  <div class="equip-slot" id="slot-armor">
+                    <div class="item-icon-placeholder">🛡️</div>
+                    <div class="equip-slot-details">
+                      <div class="equip-slot-title">방어구</div>
+                      <div class="equip-item-name" style="color: var(--text-muted)">장착 안 됨</div>
+                    </div>
+                  </div>
+                  <div class="equip-slot" id="slot-accessory">
+                    <div class="item-icon-placeholder">📿</div>
+                    <div class="equip-slot-details">
+                      <div class="equip-slot-title">액세서리 1</div>
+                      <div class="equip-item-name" style="color: var(--text-muted)">장착 안 됨</div>
+                    </div>
+                  </div>
+                  <div class="equip-slot" id="slot-accessory2">
+                    <div class="item-icon-placeholder">📿</div>
+                    <div class="equip-slot-details">
+                      <div class="equip-slot-title">액세서리 2</div>
+                      <div class="equip-item-name" style="color: var(--text-muted)">장착 안 됨</div>
+                    </div>
+                  </div>
+                  <div class="equip-slot" id="slot-accessory3">
+                    <div class="item-icon-placeholder">📿</div>
+                    <div class="equip-slot-details">
+                      <div class="equip-slot-title">액세서리 3</div>
+                      <div class="equip-item-name" style="color: var(--text-muted)">장착 안 됨</div>
+                    </div>
+                  </div>
+                  <div class="equip-slot" id="slot-accessory4">
+                    <div class="item-icon-placeholder">📿</div>
+                    <div class="equip-slot-details">
+                      <div class="equip-slot-title">액세서리 4</div>
+                      <div class="equip-item-name" style="color: var(--text-muted)">장착 안 됨</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Inventory Section -->
+            <div class="inventory-section">
+              <h3 style="text-align: left; font-size: 1.1rem; color: var(--primary-color);">소지 가방 (가방)</h3>
+              <div id="inventory-items-grid" class="inventory-grid">
+                <!-- Javascript populates items here -->
+              </div>
+            </div>
+          </div>
+
+          <div id="panel-equipment" class="town-panel">
+            <h2 style="text-align: left; margin-bottom: 16px; font-size: 1.3rem; color: var(--secondary-color);">가방</h2>
+            <div id="equipment-panel-content" class="equipment-panel-content"></div>
+          </div>
+
+          <div id="panel-skill" class="town-panel">
+            <h2 style="text-align: left; margin-bottom: 16px; font-size: 1.3rem; color: var(--secondary-color);">스킬 강화</h2>
+            <div class="skill-section">
+              <div id="skill-upgrade-list" class="skill-upgrade-grid">
+                <!-- Javascript populates skills here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Adventure Portal Panel -->
+          <div id="panel-adventure" class="town-panel">
+            <h2 style="text-align: left; margin-bottom: 16px; font-size: 1.3rem; color: var(--secondary-color);">🌌 차원 포탈 탐험</h2>
+            <div id="adventure-stages-grid" class="adventure-grid">
+              <!-- Stages load here -->
+            </div>
+          </div>
+
+          <!-- Item Crafting Panel -->
+          <div id="panel-shop" class="town-panel">
+            <h2 style="text-align: left; margin-bottom: 16px; font-size: 1.3rem; color: var(--secondary-color);">⚗️ 아이템 조합</h2>
+            <div id="shop-items-grid" class="shop-grid">
+              <!-- Crafting recipes load here -->
+            </div>
+          </div>
+
+          <!-- Forge Panel -->
+          <div id="panel-forge" class="town-panel">
+            <h2 style="text-align: left; margin-bottom: 16px; font-size: 1.3rem; color: var(--secondary-color);">⚒️ 심연의 대장간</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">착용 중인 장비를 강화하여 강력한 한계를 돌파하세요. 강화 단계가 오를수록 더 많은 골드가 요구됩니다.</p>
+            <div class="forge-container">
+              <div id="forge-weapon-side" class="card forge-card">
+                <!-- Weapon Upgrade Box -->
+              </div>
+              <div id="forge-armor-side" class="card forge-card">
+                <!-- Armor Upgrade Box -->
+              </div>
+              <div id="forge-accessory-side" class="card forge-card">
+                <!-- Accessory 1 Upgrade Box -->
+              </div>
+              <div id="forge-accessory2-side" class="card forge-card">
+                <!-- Accessory 2 Upgrade Box -->
+              </div>
+              <div id="forge-accessory3-side" class="card forge-card">
+                <!-- Accessory 3 Upgrade Box -->
+              </div>
+              <div id="forge-accessory4-side" class="card forge-card">
+                <!-- Accessory 4 Upgrade Box -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Bottom Log Box -->
+      <div style="height: 84px; background: rgba(0,0,0,0.4); border-top:1px solid var(--panel-border); font-size:0.9rem; padding: 8px 16px; display:flex; align-items:center; justify-content:space-between; gap:16px;">
+        <span style="font-weight:bold; color:var(--text-muted); white-space:nowrap;">영지 소식:</span>
+        <div id="town-event-logs" style="flex-grow:1; height:100%; overflow-y:auto; color:var(--text-muted); display:flex; flex-direction:column; justify-content:center;">
+          <div>차원의 균열이 흔들리기 시작합니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+         3. DUNGEON MAP SCREEN
+         ========================================================================== -->
+    <div id="screen-dungeon-map" class="screen">
+      <div class="dungeon-map-header">
+        <div>
+          <p class="dungeon-map-kicker">WORLD MAP</p>
+          <h2>차원 포탈</h2>
+        </div>
+        <div class="dungeon-map-header-actions">
+          <button id="btn-dungeon-map-back" class="btn">마을로 돌아가기</button>
+        </div>
+      </div>
+      <div class="dungeon-map-shell">
+        <section class="dungeon-map-card">
+          <div class="dungeon-map-toolbar">
+            <button id="btn-map-zoom-out" class="btn">-</button>
+            <span id="dungeon-map-zoom-label">100%</span>
+            <button id="btn-map-zoom-in" class="btn">+</button>
+            <button id="btn-map-reset" class="btn">100%</button>
+          </div>
+          <div id="dungeon-map-viewport" class="dungeon-map-viewport">
+            <div id="dungeon-map-plane" class="dungeon-map-plane">
+              <img src="assets/world-map.png" alt="아에테리아 월드맵">
+              <div id="dungeon-map-regions"></div>
+              <div id="dungeon-map-pins"></div>
+            </div>
+          </div>
+        </section>
+        <aside id="dungeon-map-detail" class="dungeon-map-detail"></aside>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+         4. COMBAT SCREEN
+         ========================================================================== -->
+    <div id="screen-combat" class="screen">
+      <!-- Top combat header -->
+      <div class="combat-header">
+        <span class="combat-stage-name">속삭이는 숲 - 1층</span>
+        <div class="combat-header-actions">
+          <span class="combat-turn-indicator">아군 턴</span>
+          <button id="btn-exit-dungeon" class="btn btn-danger btn-exit-dungeon">던전 나가기</button>
+        </div>
+      </div>
+
+      <!-- Arena visual stage -->
+      <div class="combat-arena">
+        <!-- Player Side -->
+        <div id="player-combat-wrapper" class="fighter-box player-side">
+          <div id="player-combat-avatar" class="fighter-avatar-wrapper">
+            <div class="fighter-avatar">🛡️</div>
+            <div class="fighter-glow"></div>
+          </div>
+          <div id="player-combat-name" class="fighter-name">성기사</div>
+          <div class="fighter-bars">
+            <div class="bar-row">
+              <div class="bar-label"><span>HP</span><span id="player-combat-hp-text">100/100</span></div>
+              <div class="progress-container"><div id="player-combat-hp" class="progress-bar hp" style="width: 100%;"></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-label"><span>MP</span><span id="player-combat-mp-text">50/50</span></div>
+              <div class="progress-container"><div id="player-combat-mp" class="progress-bar mp" style="width: 100%;"></div></div>
+            </div>
+          </div>
+          <div id="player-combat-status" class="fighter-status-effects"></div>
+        </div>
+
+        <!-- Enemy Side -->
+        <div id="enemy-combat-wrapper" class="fighter-box enemy-side">
+          <div id="enemy-combat-avatar" class="fighter-avatar-wrapper">
+            <div class="fighter-avatar">👺</div>
+            <div class="fighter-glow"></div>
+          </div>
+          <div id="enemy-combat-name" class="fighter-name">고블린 순찰병</div>
+          <div class="fighter-bars">
+            <div class="bar-row">
+              <div class="bar-label"><span>HP</span><span id="enemy-combat-hp-text">60/60</span></div>
+              <div class="progress-container"><div id="enemy-combat-hp" class="progress-bar hp" style="width: 100%;"></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-label"><span>MP</span><span id="enemy-combat-mp-text">20/20</span></div>
+              <div class="progress-container"><div id="enemy-combat-mp" class="progress-bar mp" style="width: 100%;"></div></div>
+            </div>
+          </div>
+          <div id="enemy-combat-status" class="fighter-status-effects"></div>
+        </div>
+      </div>
+
+      <!-- Action Console and Logs -->
+      <div class="combat-console">
+        <div class="combat-actions-deck">
+          <!-- Populated by JS during combat -->
+        </div>
+        <div class="combat-log-box">
+          <!-- Text logs of battle -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==========================================================================
+       MODALS OVERLAYS
+       ========================================================================== -->
+
+  <!-- A. CHARACTER CREATION MODAL -->
+  <div id="modal-char-create" class="modal-overlay">
+    <div class="modal-content" style="width: 920px; max-width: 95%;">
+      <div class="modal-title">새로운 영웅 등록</div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">어둠에 사로잡힌 차원을 구원하기 위해 모험을 떠날 영웅을 고르고 이름을 지어주세요.</p>
+      
+      <!-- Name Input -->
+      <div style="width: 100%; display: flex; flex-direction: column; gap: 8px;">
+        <label for="char-name-input" style="font-weight: bold; font-size: 0.9rem;">영웅 이름</label>
+        <input type="text" id="char-name-input" placeholder="영웅 이름을 입력해 주세요..." style="width: 100%; padding: 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--panel-border); color: #fff; border-radius: 8px; font-family: var(--font-body); font-size: 1rem; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='var(--panel-border)'">
+      </div>
+
+      <!-- Class Selection Cards -->
+      <div class="class-selection-container">
+        <!-- Knight -->
+        <div class="class-card card selected" data-class="knight">
+          <div class="class-icon">🛡️</div>
+          <div class="class-name">성기사</div>
+          <p class="class-desc">높은 체력과 든든한 방어력으로 적의 맹공을 버텨냅니다. 물리 기절 공격과 방어막 생성에 강점이 있습니다.</p>
+          <div class="class-stats">
+            <div class="class-stat-row"><span class="class-stat-label">체력</span><span class="class-stat-value" style="color:var(--danger-color)">160</span></div>
+            <div class="class-stat-row"><span class="class-stat-label">공격력</span><span class="class-stat-value">물리 18</span></div>
+            <div class="class-stat-row"><span class="class-stat-label">방어력</span><span class="class-stat-value" style="color:var(--success-color)">12</span></div>
+          </div>
+        </div>
+
+        <!-- Mage -->
+        <div class="class-card card" data-class="mage">
+          <div class="class-icon">🔮</div>
+          <div class="class-name">원소술사</div>
+          <p class="class-desc">극도로 파괴적인 주문으로 적을 먼지로 바꿉니다. 높은 마나와 원소 주문력, 체력 자가 회복 능력이 있습니다.</p>
+          <div class="class-stats">
+            <div class="class-stat-row"><span class="class-stat-label">체력</span><span class="class-stat-value" style="color:var(--danger-color)">90</span></div>
+            <div class="class-stat-row"><span class="class-stat-label">주문력</span><span class="class-stat-value">마법 24</span></div>
+            <div class="class-stat-row"><span class="class-stat-label">방어력</span><span class="class-stat-value" style="color:var(--success-color)">4</span></div>
+          </div>
+        </div>
+
+        <!-- Rogue -->
+        <div class="class-card card" data-class="rogue">
+          <div class="class-icon">🗡️</div>
+          <div class="class-name">그림자 자객</div>
+          <p class="class-desc">신속한 움직임으로 적의 사각을 찌릅니다. 높은 치명타 확률과 치명적인 지속피해(독) 스킬을 자유롭게 다룹니다.</p>
+          <div class="class-stats">
+            <div class="class-stat-row"><span class="class-stat-label">체력</span><span class="class-stat-value" style="color:var(--danger-color)">110</span></div>
+            <div class="class-stat-row"><span class="class-stat-label">공격력</span><span class="class-stat-value">물리 15</span></div>
+            <div class="class-stat-row"><span class="class-stat-label">치명타율</span><span class="class-stat-value" style="color:var(--accent-color)">20%</span></div>
+          </div>
+        </div>
+
+        <!-- Priest -->
+        <div class="class-card card" data-class="priest">
+          <div class="class-icon">✨</div>
+          <div class="class-name">빛의 사제</div>
+          <p class="class-desc">빛 속성 회복과 공격을 함께 사용하는 힐러형 딜러입니다. 실명, 재생, 흡혈형 광선으로 오래 버팁니다.</p>
+          <div class="class-stats">
+            <div class="class-stat-row"><span class="class-stat-label">체력</span><span class="class-stat-value" style="color:var(--danger-color)">120</span></div>
+            <div class="class-stat-row"><span class="class-stat-label">주문력</span><span class="class-stat-value">마법 21</span></div>
+            <div class="class-stat-row"><span class="class-stat-label">마나</span><span class="class-stat-value" style="color:var(--secondary-color)">130</span></div>
+          </div>
+        </div>
+
+        <!-- Bomber -->
+        <div class="class-card card" data-class="bomber">
+          <div class="class-icon">💥</div>
+          <div class="class-name">폭렬술사</div>
+          <p class="class-desc">폭발 마법을 중심으로 싸우는 고화력 주문 딜러입니다. 화상, 취약, 감전으로 전투를 빠르게 끝냅니다.</p>
+          <div class="class-stats">
+            <div class="class-stat-row"><span class="class-stat-label">체력</span><span class="class-stat-value" style="color:var(--danger-color)">95</span></div>
+            <div class="class-stat-row"><span class="class-stat-label">주문력</span><span class="class-stat-value">마법 27</span></div>
+            <div class="class-stat-row"><span class="class-stat-label">치명타율</span><span class="class-stat-value" style="color:var(--accent-color)">10%</span></div>
+          </div>
+        </div>
+
+        <!-- Spirit -->
+        <div class="class-card card" data-class="spirit">
+          <div class="class-icon">🌈</div>
+          <div class="class-name">정령술사</div>
+          <p class="class-desc">기본 공격과 정령 스킬을 함께 씁니다. 화염, 물결, 질풍, 대지 정령으로 여러 상태이상을 다룹니다.</p>
+          <div class="class-stats">
+            <div class="class-stat-row"><span class="class-stat-label">체력</span><span class="class-stat-value" style="color:var(--danger-color)">105</span></div>
+            <div class="class-stat-row"><span class="class-stat-label">마나</span><span class="class-stat-value" style="color:var(--secondary-color)">170</span></div>
+            <div class="class-stat-row"><span class="class-stat-label">특징</span><span class="class-stat-value">사원소</span></div>
+          </div>
+        </div>
+
+        <!-- Archer -->
+        <div class="class-card card" data-class="archer">
+          <div class="class-icon">🏹</div>
+          <div class="class-name">바람 궁수</div>
+          <p class="class-desc">원거리에서 치명타와 상태이상 화살을 쏘는 민첩한 딜러입니다. 출혈, 기절, 회피 상승을 활용합니다.</p>
+          <div class="class-stats">
+            <div class="class-stat-row"><span class="class-stat-label">체력</span><span class="class-stat-value" style="color:var(--danger-color)">115</span></div>
+            <div class="class-stat-row"><span class="class-stat-label">공격력</span><span class="class-stat-value">물리 17</span></div>
+            <div class="class-stat-row"><span class="class-stat-label">치명타율</span><span class="class-stat-value" style="color:var(--accent-color)">16%</span></div>
+          </div>
+        </div>
+        <!-- Monk -->
+        <div class="class-card card" data-class="monk">
+          <div class="class-icon">🥋</div>
+          <div class="class-name">무투가</div>
+          <p class="class-desc">수도승처럼 단련된 육체와 빠른 연격으로 싸우는 물리 치명타 캐릭터입니다. 연타, 기절, 피해 증가를 사용합니다.</p>
+          <div class="class-stats">
+            <div class="class-stat-row"><span class="class-stat-label">체력</span><span class="class-stat-value" style="color:var(--danger-color)">130</span></div>
+            <div class="class-stat-row"><span class="class-stat-label">공격력</span><span class="class-stat-value">물리 19</span></div>
+            <div class="class-stat-row"><span class="class-stat-label">치명타율</span><span class="class-stat-value" style="color:var(--accent-color)">18%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px; width: 100%; margin-top: 10px;">
+        <button id="btn-submit-char" class="btn btn-primary" style="flex-grow: 1; padding: 12px;">모험단 등록</button>
+        <button id="btn-cancel-char" class="btn" style="flex-grow: 1; padding: 12px;">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- B. VICTORY MODAL -->
+  <div id="modal-victory" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-title victory">⚔️ 전투 승리!</div>
+      <p style="font-size: 0.9rem; text-align: center;"><span id="vic-monster-name" style="font-weight: bold; color: var(--secondary-color);">몬스터</span>의 처치를 완료하고 전리품을 정산합니다.</p>
+      
+      <div class="loot-rewards-list">
+        <div class="reward-row">
+          <span>획득한 경험치:</span>
+          <span style="color: var(--success-color); font-weight: bold;">+<span id="vic-xp-value">30</span> XP</span>
+        </div>
+        <div class="reward-row">
+          <span>획득한 골드:</span>
+          <span style="color: var(--accent-color); font-weight: bold;">+<span id="vic-gold-value">15</span> G</span>
+        </div>
+        
+        <div id="vic-loot-box" style="margin-top: 6px;">
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: bold;">획득한 장비 아이템:</div>
+          <div class="reward-item-box">
+            <div id="vic-loot-icon" class="item-icon-placeholder" style="width: 32px; height: 32px; font-size: 1.1rem;">🎁</div>
+            <div style="text-align: left;">
+              <div id="vic-loot-name" style="font-weight: bold; font-size: 0.85rem;">[희귀] 고블린 단검</div>
+              <div id="vic-loot-desc" style="font-size: 0.75rem; color: var(--text-muted);">물리 공격력 +5</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="vic-levelup-text" style="color: var(--accent-color); font-weight: bold; display: none; font-size: 1rem; text-align: center; margin-bottom: 10px;">
+        🎉 축하합니다! 레벨이 상승했습니다!
+      </div>
+
+      <div class="modal-actions-dual" style="display: flex; gap: 12px; width: 100%; margin-top: 10px;">
+        <button id="btn-victory-confirm" class="btn btn-primary" style="flex-grow: 1; padding: 12px;">탐험 계속</button>
+        <button id="btn-victory-retreat" class="btn btn-secondary" style="flex-grow: 1; padding: 12px; display: none;">마을 귀환</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- C. DEFEAT MODAL -->
+  <div id="modal-defeat" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-title defeat">💀 영웅 사망</div>
+      <p style="font-size: 0.95rem; text-align: center; line-height: 1.5;">몬스터의 막강한 힘 앞에 영웅이 쓰러졌습니다.<br><span style="color: var(--danger-color); font-weight: bold;">소지 골드의 15%</span>를 소모하여 마을 여관으로 귀환합니다.</p>
+      
+      <button id="btn-defeat-confirm" class="btn btn-primary" style="width: 100%; padding: 12px; background: linear-gradient(135deg, var(--danger-color), #b91c1c); box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);">치료 후 부활하기</button>
+    </div>
+  </div>
+
+  <!-- D. GAME CLEAR / ENDING MODAL -->
+  <div id="modal-game-clear" class="modal-overlay">
+    <div class="modal-content" style="width: 600px; max-width: 95%; border-color: #f59e0b; box-shadow: 0 0 25px rgba(245, 158, 11, 0.25);">
+      <div class="modal-title" style="color: #f59e0b; font-family: var(--font-title); font-size: 2rem; letter-spacing: 2px;">👑 차원 구원 완료</div>
+      <p style="font-size: 1rem; text-align: center; line-height: 1.6; margin: 15px 0;">
+        축하합니다! 에테리아의 심장 아르카이온을 물리치고<br>
+        공허의 세력으로부터 **에테리아 차원의 평화**를 되찾았습니다!<br>
+        당신은 역사에 영원히 기록될 진정한 영웅입니다.
+      </p>
+      
+      <div class="ending-credits" style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px solid var(--panel-border); font-size: 0.85rem; line-height: 1.8; text-align: center; color: var(--text-muted); max-height: 150px; overflow-y: auto; margin-bottom: 15px;">
+        <div style="font-weight: bold; color: #fff; margin-bottom: 5px;">- 개발진 -</div>
+        <div>기획 및 연출: Antigravity AI</div>
+        <div>디자인 & 아트: Antigravity Styling System</div>
+        <div>총괄 용사: 플레이어 님</div>
+        <div style="margin-top: 10px; font-weight: bold; color: var(--secondary-color);">감사합니다!</div>
+        <div style="font-size: 0.75rem;">이후 마을로 복귀하여 장비 강화와 탐험을 계속 즐기실 수 있습니다.</div>
+      </div>
+      
+      <button id="btn-clear-confirm" class="btn btn-primary" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);">영광스럽게 마을로 복귀하기</button>
+    </div>
+  </div>
+
+  <!-- JavaScript Files -->
+  <script src="js/character.js"></script>
+  <script src="js/items.js"></script>
+  <script src="js/stages.js"></script>
+  <script src="js/combat.js"></script>
+  <script src="js/game.js?v=dungeon-theme-layout-20260602"></script>
+</body>
+</html>

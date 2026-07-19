@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d91e90e2d610cec4da95fa590abaae04, type: 3}
+  m_Name: Enemy_D15_Boss
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaEnemyData
+  enemyName: "\uBE5B\uAC10\uC625\uC7A5 \uB8E8\uBBF8\uB77C"
+  description: "\uBE5B\uAC10\uC625\uC7A5 \uB8E8\uBBF8\uB77C\uC785\uB2C8\uB2E4."
+  hp: 22500
+  maxMp: 0
+  attack: 520
+  magic: 760
+  defense: 430
+  speed: 5
+  critRate: 0.2
+  goldReward: 10800
+  xpReward: 45000
+  skills:
+  - {fileID: 11400000, guid: 838af172397bcd9449c96700a10ff491, type: 2}
+  - {fileID: 11400000, guid: 3387f993ee666a941ad1ee3a99109d9d, type: 2}

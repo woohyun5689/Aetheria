@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0589f7e86e541e94a9f75957ff4b1b32, type: 3}
+  m_Name: Dungeon_12
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaDungeonData
+  dungeonNumber: 12
+  dungeonName: "\uBCC4\uCD94\uB77D \uC694\uC0C8"
+  description: "\uCD94\uB77D\uD55C \uBCC4\uC758 \uD30C\uD3B8\uC73C\uB85C \uC9C0\uC5B4\uC9C4
+    \uC694\uC0C8\uC785\uB2C8\uB2E4. \uBCC4\uBE5B\uC5D0 \uB4A4\uD2C0\uB9B0 \uC804\uC0AC\uB4E4\uC774
+    \uAC15\uB82C\uD55C \uC77C\uACA9\uC744 \uD37C\uBD93\uC2B5\uB2C8\uB2E4."
+  recommendedLevel: 50
+  floors: 6
+  monsters:
+  - {fileID: 11400000, guid: b795968e2cd36874db3ef8661c831472, type: 2}
+  - {fileID: 11400000, guid: cf9e09b8e8e78464988303566e34b02b, type: 2}
+  boss: {fileID: 11400000, guid: a2c6b5d022bfced438d4f071095fb153, type: 2}

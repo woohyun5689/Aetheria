@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d91e90e2d610cec4da95fa590abaae04, type: 3}
+  m_Name: Enemy_D21_Boss
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaEnemyData
+  enemyName: "\uCC2C\uB780\uD55C \uC2EC\uD310\uAD00 \uB8E8\uBA58"
+  description: "\uCC2C\uB780\uD55C \uC2EC\uD310\uAD00 \uB8E8\uBA58\uC785\uB2C8\uB2E4."
+  hp: 65000
+  maxMp: 0
+  attack: 1520
+  magic: 1780
+  defense: 980
+  speed: 5
+  critRate: 0.28
+  goldReward: 30000
+  xpReward: 150000
+  skills:
+  - {fileID: 11400000, guid: d81d4bd469fa0f54eae21fa4d6391dcf, type: 2}
+  - {fileID: 11400000, guid: f1521c34ea6e99b489e342d1abe8ece8, type: 2}

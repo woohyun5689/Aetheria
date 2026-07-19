@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d91e90e2d610cec4da95fa590abaae04, type: 3}
+  m_Name: Enemy_D07_Monster_03
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaEnemyData
+  enemyName: "\uAC80\uC740 \uC7AC\uC758 \uAE30\uC0AC"
+  description: "\uAC80\uC740 \uC7AC\uC758 \uAE30\uC0AC\uC785\uB2C8\uB2E4."
+  hp: 900
+  maxMp: 0
+  attack: 116
+  magic: 24
+  defense: 78
+  speed: 5
+  critRate: 0.11
+  goldReward: 290
+  xpReward: 980
+  skills:
+  - {fileID: 11400000, guid: 2ea995346b3f1ab43b4c1ac07e0ee17e, type: 2}

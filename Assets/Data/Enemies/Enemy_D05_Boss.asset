@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d91e90e2d610cec4da95fa590abaae04, type: 3}
+  m_Name: Enemy_D05_Boss
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaEnemyData
+  enemyName: "\uCC9C\uB465 \uAD70\uC8FC \uB77C\uC774\uC5D0\uC2A4"
+  description: "\uCC9C\uB465 \uAD70\uC8FC \uB77C\uC774\uC5D0\uC2A4\uC785\uB2C8\uB2E4."
+  hp: 1250
+  maxMp: 0
+  attack: 78
+  magic: 94
+  defense: 42
+  speed: 5
+  critRate: 0.16
+  goldReward: 950
+  xpReward: 2300
+  skills:
+  - {fileID: 11400000, guid: bbe533245bd798f4faca2d8cc22c04be, type: 2}
+  - {fileID: 11400000, guid: ce8627e8b8c2d6f4f81483fb9432b6ff, type: 2}

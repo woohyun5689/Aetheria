@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d91e90e2d610cec4da95fa590abaae04, type: 3}
+  m_Name: Enemy_D24_Boss
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaEnemyData
+  enemyName: "\uAC70\uC6B8 \uAD70\uC8FC \uC2A4\uD398\uD058\uB77C"
+  description: "\uAC70\uC6B8 \uAD70\uC8FC \uC2A4\uD398\uD058\uB77C\uC785\uB2C8\uB2E4."
+  hp: 104000
+  maxMp: 0
+  attack: 2150
+  magic: 2460
+  defense: 1440
+  speed: 5
+  critRate: 0.33
+  goldReward: 44000
+  xpReward: 250000
+  skills:
+  - {fileID: 11400000, guid: 2eea968abe2442d4084180c7d962b98c, type: 2}
+  - {fileID: 11400000, guid: 6b05b9db60c5e7445a07a14f58abaddf, type: 2}

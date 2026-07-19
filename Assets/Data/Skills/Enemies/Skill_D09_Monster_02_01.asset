@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36f0d53b27dae3947abb88b3edd2a980, type: 3}
+  m_Name: Skill_D09_Monster_02_01
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaSkillData
+  skillName: "\uCD09\uC218 \uC555\uBC15"
+  description: 
+  mpCost: 75
+  multiplier: 1.75
+  usesMagic: 0
+  noDamage: 0
+  grantsShield: 0
+  healsSelf: 0
+  stunChance: 0.17
+  burnChance: 0
+  poisonChance: 0
+  bleedChance: 0
+  shockChance: 0
+  freezeChance: 0
+  blindChance: 0
+  weakenChance: 0
+  vulnerableChance: 0
+  silenceChance: 0
+  manaBurnChance: 0
+  selfStatusType: 
+  selfStatusDuration: 0
+  selfStatusValue: 0
+  critBonus: 0
+  lifeStealRatio: 0
+  forceCrit: 0

@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d91e90e2d610cec4da95fa590abaae04, type: 3}
+  m_Name: Enemy_D06_Boss
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaEnemyData
+  enemyName: "\uBE59\uAD00\uC758 \uC5EC\uC655 \uC138\uB808\uB098"
+  description: "\uBE59\uAD00\uC758 \uC5EC\uC655 \uC138\uB808\uB098\uC785\uB2C8\uB2E4."
+  hp: 1680
+  maxMp: 0
+  attack: 70
+  magic: 128
+  defense: 64
+  speed: 5
+  critRate: 0.14
+  goldReward: 1250
+  xpReward: 3200
+  skills:
+  - {fileID: 11400000, guid: 65c5a4e3119506c41ae599ee3295fb64, type: 2}
+  - {fileID: 11400000, guid: 5dc46b2f417332244a8bcdcc62c762a4, type: 2}

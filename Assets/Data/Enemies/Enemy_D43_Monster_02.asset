@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d91e90e2d610cec4da95fa590abaae04, type: 3}
+  m_Name: Enemy_D43_Monster_02
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaEnemyData
+  enemyName: "\uACF5\uD5C8 \uAD00\uD604\uB2F9 \uD30C\uC218\uCCB4 2"
+  description: "\uACF5\uD5C8 \uAD00\uD604\uB2F9 \uD30C\uC218\uCCB4 2\uC785\uB2C8\uB2E4."
+  hp: 292919
+  maxMp: 0
+  attack: 20752
+  magic: 14942
+  defense: 13417
+  speed: 5
+  critRate: 0.38
+  goldReward: 55222
+  xpReward: 327240
+  skills:
+  - {fileID: 11400000, guid: 973fc0882fd96b44b8d60998b61b792a, type: 2}

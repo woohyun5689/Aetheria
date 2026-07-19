@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d91e90e2d610cec4da95fa590abaae04, type: 3}
+  m_Name: Enemy_D42_Boss
+  m_EditorClassIdentifier: Assembly-CSharp::AetheriaEnemyData
+  enemyName: "\uD0DC\uACE0 \uB300\uC7A5\uC7A5\uC774 \uBE0C\uB8E8\uCE78"
+  description: "\uD0DC\uACE0 \uB300\uC7A5\uC7A5\uC774 \uBE0C\uB8E8\uCE78\uC785\uB2C8\uB2E4."
+  hp: 1536000
+  maxMp: 0
+  attack: 25700
+  magic: 26840
+  defense: 17000
+  speed: 5
+  critRate: 0.42
+  goldReward: 644000
+  xpReward: 4020000
+  skills:
+  - {fileID: 11400000, guid: 8588ff4317f19904a8b2e7f62358e263, type: 2}
+  - {fileID: 11400000, guid: 8d256700f5c29dc478577f87e7f1cc9d, type: 2}
