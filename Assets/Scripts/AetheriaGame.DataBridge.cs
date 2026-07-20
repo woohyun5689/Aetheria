@@ -155,7 +155,8 @@ public sealed partial class AetheriaGame
             Mathf.Clamp(data.critRate, 0f, 0.95f),
             Mathf.Max(0, data.goldReward),
             Mathf.Max(0, data.xpReward),
-            SkillsFromData(data.skills));
+            SkillsFromData(data.skills),
+            data.name);
     }
 
     private List<SkillState> SkillsFromData(IEnumerable<AetheriaSkillData> source)

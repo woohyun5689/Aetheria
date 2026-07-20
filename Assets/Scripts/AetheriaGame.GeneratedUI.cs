@@ -48,18 +48,19 @@ public sealed partial class AetheriaGame
         {
             case AetheriaScreen.MainMenu:
             case AetheriaScreen.ClassSelect:
-                return "UI/Generated/menu_background";
+            case AetheriaScreen.Guide:
+                return "UI/Generated/menu_background_v2";
             case AetheriaScreen.Town:
             case AetheriaScreen.Inventory:
             case AetheriaScreen.Enhancement:
             case AetheriaScreen.SkillTraining:
             case AetheriaScreen.Crafting:
-                return "UI/Generated/town_background";
+                return "UI/Generated/town_background_v2";
             case AetheriaScreen.Combat:
             case AetheriaScreen.Victory:
             case AetheriaScreen.Defeat:
             case AetheriaScreen.GameClear:
-                return "UI/Generated/combat_background";
+                return "UI/Generated/combat_background_v2";
             default:
                 return null;
         }
@@ -86,9 +87,12 @@ public sealed partial class AetheriaGame
         backgroundImage.sprite = sprite;
         backgroundImage.preserveAspect = false;
         backgroundImage.raycastTarget = false;
+        var backgroundFitter = background.gameObject.AddComponent<AspectRatioFitter>();
+        backgroundFitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+        backgroundFitter.aspectRatio = sprite.rect.width / Mathf.Max(1f, sprite.rect.height);
 
-        var veilAlpha = currentScreen == AetheriaScreen.MainMenu ? 0.26f : 0.42f;
-        var veil = AddFlatPanel("Generated Screen Veil", root, new Color(0.01f, 0.015f, 0.025f, veilAlpha));
+        var veilAlpha = currentScreen == AetheriaScreen.MainMenu ? 0.03f : 0.06f;
+        var veil = AddFlatPanel("Generated Screen Veil", root, new Color(0.92f, 0.97f, 1f, veilAlpha));
         Stretch(veil, 0, 0, 0, 0);
         veil.SetSiblingIndex(1);
         veil.GetComponent<Image>().raycastTarget = false;
@@ -106,6 +110,13 @@ public sealed partial class AetheriaGame
     private bool ApplyGeneratedPanelSkin(string name, Image image, Color sourceColor)
     {
         if (image == null || sourceColor.a <= 0.05f || string.IsNullOrEmpty(name))
+        {
+            return false;
+        }
+
+        // Content panels prioritize uninterrupted text space. The illustrated frame
+        // is reserved for the full-screen border created with the backdrop above.
+        if (!name.Contains("Artwork Panel"))
         {
             return false;
         }
@@ -134,7 +145,7 @@ public sealed partial class AetheriaGame
             return false;
         }
 
-        var sprite = LoadGeneratedSprite("UI/Generated/panel_frame", new Vector4(84, 64, 84, 64));
+        var sprite = LoadGeneratedSprite("UI/Generated/panel_frame_bright", new Vector4(96, 76, 96, 76));
         if (sprite == null)
         {
             return false;
@@ -142,27 +153,46 @@ public sealed partial class AetheriaGame
 
         image.sprite = sprite;
         image.type = Image.Type.Sliced;
-        image.color = new Color(1f, 1f, 1f, Mathf.Clamp(sourceColor.a, 0.78f, 0.98f));
+        var tint = Color.Lerp(Color.white, new Color(sourceColor.r, sourceColor.g, sourceColor.b, 1f), 0.08f);
+        image.color = new Color(tint.r, tint.g, tint.b, Mathf.Clamp(sourceColor.a, 0.84f, 0.98f));
         return true;
     }
 
     private bool ApplyGeneratedButtonSkin(Image image, Color accent)
     {
-        var sprite = LoadGeneratedSprite("UI/Generated/button_frame", new Vector4(96, 42, 96, 42));
+        var sprite = LoadGeneratedSprite("UI/Generated/button_frame_bright", Vector4.zero);
         if (image == null || sprite == null)
         {
             return false;
         }
 
         image.sprite = sprite;
-        image.type = Image.Type.Sliced;
-        image.color = Color.Lerp(Color.white, accent, 0.16f);
+        // The source frame is already close to the aspect ratio of our buttons.
+        // Scaling the complete frame keeps its side ornaments intact on compact map controls.
+        image.type = Image.Type.Simple;
+        image.color = Color.Lerp(Color.white, accent, 0.18f);
         return true;
     }
 
     private Sprite LoadCharacterStateSprite(string portraitName, string state)
     {
-        var sprite = LoadGeneratedSprite("Characters/" + portraitName + "/" + state, Vector4.zero);
+        state = string.IsNullOrEmpty(state) ? "idle" : state;
+
+        // The v2 set uses one consistent transparent, portrait-format canvas for
+        // every state so the character no longer changes scale or gains a square
+        // concept-art background when the UI switches pose.
+        var sprite = LoadGeneratedSprite("CharactersV2/" + portraitName + "/" + state, Vector4.zero);
+        if (sprite == null && state != "idle")
+        {
+            sprite = LoadGeneratedSprite("CharactersV2/" + portraitName + "/idle", Vector4.zero);
+        }
+
+        if (sprite != null)
+        {
+            return sprite;
+        }
+
+        sprite = LoadGeneratedSprite("Characters/" + portraitName + "/" + state, Vector4.zero);
         if (sprite == null && state != "idle")
         {
             sprite = LoadGeneratedSprite("Characters/" + portraitName + "/idle", Vector4.zero);

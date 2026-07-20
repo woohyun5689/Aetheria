@@ -8,6 +8,28 @@ public sealed partial class AetheriaGame
 {
     private void Update()
     {
+        if (currentScreen == AetheriaScreen.Guide && HotkeyPressed(KeyCode.Escape, Hotkey.Escape))
+        {
+            if (guideReturnToMainMenu)
+            {
+                ShowMainMenu();
+            }
+            else
+            {
+                ShowTown("가이드를 닫았습니다. 던전 탐험부터 시작해 보세요.");
+            }
+            return;
+        }
+
+        var helpAvailable = currentScreen == AetheriaScreen.MainMenu
+            || currentScreen == AetheriaScreen.ClassSelect
+            || currentScreen == AetheriaScreen.Town;
+        if (currentEnemy == null && helpAvailable && HotkeyPressed(KeyCode.F1, Hotkey.F1))
+        {
+            ShowHowToPlay(player == null || currentScreen == AetheriaScreen.MainMenu || currentScreen == AetheriaScreen.ClassSelect);
+            return;
+        }
+
         if (player == null)
         {
             return;
@@ -29,6 +51,15 @@ public sealed partial class AetheriaGame
     {
         if (actionLocked)
         {
+            if (HotkeyPressed(KeyCode.Q, Hotkey.Q)
+                || HotkeyPressed(KeyCode.W, Hotkey.W)
+                || HotkeyPressed(KeyCode.E, Hotkey.E)
+                || HotkeyPressed(KeyCode.R, Hotkey.R)
+                || HotkeyPressed(KeyCode.T, Hotkey.T)
+                || HotkeyPressed(KeyCode.Escape, Hotkey.Escape))
+            {
+                RejectCombatInput(CombatLockedMessage());
+            }
             return;
         }
 
@@ -140,6 +171,7 @@ public sealed partial class AetheriaGame
             case Hotkey.I: return keyboard.iKey.wasPressedThisFrame;
             case Hotkey.K: return keyboard.kKey.wasPressedThisFrame;
             case Hotkey.S: return keyboard.sKey.wasPressedThisFrame;
+            case Hotkey.F1: return keyboard.f1Key.wasPressedThisFrame;
             case Hotkey.Escape: return keyboard.escapeKey.wasPressedThisFrame;
             default: return false;
         }
@@ -156,6 +188,7 @@ public sealed partial class AetheriaGame
         I,
         K,
         S,
+        F1,
         Escape
     }
 }

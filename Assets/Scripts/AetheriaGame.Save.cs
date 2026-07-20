@@ -111,6 +111,12 @@ public sealed partial class AetheriaGame
             state.saveVersion = 1;
         }
 
+        if (state.saveVersion < 2)
+        {
+            state.hasSeenGuide = false;
+            state.saveVersion = 2;
+        }
+
         state.saveVersion = CurrentSaveVersion;
     }
 
