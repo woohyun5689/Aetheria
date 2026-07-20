@@ -209,4 +209,48 @@ public sealed partial class AetheriaGame
 
         return holder;
     }
+
+    private Sprite LoadCurrentEnemyArtSprite()
+    {
+        if (currentDungeon == null || currentEnemy == null)
+        {
+            return null;
+        }
+
+        var fileName = "boss";
+        if (!currentEnemyIsBoss)
+        {
+            var enemyIndex = currentDungeon.monsters == null
+                ? -1
+                : currentDungeon.monsters.FindIndex(entry => entry != null && entry.name == currentEnemy.name);
+            if (enemyIndex < 0)
+            {
+                return null;
+            }
+
+            fileName = "monster_" + (enemyIndex + 1).ToString("00");
+        }
+
+        var resourcePath = "Enemies/D" + currentDungeon.number.ToString("00") + "/" + fileName;
+        return LoadGeneratedSprite(resourcePath, Vector4.zero);
+    }
+
+    private RectTransform AddEnemyArt(Transform parent, float size)
+    {
+        var holder = AddFlatPanel("Enemy Portrait", parent, new Color(0, 0, 0, 0));
+        AddLayoutSize(holder, size, size);
+        var image = holder.GetComponent<Image>();
+        image.raycastTarget = false;
+        image.sprite = LoadCurrentEnemyArtSprite();
+        image.preserveAspect = true;
+        image.color = image.sprite == null ? new Color(0, 0, 0, 0) : Color.white;
+
+        if (image.sprite == null)
+        {
+            var fallback = AddText(holder, currentEnemyIsBoss ? "BOSS" : "◆", 32, FontStyle.Bold, dangerColor, TextAnchor.MiddleCenter, size);
+            Stretch(fallback.GetComponent<RectTransform>(), 0, 0, 0, 0);
+        }
+
+        return holder;
+    }
 }

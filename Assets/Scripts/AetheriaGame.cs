@@ -2854,14 +2854,14 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var enemy = AddPanel("Enemy Fighter Box", arena, Rgba(24, 10, 14, 235));
         AddSideAccent(enemy, dangerColor);
         AddLayoutSize(enemy, 670, -1);
-        AddVertical(enemy, 10, TextAnchor.UpperCenter, new RectOffset(24, 24, 20, 20));
-        AddText(enemy, currentEnemyIsBoss ? "👑" : "◆", 56, FontStyle.Bold, dangerColor, TextAnchor.MiddleCenter, 72);
-        AddText(enemy, currentEnemy.name, 29, FontStyle.Bold, dangerColor, TextAnchor.MiddleCenter, 42);
-        AddText(enemy, currentEnemy.description, 19, FontStyle.Normal, mutedColor, TextAnchor.MiddleCenter, 52);
+        AddVertical(enemy, 6, TextAnchor.UpperCenter, new RectOffset(24, 24, 20, 20));
+        AddEnemyArt(enemy, currentEnemyIsBoss ? 185 : 170);
+        AddText(enemy, currentEnemy.name, 28, FontStyle.Bold, dangerColor, TextAnchor.MiddleCenter, 38);
+        AddText(enemy, currentEnemy.description, 17, FontStyle.Normal, mutedColor, TextAnchor.MiddleCenter, 36);
         AddBar(enemy, currentEnemy.hp, currentEnemy.maxHp, dangerColor, "HP");
         AddBar(enemy, currentEnemy.mp, currentEnemy.maxMp, manaColor, "MP");
-        AddText(enemy, StatusLine(enemyStatusEffects), 18, FontStyle.Bold, goldColor, TextAnchor.MiddleCenter, 32);
-        AddText(enemy, "공격 " + currentEnemy.attack + "  마력 " + currentEnemy.magic + "  방어 " + currentEnemy.defense + "  속도 " + currentEnemy.speed + "  보상 " + currentEnemy.gold + "G", 19, FontStyle.Normal, textColor, TextAnchor.MiddleCenter, 34);
+        AddText(enemy, StatusLine(enemyStatusEffects), 17, FontStyle.Bold, goldColor, TextAnchor.MiddleCenter, 28);
+        AddText(enemy, "공격 " + currentEnemy.attack + "  마력 " + currentEnemy.magic + "  방어 " + currentEnemy.defense + "  속도 " + currentEnemy.speed + "  보상 " + currentEnemy.gold + "G", 17, FontStyle.Normal, textColor, TextAnchor.MiddleCenter, 30);
 
         var commandArea = AddRow("Combat Console", page, 16, TextAnchor.UpperCenter);
         AddLayoutSize(commandArea, -1, 425);
