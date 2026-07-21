@@ -51,7 +51,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
     private const int MaxGearEnhancementLevel = 30;
     private const int MaxDungeonFloors = 30;
     private const int MaxGeneralLogLines = 12;
-    private const float UiScrollbarWidth = 18f;
+    private const float UiScrollbarWidth = 12f;
     private const int UiButtonDefaultTextSize = 24;
     private static AetheriaGame instance;
     private static readonly int[] CraftingRecipeCosts = { 40, 80, 150, 280, 520, 900, 1500, 2400, 3600, 5200, 7600 };
@@ -76,8 +76,10 @@ public sealed partial class AetheriaGame : MonoBehaviour
     private readonly Color dangerColor = Rgb(190, 47, 61);
     private readonly Color manaColor = Rgb(0, 108, 151);
     private readonly Color textColor = Rgb(20, 39, 61);
-    private readonly Color mutedColor = Rgb(74, 94, 116);
+    private readonly Color mutedColor = Rgb(48, 65, 82);
     private readonly Color neonPurple = Rgb(112, 69, 163);
+    private readonly Color buttonTextColor = Rgb(16, 32, 57);
+    private readonly Color disabledButtonTextColor = Rgb(91, 105, 121);
     private Sprite mapCircleSprite;
     private Sprite mapRoundedRectSprite;
     private List<DungeonMapRegion> cachedDungeonMapRegions;
@@ -202,11 +204,11 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddVertical(frame, 20, TextAnchor.MiddleCenter, new RectOffset(160, 160, 56, 56));
 
         var titleCard = AddPanel("Main Menu Title", frame, Rgba(255, 253, 247, 232));
-        AddLayoutSize(titleCard, -1, 180);
+        AddLayoutSize(titleCard, -1, 220);
         AddVertical(titleCard, 2, TextAnchor.MiddleCenter, new RectOffset(24, 24, 14, 14));
-        AddText(titleCard, "AETHERIA", 72, FontStyle.Bold, goldColor, TextAnchor.MiddleCenter, 82);
-        AddText(titleCard, "빛의 원정", 30, FontStyle.Bold, manaColor, TextAnchor.MiddleCenter, 40);
-        AddText(titleCard, "마을에서 준비하고, 던전에서 공격과 스킬을 고르는 1인 턴제 RPG", 18, FontStyle.Bold, mutedColor, TextAnchor.MiddleCenter, 28);
+        AddText(titleCard, "AETHERIA", 72, FontStyle.Bold, goldColor, TextAnchor.MiddleCenter, 104);
+        AddText(titleCard, "빛의 원정", 30, FontStyle.Bold, manaColor, TextAnchor.MiddleCenter, 44);
+        AddText(titleCard, "마을에서 준비하고, 던전에서 공격과 스킬을 고르는 1인 턴제 RPG", 18, FontStyle.Bold, mutedColor, TextAnchor.MiddleCenter, 32);
 
         var slotPanel = AddPanel("Save Slots", frame, panelColor);
         AddLayoutSize(slotPanel, -1, 420);
@@ -314,19 +316,32 @@ public sealed partial class AetheriaGame : MonoBehaviour
             var localHeroClass = heroClass;
             var accent = ClassAccentColor(heroClass.name);
             var selected = selectedHeroClassName == heroClass.name;
-            var card = AddPanel(heroClass.name, grid, selected ? Rgba(224, 246, 241, 250) : panelColor);
-            AddSideAccent(card, selected ? goodColor : accent);
-            AddVertical(card, 6, TextAnchor.UpperCenter, new RectOffset(10, 10, 8, 8));
-            AddCharacterArt(card, heroClass.portraitName, "idle", 174, 174);
-            AddText(card, heroClass.name, 24, FontStyle.Bold, accent, TextAnchor.MiddleCenter, 34);
-            AddText(card, heroClass.description, 15, FontStyle.Normal, mutedColor, TextAnchor.MiddleCenter, 54);
-            AddText(card, "HP " + heroClass.hp + "  MP " + heroClass.mp + "  ATK " + heroClass.attack + "  MAG " + heroClass.magic + "\nDEF " + heroClass.defense + "  SPD " + RoundToGameInt(BaseSpeedForClass(heroClass.name)) + "  CRIT " + RoundToGameInt(heroClass.crit * 100f) + "%", 14, FontStyle.Normal, textColor, TextAnchor.MiddleCenter, 44);
-            var selectButton = AddButton(card, selected ? "선택됨" : "선택", () =>
+            var card = AddPanel(heroClass.name, grid, Color.white);
+            var cardButton = card.gameObject.AddComponent<Button>();
+            cardButton.onClick.AddListener(() =>
             {
+                PlayUiClickSound();
                 selectedHeroClassName = localHeroClass.name;
                 ShowClassSelect(activeSlot);
-            }, selected ? goodColor : panelAltColor);
-            AddLayoutSize(selectButton.GetComponent<RectTransform>(), -1, 52);
+            });
+            ApplyCharacterThemeCardButton(cardButton, heroClass.portraitName, selected);
+
+            var contentObject = new GameObject("Class Card Content", typeof(RectTransform));
+            contentObject.transform.SetParent(card, false);
+            var content = contentObject.GetComponent<RectTransform>();
+            Stretch(content, 40, 24, 40, 24);
+            var contentLayout = contentObject.AddComponent<VerticalLayoutGroup>();
+            contentLayout.spacing = 4;
+            contentLayout.childAlignment = TextAnchor.UpperCenter;
+            contentLayout.childControlWidth = true;
+            contentLayout.childControlHeight = true;
+            contentLayout.childForceExpandWidth = false;
+            contentLayout.childForceExpandHeight = false;
+
+            AddCharacterArt(content, heroClass.portraitName, "idle", 132, 132);
+            AddText(content, heroClass.name, 24, FontStyle.Bold, CharacterThemeHeading(heroClass.portraitName, accent), TextAnchor.MiddleCenter, 38);
+            AddText(content, heroClass.description, 19, FontStyle.Bold, CharacterThemeMuted(heroClass.portraitName, mutedColor), TextAnchor.MiddleCenter, 100);
+            AddText(content, "HP " + heroClass.hp + "  MP " + heroClass.mp + "  ATK " + heroClass.attack + "  MAG " + heroClass.magic + "\nDEF " + heroClass.defense + "  SPD " + RoundToGameInt(BaseSpeedForClass(heroClass.name)) + "  CRIT " + RoundToGameInt(heroClass.crit * 100f) + "%", 18, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, 60);
         }
 
         var selectedHeroClass = heroClasses.Find(entry => entry.name == selectedHeroClassName);
@@ -334,6 +349,12 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddLayoutSize(buttons, -1, 62);
         var startButton = AddButton(buttons, selectedHeroClass != null ? selectedHeroClass.name + "으로 시작" : "영웅을 먼저 선택하세요", StartSelectedHeroClass, goodColor);
         startButton.interactable = selectedHeroClass != null;
+        if (selectedHeroClass != null)
+        {
+            ApplyCharacterThemeButtonFrame(startButton, selectedHeroClass.portraitName, true);
+            startButton.GetComponent<Image>().color = Color.Lerp(Color.white, goodColor, 0.16f);
+            ApplyCharacterThemeButtonText(startButton, selectedHeroClass.portraitName);
+        }
         AddButton(buttons, "뒤로", ShowMainMenu, panelAltColor);
     }
 
@@ -364,9 +385,9 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddVertical(page, 16, TextAnchor.UpperCenter, new RectOffset(42, 42, 30, 30));
 
         var header = AddPanel("Guide Header", page, panelColor);
-        AddLayoutSize(header, -1, 126);
+        AddLayoutSize(header, -1, 134);
         AddVertical(header, 4, TextAnchor.MiddleCenter, new RectOffset(24, 24, 12, 12));
-        AddText(header, "처음 3분 플레이 방법", 42, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, 54);
+        AddText(header, "처음 3분 플레이 방법", 42, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, 60);
         AddText(header, "마을 → 던전 → 전투 → 장비 정비를 반복하면 됩니다.", 22, FontStyle.Bold, manaColor, TextAnchor.MiddleCenter, 36);
 
         var flow = AddRow("Guide Flow", page, 14, TextAnchor.UpperCenter);
@@ -429,11 +450,14 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
         var page = AddPanel("Delete Save Confirm", root, pageColor);
         Stretch(page, 0, 0, 0, 0);
-        AddVertical(page, 22, TextAnchor.MiddleCenter, new RectOffset(90, 90, 80, 80));
 
         var panel = AddPanel("Delete Save Confirm Panel", page, Rgba(255, 238, 240, 250));
+        panel.anchorMin = new Vector2(0.5f, 0.5f);
+        panel.anchorMax = panel.anchorMin;
+        panel.pivot = new Vector2(0.5f, 0.5f);
+        panel.anchoredPosition = Vector2.zero;
+        panel.sizeDelta = new Vector2(920f, 500f);
         AddSideAccent(panel, dangerColor);
-        AddLayoutSize(panel, 920, 430);
         AddVertical(panel, 18, TextAnchor.MiddleCenter, new RectOffset(44, 44, 36, 36));
 
         AddText(panel, "저장 슬롯 삭제", 44, FontStyle.Bold, dangerColor, TextAnchor.MiddleCenter, 64);
@@ -473,7 +497,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddVertical(page, 14, TextAnchor.UpperCenter, new RectOffset(28, 28, 20, 20));
 
         var hud = AddPanel("Town HUD", page, panelColor);
-        AddLayoutSize(hud, -1, 150);
+        AddLayoutSize(hud, -1, 200);
         var hudLayout = hud.gameObject.AddComponent<HorizontalLayoutGroup>();
         hudLayout.spacing = 18;
         hudLayout.padding = new RectOffset(18, 18, 12, 12);
@@ -514,14 +538,14 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddLayoutSize(menuButton.GetComponent<RectTransform>(), 170, 64);
 
         var body = AddRow("Town Command Deck", page, 18, TextAnchor.UpperCenter);
-        AddLayoutSize(body, -1, 860);
+        AddLayoutSize(body, -1, 810);
 
         var heroShowcase = AddPanel("Hero Showcase", body, panelAltColor);
         AddLayoutSize(heroShowcase, 380, -1);
         AddVertical(heroShowcase, 10, TextAnchor.UpperCenter, new RectOffset(18, 18, 18, 18));
         AddText(heroShowcase, townCharacterState == "rest" ? "내 영웅 · 회복 완료" : "내 영웅", 24, FontStyle.Bold, manaColor, TextAnchor.MiddleCenter, 38);
         AddCharacterArt(heroShowcase, player.portraitName, townCharacterState, 330, 500);
-        AddText(heroShowcase, player.heroName + "\n" + player.heroClass, 29, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, 66);
+        AddText(heroShowcase, player.heroName + "\n" + player.heroClass, 29, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, 74);
         AddText(heroShowcase, "HP " + player.hp + "/" + MaxHp() + "   MP " + player.mp + "/" + MaxMp() + "\n" + (BasicAttackUsesMagic() ? "마법 공격형" : "물리 공격형"), 18, FontStyle.Normal, mutedColor, TextAnchor.MiddleCenter, 70);
 
         var commandBoard = AddPanel("Adventure Command Board", body, panelColor);
@@ -533,7 +557,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddMessageBanner(commandBoard, message, manaColor, 72);
 
         var actionGrid = AddPanel("Town Action Grid", commandBoard, new Color(0, 0, 0, 0));
-        AddLayoutSize(actionGrid, -1, 430);
+        AddLayoutSize(actionGrid, -1, 410);
         var actionLayout = actionGrid.gameObject.AddComponent<GridLayoutGroup>();
         actionLayout.cellSize = new Vector2(400, 126);
         actionLayout.spacing = new Vector2(14, 14);
@@ -549,7 +573,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddButton(actionGrid, "여관 휴식\nHP · MP 회복", Rest, dangerColor);
 
         AddDivider(commandBoard, Rgba(202, 168, 92, 110));
-        AddText(commandBoard, StatLine() + "\n가방 " + InventoryCountLabel() + "   최근 기록 " + player.generalLogs.Count, 17, FontStyle.Normal, textColor, TextAnchor.MiddleLeft, 116);
+        AddText(commandBoard, StatLine() + "\n가방 " + InventoryCountLabel() + "   최근 기록 " + player.generalLogs.Count, 18, FontStyle.Bold, textColor, TextAnchor.MiddleLeft, 116);
 
         var fieldJournal = AddPanel("Field Journal", body, panelColor);
         AddLayoutSize(fieldJournal, -1, -1);
@@ -566,10 +590,10 @@ public sealed partial class AetheriaGame : MonoBehaviour
             + EquipmentLine("장신구 2", player.charm2) + "\n"
             + EquipmentLine("장신구 3", player.charm3) + "\n"
             + EquipmentLine("장신구 4", player.charm4),
-            16, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 190);
+            18, FontStyle.Bold, textColor, TextAnchor.UpperLeft, 190);
         AddDivider(fieldJournal, Rgba(111, 211, 255, 95));
         AddText(fieldJournal, "최근 소식", 22, FontStyle.Bold, neonPurple, TextAnchor.MiddleLeft, 34);
-        AddText(fieldJournal, RecentLogText(), 16, FontStyle.Normal, mutedColor, TextAnchor.UpperLeft, 190);
+        AddText(fieldJournal, RecentLogText(), 18, FontStyle.Bold, mutedColor, TextAnchor.UpperLeft, 190);
     }
 
     private void ShowTownLegacy(string message)
@@ -764,15 +788,21 @@ public sealed partial class AetheriaGame : MonoBehaviour
             }
         }
 
-        var detail = AddScrollList("Item Detail", body, panelColor, -1, -1, 12, new RectOffset(24, 30, 24, 24));
-        AddText(detail, "상세 정보", 32, FontStyle.Bold, textColor, TextAnchor.MiddleLeft, 48);
+        // Keep the section title outside the scrolling viewport. It previously
+        // stopped halfway under the mask at the bottom QA position, which looked
+        // like a clipped/overlapping label even though the content was scrollable.
+        var detailColumn = AddPanel("Item Detail Column", body, new Color(0f, 0f, 0f, 0f));
+        AddLayoutSize(detailColumn, -1, -1);
+        AddVertical(detailColumn, 8, TextAnchor.UpperLeft, new RectOffset(0, 0, 0, 0));
+        AddText(detailColumn, "상세 정보", 32, FontStyle.Bold, textColor, TextAnchor.MiddleLeft, 48);
+        var detail = AddScrollList("Item Detail", detailColumn, panelColor, -1, -1, 12, new RectOffset(24, 30, 16, 24));
         AddMessageBanner(detail, message, Rgb(178, 148, 102), 60);
 
         if (selectedInventoryIndex >= 0 && selectedInventoryIndex < player.inventory.Count)
         {
             var item = player.inventory[selectedInventoryIndex];
             var comparison = AddRow("Selected Item Comparison", detail, 12, TextAnchor.UpperCenter);
-            AddLayoutSize(comparison, -1, 320);
+            AddLayoutSize(comparison, -1, 400);
             AddItemComparisonPanel(comparison, "선택 아이템", SelectedItemDetailText(item), RarityColor(item.rarity));
             AddItemComparisonPanel(comparison, "교체 대상", ReplacementTargetDetailText(item), textColor);
             AddColoredGearDeltaPanel(detail, item, EquippedItemForReplacement(item.type, item.type == "Charm" ? 1 : 0));
@@ -815,23 +845,29 @@ public sealed partial class AetheriaGame : MonoBehaviour
         }
 
         var equipped = AddPanel("Equipped Detail", detail, panelAltColor);
-        AddLayoutSize(equipped, -1, 240);
+        AddLayoutSize(equipped, -1, 610);
         AddVertical(equipped, 8, TextAnchor.UpperLeft, new RectOffset(18, 18, 18, 18));
         AddText(equipped, "전체 착용 요약", 25, FontStyle.Bold, textColor, TextAnchor.MiddleLeft, 36);
-        AddText(equipped, EquipmentLine("무기", player.weapon), 20, FontStyle.Normal, textColor, TextAnchor.MiddleLeft, 30);
-        AddText(equipped, EquipmentLine("방어구", player.armor), 20, FontStyle.Normal, textColor, TextAnchor.MiddleLeft, 30);
-        AddText(equipped, EquipmentLine("장신구 1", player.charm), 19, FontStyle.Normal, textColor, TextAnchor.MiddleLeft, 28);
-        AddText(equipped, EquipmentLine("장신구 2", player.charm2), 19, FontStyle.Normal, textColor, TextAnchor.MiddleLeft, 28);
-        AddText(equipped, EquipmentLine("장신구 3", player.charm3), 19, FontStyle.Normal, textColor, TextAnchor.MiddleLeft, 28);
-        AddText(equipped, EquipmentLine("장신구 4", player.charm4), 19, FontStyle.Normal, textColor, TextAnchor.MiddleLeft, 28);
-        var unequipRow = AddRow("Unequip Row", equipped, 8, TextAnchor.MiddleLeft);
-        AddLayoutSize(unequipRow, -1, 48);
-        AddFlexibleButton(unequipRow, "무기 해제", () => UnequipItem("Weapon"), panelColor, 48);
-        AddFlexibleButton(unequipRow, "방어구 해제", () => UnequipItem("Armor"), panelColor, 48);
-        AddFlexibleButton(unequipRow, "장신구 1", () => UnequipItem("Charm1"), panelColor, 48);
-        AddFlexibleButton(unequipRow, "장신구 2", () => UnequipItem("Charm2"), panelColor, 48);
-        AddFlexibleButton(unequipRow, "장신구 3", () => UnequipItem("Charm3"), panelColor, 48);
-        AddFlexibleButton(unequipRow, "장신구 4", () => UnequipItem("Charm4"), panelColor, 48);
+        AddText(equipped, EquipmentLine("무기", player.weapon), 18, FontStyle.Normal, textColor, TextAnchor.MiddleLeft, 44);
+        AddText(equipped, EquipmentLine("방어구", player.armor), 18, FontStyle.Normal, textColor, TextAnchor.MiddleLeft, 44);
+        AddText(equipped, EquipmentLine("장신구 1", player.charm), 18, FontStyle.Normal, textColor, TextAnchor.MiddleLeft, 44);
+        AddText(equipped, EquipmentLine("장신구 2", player.charm2), 18, FontStyle.Normal, textColor, TextAnchor.MiddleLeft, 44);
+        AddText(equipped, EquipmentLine("장신구 3", player.charm3), 18, FontStyle.Normal, textColor, TextAnchor.MiddleLeft, 44);
+        AddText(equipped, EquipmentLine("장신구 4", player.charm4), 18, FontStyle.Normal, textColor, TextAnchor.MiddleLeft, 44);
+        var unequipGrid = AddPanel("Unequip Grid", equipped, new Color(0f, 0f, 0f, 0f));
+        AddLayoutSize(unequipGrid, -1, 202);
+        var unequipLayout = unequipGrid.gameObject.AddComponent<GridLayoutGroup>();
+        unequipLayout.cellSize = new Vector2(170, 62);
+        unequipLayout.spacing = new Vector2(8, 8);
+        unequipLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+        unequipLayout.constraintCount = 2;
+        unequipLayout.childAlignment = TextAnchor.UpperCenter;
+        AddButton(unequipGrid, "무기 해제", () => UnequipItem("Weapon"), panelColor);
+        AddButton(unequipGrid, "방어구 해제", () => UnequipItem("Armor"), panelColor);
+        AddButton(unequipGrid, "장신구 1 해제", () => UnequipItem("Charm1"), panelColor);
+        AddButton(unequipGrid, "장신구 2 해제", () => UnequipItem("Charm2"), panelColor);
+        AddButton(unequipGrid, "장신구 3 해제", () => UnequipItem("Charm3"), panelColor);
+        AddButton(unequipGrid, "장신구 4 해제", () => UnequipItem("Charm4"), panelColor);
     }
 
     private void AddItemComparisonPanel(Transform parent, string title, string value, Color titleColor)
@@ -840,8 +876,8 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddSideAccent(panel, titleColor);
         AddLayoutSize(panel, -1, -1);
         AddVertical(panel, 8, TextAnchor.UpperLeft, new RectOffset(16, 16, 14, 14));
-        AddText(panel, title, 22, FontStyle.Bold, titleColor, TextAnchor.MiddleLeft, 30);
-        AddText(panel, value, 16, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 270);
+        AddText(panel, title, 22, FontStyle.Bold, titleColor, TextAnchor.MiddleLeft, 34);
+        AddText(panel, value, 18, FontStyle.Bold, textColor, TextAnchor.UpperLeft, 326);
     }
 
     private void AddInventorySortButton(Transform parent, string label, InventorySortMode mode)
@@ -919,7 +955,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         }
 
         var panel = AddPanel("Colored Gear Delta", parent, panelAltColor);
-        AddLayoutSize(panel, -1, 74);
+        AddLayoutSize(panel, -1, 82);
         var layout = panel.gameObject.AddComponent<GridLayoutGroup>();
         layout.cellSize = new Vector2(116, 30);
         layout.spacing = new Vector2(8, 6);
@@ -959,8 +995,9 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
         var chipColor = delta > 0 ? Rgba(6, 78, 59, 220) : Rgba(95, 21, 35, 220);
         var chip = AddPanel("Delta " + label, parent, chipColor);
-        AddSideAccent(chip, delta > 0 ? goodColor : dangerColor);
-        AddText(chip, label + " " + SignedInt(delta) + (percent ? "%" : ""), 15, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, 28);
+        var chipTextColor = delta > 0 ? goodColor : dangerColor;
+        AddSideAccent(chip, chipTextColor);
+        AddText(chip, label + " " + SignedInt(delta) + (percent ? "%" : ""), 15, FontStyle.Bold, chipTextColor, TextAnchor.MiddleCenter, 28);
     }
 
     private void ShowEnhancement(string message)
@@ -985,7 +1022,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var grid = AddPanel("Enhancement Grid", page, pageColor);
         AddLayoutSize(grid, -1, 790);
         var layout = grid.gameObject.AddComponent<GridLayoutGroup>();
-        layout.cellSize = new Vector2(560, 285);
+        layout.cellSize = new Vector2(560, 360);
         layout.spacing = new Vector2(18, 18);
         layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         layout.constraintCount = 3;
@@ -1125,7 +1162,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
     private void AddEnhancementCard(Transform parent, string slotLabel, ItemState item, string role)
     {
-        var card = AddPanel(slotLabel, parent, panelColor);
+        var card = AddPanel("Enhancement Card " + slotLabel, parent, panelColor);
         AddSideAccent(card, item == null ? mutedColor : RarityColor(item.rarity));
         AddVertical(card, 8, TextAnchor.UpperLeft, new RectOffset(18, 18, 16, 16));
 
@@ -1136,7 +1173,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var detail = item == null
             ? "가방에서 해당 부위 장비를 먼저 착용하세요."
             : role + "\n현재 전투력 +" + item.power + (item.level >= MaxGearEnhancementLevel ? " / 최대 강화" : " -> 강화 후 +" + nextPower) + "\n" + GearStatsDescription(item) + "\n" + (item.level >= MaxGearEnhancementLevel ? "더 이상 강화할 수 없습니다." : "비용 " + cost + "G / 성공률 " + RoundToGameInt(GearEnhancementSuccessChance * 100f) + "%");
-        AddText(card, detail, 17, FontStyle.Normal, mutedColor, TextAnchor.UpperLeft, 92);
+        AddText(card, detail, 17, FontStyle.Normal, mutedColor, TextAnchor.UpperLeft, 150);
 
         var button = AddButton(card, item != null && item.level >= MaxGearEnhancementLevel ? "최대 강화" : "이 부위 강화", () => EnhanceEquippedItem(slotLabel, item), goldColor);
         button.interactable = item != null && item.level < MaxGearEnhancementLevel && player.gold >= cost;
@@ -1204,7 +1241,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         ApplyDungeonMapView(mapImage);
         ConfigureDungeonMapInput(mapPanel, mapImage);
 
-        var daylightWash = AddFlatPanel("Map Daylight Wash", mapImage, new Color(0.92f, 0.98f, 1f, 0.06f));
+        var daylightWash = AddFlatPanel("Map Daylight Wash", mapImage, new Color(0.92f, 0.98f, 1f, 0f));
         Stretch(daylightWash, 0, 0, 0, 0);
         daylightWash.GetComponent<Image>().raycastTarget = false;
 
@@ -1395,16 +1432,13 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var portalTop = AddRow("Dungeon Map Top Overlay", portalPage, 8, TextAnchor.MiddleLeft);
         var portalTopImage = portalTop.GetComponent<Image>();
         portalTopImage.sprite = MapRoundedRectSprite();
-        portalTopImage.color = Rgba(255, 252, 244, 242);
+        portalTopImage.color = new Color(1f, 252f / 255f, 244f / 255f, 0f);
         portalTopImage.raycastTarget = false;
-        var portalTopOutline = portalTop.gameObject.AddComponent<Outline>();
-        portalTopOutline.effectColor = Rgba(31, 96, 122, 92);
-        portalTopOutline.effectDistance = new Vector2(1f, -1f);
         portalTop.anchorMin = new Vector2(1f, 1f);
         portalTop.anchorMax = new Vector2(1f, 1f);
         portalTop.pivot = new Vector2(1f, 1f);
         portalTop.anchoredPosition = new Vector2(-14f, -14f);
-        portalTop.sizeDelta = new Vector2(includeResetButton ? 430f : 330f, 56f);
+        portalTop.sizeDelta = new Vector2(includeResetButton ? 600f : 390f, 72f);
         var portalTopLayout = portalTop.GetComponent<HorizontalLayoutGroup>();
         portalTopLayout.padding = new RectOffset(10, 10, 7, 7);
         portalTopLayout.childForceExpandWidth = false;
@@ -1419,11 +1453,11 @@ public sealed partial class AetheriaGame : MonoBehaviour
                 ResetDungeonMapView();
                 ShowDungeonSelect();
             }, panelAltColor);
-            AddLayoutSize(resetButton.GetComponent<RectTransform>(), 86, 44);
+            AddLayoutSize(resetButton.GetComponent<RectTransform>(), 180, 60);
         }
 
         var townButton = AddButton(portalTop, "마을로", () => ShowTown("마을로 돌아왔습니다."), panelAltColor);
-        AddLayoutSize(townButton.GetComponent<RectTransform>(), 112, 44);
+        AddLayoutSize(townButton.GetComponent<RectTransform>(), 130, 60);
     }
 
     private void AddDungeonMapStatusOverlay(RectTransform portalPage, string title, string detail)
@@ -1436,8 +1470,8 @@ public sealed partial class AetheriaGame : MonoBehaviour
         statusPanel.anchoredPosition = new Vector2(14f, 14f);
         statusPanel.sizeDelta = new Vector2(620f, 72f);
         AddVertical(statusPanel, 1, TextAnchor.MiddleCenter, new RectOffset(14, 14, 7, 7));
-        AddText(statusPanel, title, 18, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, 26);
-        AddText(statusPanel, detail, 16, FontStyle.Normal, mutedColor, TextAnchor.MiddleCenter, 26);
+        AddText(statusPanel, title, 20, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, 26);
+        AddText(statusPanel, detail, 18, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, 26);
     }
 
     private void AddDungeonQuickStartOverlay(RectTransform portalPage, List<DungeonData> dungeons)
@@ -1458,7 +1492,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
         AddText(quickStart, "추천 던전", 20, FontStyle.Bold, manaColor, TextAnchor.MiddleCenter, 28);
         AddText(quickStart, recommended.number + ". " + recommended.name + "  ·  권장 Lv." + recommended.recommendedLevel, 22, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, 34);
-        AddText(quickStart, "빠른 시작: 추천 던전으로 바로 출발할 수 있어요.", 16, FontStyle.Normal, mutedColor, TextAnchor.MiddleCenter, 24);
+        AddText(quickStart, "빠른 시작: 추천 던전으로 바로 출발할 수 있어요.", 18, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, 24);
         var enter = AddButton(quickStart, "추천 전투 시작", () => StartCombat(recommended, false), goodColor);
         AddLayoutSize(enter.GetComponent<RectTransform>(), -1, 56);
         enter.interactable = IsDungeonUnlocked(recommended) && HasDungeonEncounter(recommended);
@@ -1973,19 +2007,36 @@ public sealed partial class AetheriaGame : MonoBehaviour
             statusColor = goldColor;
         }
 
-        var showRight = percent.x < 58f;
-        var verticalPivot = percent.y > 72f ? 0f : percent.y < 28f ? 1f : 0.5f;
-        var verticalOffset = percent.y > 72f ? 30f : percent.y < 28f ? -30f : 0f;
-        var zoom = Mathf.Max(0.01f, mapParent.localScale.x);
-        var window = AddPanel("Dungeon Info Popup", mapParent, Rgba(251, 253, 254, DungeonInfoPopupAlpha));
+        var popupParent = mapParent.parent as RectTransform;
+        if (popupParent == null)
+        {
+            return;
+        }
+
+        SetDungeonMapHudVisible(mapParent, false);
+
+        var pinWorld = mapParent.TransformPoint(DungeonMapLocalPoint(mapParent, percent));
+        var pinInViewport = (Vector2)popupParent.InverseTransformPoint(pinWorld);
+        var viewportRect = popupParent.rect;
+        var showRight = pinInViewport.x <= viewportRect.center.x;
+        var verticalPivot = pinInViewport.y > viewportRect.center.y + viewportRect.height * 0.18f
+            ? 1f
+            : pinInViewport.y < viewportRect.center.y - viewportRect.height * 0.18f ? 0f : 0.5f;
+        var popupSize = new Vector2(680f, 760f);
+        var window = AddPanel("Dungeon Info Popup", popupParent, Rgba(251, 253, 254, DungeonInfoPopupAlpha));
         AddSideAccent(window, statusColor);
         window.anchorMin = new Vector2(0.5f, 0.5f);
         window.anchorMax = window.anchorMin;
         window.pivot = new Vector2(showRight ? 0f : 1f, verticalPivot);
-        window.anchoredPosition = DungeonMapLocalPoint(mapParent, percent) + new Vector2((showRight ? 42f : -42f) / zoom, verticalOffset / zoom);
-        window.sizeDelta = new Vector2(620f, 680f);
-        window.localScale = new Vector3(1f / zoom, 1f / zoom, 1f);
-        window.anchoredPosition = ClampDungeonInfoPopupPosition(mapParent, window.anchoredPosition, window.sizeDelta, window.pivot, zoom);
+        window.sizeDelta = popupSize;
+        window.localScale = Vector3.one;
+        window.anchoredPosition = ClampRectToViewport(
+            popupParent,
+            pinInViewport + new Vector2(showRight ? 34f : -34f, 0f),
+            popupSize,
+            window.pivot,
+            18f);
+        window.SetAsLastSibling();
         var popupLayout = window.GetComponent<LayoutElement>();
         if (popupLayout != null)
         {
@@ -2000,33 +2051,34 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
         AddText(window, (region != null ? region.name : "미지의 대륙") + " / 권장 Lv." + dungeon.recommendedLevel + " / 구역 " + DungeonFloorCount(dungeon), 18, FontStyle.Bold, manaColor, TextAnchor.MiddleLeft, 32);
         AddText(window, DungeonRecommendedPowerText(dungeon), 16, FontStyle.Bold, underLevel ? goldColor : textColor, TextAnchor.UpperLeft, 50);
-        AddText(window, dungeon.description, 17, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 68);
+        AddText(window, dungeon.description, 17, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 76);
         AddDivider(window, statusColor);
-        AddText(window, DungeonLootRarityText(dungeon), 16, FontStyle.Bold, RarityColor(MaxRarityForDungeon(dungeon.number)), TextAnchor.UpperLeft, 72);
-        AddText(window, DungeonRewardAndDangerText(dungeon), 16, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 106);
+        AddText(window, DungeonLootRarityText(dungeon), 16, FontStyle.Bold, RarityColor(MaxRarityForDungeon(dungeon.number)), TextAnchor.UpperLeft, 88);
+        AddText(window, DungeonRewardAndDangerText(dungeon), 16, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 124);
         AddDivider(window, Rgba(148, 163, 184, 150));
-        AddText(window, "일반 적: " + DungeonMonsterSummary(dungeon) + "\n보스: " + DungeonBossName(dungeon), 16, FontStyle.Normal, mutedColor, TextAnchor.UpperLeft, 52);
-        AddText(window, "영웅 Lv." + player.level + "  HP " + player.hp + "/" + MaxHp() + "  MP " + player.mp + "/" + MaxMp() + "\n공격 " + Attack() + " / 마력 " + Magic() + " / 방어 " + Defense() + " / 속도 " + Speed(), 15, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 54);
+        AddText(window, "일반 적: " + DungeonMonsterSummary(dungeon) + "\n보스: " + DungeonBossName(dungeon), 16, FontStyle.Normal, mutedColor, TextAnchor.UpperLeft, 62);
+        AddText(window, "영웅 Lv." + player.level + "  HP " + player.hp + "/" + MaxHp() + "  MP " + player.mp + "/" + MaxMp() + "\n공격 " + Attack() + " / 마력 " + Magic() + " / 방어 " + Defense() + " / 속도 " + Speed(), 15, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 64);
 
         var buttons = AddRow("Dungeon Popup Buttons", window, 16, TextAnchor.MiddleRight);
-        AddLayoutSize(buttons, -1, 56);
-        var closeButton = AddButton(buttons, "닫기", () => Destroy(window.gameObject), panelAltColor);
-        AddLayoutSize(closeButton.GetComponent<RectTransform>(), 118, 48);
+        AddLayoutSize(buttons, -1, 60);
+        var closeButton = AddButton(buttons, "닫기", () =>
+        {
+            SetDungeonMapHudVisible(mapParent, true);
+            Destroy(window.gameObject);
+        }, panelAltColor);
+        AddLayoutSize(closeButton.GetComponent<RectTransform>(), 140, 52);
         var enterButton = AddButton(buttons, "전투 시작", () => StartCombat(dungeon, false), goodColor);
-        AddLayoutSize(enterButton.GetComponent<RectTransform>(), 150, 48);
+        AddLayoutSize(enterButton.GetComponent<RectTransform>(), 190, 52);
         enterButton.interactable = unlocked && HasDungeonEncounter(dungeon);
     }
 
-    private Vector2 ClampDungeonInfoPopupPosition(RectTransform mapParent, Vector2 position, Vector2 popupSize, Vector2 pivot, float zoom)
+    private Vector2 ClampRectToViewport(RectTransform viewport, Vector2 position, Vector2 popupSize, Vector2 pivot, float margin)
     {
-        var contentSize = DungeonMapContentSize(mapParent);
-        var effectiveZoom = Mathf.Max(0.01f, zoom);
-        var margin = 20f / effectiveZoom;
-        var effectiveSize = popupSize / effectiveZoom;
-        var minX = -contentSize.x * 0.5f + margin + effectiveSize.x * pivot.x;
-        var maxX = contentSize.x * 0.5f - margin - effectiveSize.x * (1f - pivot.x);
-        var minY = -contentSize.y * 0.5f + margin + effectiveSize.y * pivot.y;
-        var maxY = contentSize.y * 0.5f - margin - effectiveSize.y * (1f - pivot.y);
+        var bounds = viewport != null ? viewport.rect : new Rect(-960f, -540f, 1920f, 1080f);
+        var minX = bounds.xMin + margin + popupSize.x * pivot.x;
+        var maxX = bounds.xMax - margin - popupSize.x * (1f - pivot.x);
+        var minY = bounds.yMin + margin + popupSize.y * pivot.y;
+        var maxY = bounds.yMax - margin - popupSize.y * (1f - pivot.y);
 
         if (minX > maxX)
         {
@@ -2051,12 +2103,60 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
     private void ClearDungeonInfoPopups(RectTransform mapParent)
     {
-        for (var i = mapParent.childCount - 1; i >= 0; i--)
+        DestroyDungeonInfoPopupsUnder(mapParent);
+        DestroyDungeonInfoPopupsUnder(mapParent != null ? mapParent.parent as RectTransform : null);
+        SetDungeonMapHudVisible(mapParent, true);
+    }
+
+    private void DestroyDungeonInfoPopupsUnder(RectTransform parent)
+    {
+        if (parent == null)
         {
-            var child = mapParent.GetChild(i);
+            return;
+        }
+
+        for (var i = parent.childCount - 1; i >= 0; i--)
+        {
+            var child = parent.GetChild(i);
             if (child != null && child.name == "Dungeon Info Popup")
             {
                 Destroy(child.gameObject);
+            }
+        }
+    }
+
+    private void SetDungeonMapHudVisible(RectTransform mapParent, bool visible)
+    {
+        var portalPage = mapParent != null && mapParent.parent != null ? mapParent.parent.parent : null;
+        if (portalPage == null)
+        {
+            return;
+        }
+
+        var hiddenNames = new[] { "Dungeon Map Top Overlay", "Dungeon Map Status Overlay", "Dungeon Quick Start" };
+        for (var i = 0; i < hiddenNames.Length; i++)
+        {
+            var child = portalPage.Find(hiddenNames[i]);
+            if (child != null)
+            {
+                child.gameObject.SetActive(visible);
+            }
+        }
+
+        var mapButtons = mapParent.GetComponentsInChildren<Button>(true);
+        for (var i = 0; i < mapButtons.Length; i++)
+        {
+            mapButtons[i].gameObject.SetActive(visible);
+        }
+
+        // Pin glows are siblings of the pin buttons, so hiding only Button
+        // objects left marker light behind the transparent information popup.
+        for (var i = 0; i < mapParent.childCount; i++)
+        {
+            var child = mapParent.GetChild(i);
+            if (child != null && child.name.StartsWith("Dungeon Pin Glow ", StringComparison.Ordinal))
+            {
+                child.gameObject.SetActive(visible);
             }
         }
     }
@@ -2138,7 +2238,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
     private Button AddMapRegionButton(RectTransform parent, DungeonMapRegion region, int dungeonCount, Action onClick)
     {
         var hit = CreateMapButtonObject("Region Hit " + region.key, parent, new Vector2(region.center.x, region.center.y), new Vector2(DungeonMapBaseWidth * 0.18f, DungeonMapBaseHeight * 0.15f), onClick);
-        hit.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.001f);
+        hit.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
         hit.interactable = dungeonCount > 0;
 
         var button = CreateMapButtonObject("Region " + region.key, parent, new Vector2(region.center.x, region.center.y), new Vector2(190f, 52f), onClick);
@@ -2158,16 +2258,16 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
         var text = AddText(button.transform, region.name, 20, FontStyle.Bold, Rgb(255, 236, 179), TextAnchor.MiddleCenter, 46);
         text.raycastTarget = false;
-        Stretch(text.GetComponent<RectTransform>(), 10, 0, 10, 0);
+        Stretch(text.GetComponent<RectTransform>(), 12, 0, 54, 0);
 
-        var count = AddText(button.transform, dungeonCount + "개", 16, FontStyle.Bold, Rgb(250, 204, 21), TextAnchor.UpperRight, 18);
+        var count = AddText(button.transform, dungeonCount + "개", 16, FontStyle.Bold, Rgb(250, 204, 21), TextAnchor.UpperRight, 24);
         count.raycastTarget = false;
         var countRect = count.GetComponent<RectTransform>();
         countRect.anchorMin = new Vector2(1f, 1f);
         countRect.anchorMax = new Vector2(1f, 1f);
         countRect.pivot = new Vector2(1f, 1f);
-        countRect.anchoredPosition = new Vector2(-8f, -4f);
-        countRect.sizeDelta = new Vector2(44f, 18f);
+        countRect.anchoredPosition = new Vector2(-6f, -3f);
+        countRect.sizeDelta = new Vector2(48f, 24f);
         button.interactable = dungeonCount > 0;
         return button;
     }
@@ -2177,7 +2277,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddMapGlow(parent, "Dungeon Pin Glow " + dungeon.number, percent, bossCleared ? goodColor : unlocked ? goldColor : mutedColor, unlocked ? 0.22f : 0.08f);
         var hit = CreateMapButtonObject("Dungeon Pin Hit " + dungeon.number, parent, percent, new Vector2(98f, 98f), onClick);
         ApplyDungeonMapCounterScale(hit.GetComponent<RectTransform>(), parent);
-        hit.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.001f);
+        hit.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
 
         var button = CreateMapButtonObject("Dungeon Pin " + dungeon.number, parent, percent, new Vector2(50f, 50f), onClick);
         ApplyDungeonMapCounterScale(button.GetComponent<RectTransform>(), parent);
@@ -2209,9 +2309,6 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var labelImage = label.GetComponent<Image>();
         labelImage.sprite = MapRoundedRectSprite();
         labelImage.raycastTarget = false;
-        var labelOutline = label.gameObject.AddComponent<Outline>();
-        labelOutline.effectColor = unlocked ? Rgba(245, 190, 92, 170) : Rgba(148, 163, 184, 100);
-        labelOutline.effectDistance = new Vector2(1.2f, -1.2f);
         var labelText = AddText(label, dungeon.number + ". " + dungeon.name, 16, FontStyle.Bold, unlocked ? Rgb(255, 247, 210) : Rgb(203, 213, 225), TextAnchor.MiddleCenter, 40);
         labelText.raycastTarget = false;
         labelText.resizeTextForBestFit = true;
@@ -2829,7 +2926,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
     {
         var unlocked = IsDungeonUnlocked(dungeon);
         var underLevel = player.level < dungeon.recommendedLevel;
-        var card = AddPanel(dungeon.name, parent, unlocked ? panelColor : Rgba(232, 236, 241, 246));
+        var card = AddPanel("Dungeon Card " + dungeon.name, parent, unlocked ? panelColor : Rgba(232, 236, 241, 246));
         AddVertical(card, 8, TextAnchor.UpperLeft, new RectOffset(18, 18, 16, 16));
 
         AddText(card, dungeon.name, 25, FontStyle.Bold, unlocked ? goldColor : mutedColor, TextAnchor.MiddleLeft, 34);
@@ -2983,7 +3080,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         for (var i = 0; i < lines.Count; i++)
         {
             var newest = i == lines.Count - 1;
-            AddText(list, lines[i], newest ? 19 : 18, newest ? FontStyle.Bold : FontStyle.Normal, newest ? textColor : mutedColor, TextAnchor.MiddleLeft, 32);
+            AddText(list, lines[i], newest ? 19 : 18, newest ? FontStyle.Bold : FontStyle.Normal, newest ? textColor : mutedColor, TextAnchor.MiddleLeft, 44);
         }
 
         if (scroll != null)
@@ -3451,19 +3548,21 @@ public sealed partial class AetheriaGame : MonoBehaviour
     private void ShowVictoryResult(string title, string message, string buttonLabel, Action nextAction)
     {
         EnsurePlayerData();
-        ShowCombat(true);
         currentScreen = AetheriaScreen.Victory;
+        ClearRoot();
         PlayVictorySound();
 
-        var page = AddFlatPanel("Victory Result", root, new Color(0f, 0f, 0f, 0f));
+        var page = AddPanel("Victory Result", root, pageColor);
         Stretch(page, 0, 0, 0, 0);
-        page.GetComponent<Image>().raycastTarget = true;
-        AddVertical(page, 14, TextAnchor.MiddleCenter, new RectOffset(70, 70, 54, 54));
 
         var panel = AddPanel("Victory Panel", page, Rgba(232, 248, 240, 250));
-        AddSideAccent(panel, goodColor);
-        AddLayoutSize(panel, 700, 600);
-        AddVertical(panel, 10, TextAnchor.MiddleCenter, new RectOffset(28, 28, 24, 24));
+        panel.anchorMin = new Vector2(0.5f, 0.5f);
+        panel.anchorMax = panel.anchorMin;
+        panel.pivot = new Vector2(0.5f, 0.5f);
+        panel.anchoredPosition = Vector2.zero;
+        panel.sizeDelta = new Vector2(760f, 660f);
+        ApplyCharacterThemePanelFrame(panel, player.portraitName, true);
+        AddVertical(panel, 10, TextAnchor.MiddleCenter, new RectOffset(60, 60, 44, 88));
 
         AddCharacterArt(panel, player.portraitName, "victory", 180, 180);
         AddText(panel, title, 34, FontStyle.Bold, goldColor, TextAnchor.MiddleCenter, 50);
@@ -3502,19 +3601,21 @@ public sealed partial class AetheriaGame : MonoBehaviour
     private void ShowDefeatResult(int lostGold)
     {
         EnsurePlayerData();
-        ShowCombat(true);
         currentScreen = AetheriaScreen.Defeat;
+        ClearRoot();
         PlayDefeatSound();
 
-        var page = AddFlatPanel("Defeat Result", root, new Color(0f, 0f, 0f, 0f));
+        var page = AddPanel("Defeat Result", root, pageColor);
         Stretch(page, 0, 0, 0, 0);
-        page.GetComponent<Image>().raycastTarget = true;
-        AddVertical(page, 14, TextAnchor.MiddleCenter, new RectOffset(70, 70, 54, 54));
 
         var panel = AddPanel("Defeat Panel", page, Rgba(255, 238, 240, 250));
-        AddSideAccent(panel, dangerColor);
-        AddLayoutSize(panel, 700, 570);
-        AddVertical(panel, 10, TextAnchor.MiddleCenter, new RectOffset(28, 28, 24, 24));
+        panel.anchorMin = new Vector2(0.5f, 0.5f);
+        panel.anchorMax = panel.anchorMin;
+        panel.pivot = new Vector2(0.5f, 0.5f);
+        panel.anchoredPosition = Vector2.zero;
+        panel.sizeDelta = new Vector2(760f, 630f);
+        ApplyCharacterThemePanelFrame(panel, player.portraitName, true);
+        AddVertical(panel, 10, TextAnchor.MiddleCenter, new RectOffset(60, 60, 44, 88));
 
         AddCharacterArt(panel, player.portraitName, "defeat", 170, 170);
         AddText(panel, "전투 패배", 34, FontStyle.Bold, dangerColor, TextAnchor.MiddleCenter, 50);
@@ -3536,12 +3637,15 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
         var page = AddPanel("Game Clear", root, pageColor);
         Stretch(page, 0, 0, 0, 0);
-        AddVertical(page, 24, TextAnchor.MiddleCenter, new RectOffset(90, 90, 70, 70));
 
         var panel = AddPanel("Game Clear Panel", page, Rgba(255, 249, 232, 250));
-        AddSideAccent(panel, goldColor);
-        AddLayoutSize(panel, 1080, 780);
-        AddVertical(panel, 18, TextAnchor.MiddleCenter, new RectOffset(48, 48, 42, 42));
+        panel.anchorMin = new Vector2(0.5f, 0.5f);
+        panel.anchorMax = panel.anchorMin;
+        panel.pivot = new Vector2(0.5f, 0.5f);
+        panel.anchoredPosition = Vector2.zero;
+        panel.sizeDelta = new Vector2(1160f, 820f);
+        ApplyCharacterThemePanelFrame(panel, player.portraitName, true);
+        AddVertical(panel, 18, TextAnchor.MiddleCenter, new RectOffset(68, 68, 50, 90));
 
         AddCharacterArt(panel, player.portraitName, "victory", 200, 200);
         AddText(panel, "AETHERIA 정복 완료", 58, FontStyle.Bold, goldColor, TextAnchor.MiddleCenter, 86);
@@ -6293,15 +6397,8 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
     private Color ClassAccentColor(string heroClass)
     {
-        var classId = GearClassId(heroClass);
-        if (classId == "mage") return Rgb(59, 130, 246);
-        if (classId == "rogue") return Rgb(168, 85, 247);
-        if (classId == "priest") return Rgb(250, 204, 21);
-        if (classId == "bomber") return Rgb(239, 68, 68);
-        if (classId == "spirit") return Rgb(20, 184, 166);
-        if (classId == "archer") return Rgb(34, 197, 94);
-        if (classId == "monk") return Rgb(245, 158, 11);
-        return Rgb(148, 163, 184);
+        var theme = CharacterThemeForKey(heroClass);
+        return theme == null ? Rgb(148, 163, 184) : theme.accent;
     }
 
     private List<HeroClass> HeroClasses()
@@ -7185,20 +7282,58 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var go = new GameObject(name, typeof(RectTransform), typeof(Image));
         go.transform.SetParent(parent, false);
         var image = go.GetComponent<Image>();
-        if (IsGeneratedScreenPage(name, parent))
-        {
-            color = new Color(0, 0, 0, 0);
-        }
-        image.color = color;
-        image.raycastTarget = color.a > 0.05f;
+        var requestedColor = color;
+        var isScreenPage = IsGeneratedScreenPage(name, parent);
+        image.color = ResolvePanelSurfaceColor(name, requestedColor, isScreenPage, parent);
+        image.raycastTarget = ShouldPanelReceiveRaycasts(name, image.color, isScreenPage);
         var rect = go.GetComponent<RectTransform>();
-        if (color.a > 0.05f && name != "Fill")
-        {
-            var outline = go.AddComponent<Outline>();
-            outline.effectColor = Rgba(32, 60, 82, 70);
-            outline.effectDistance = new Vector2(1.5f, -1.5f);
-        }
         return rect;
+    }
+
+    private Color ResolvePanelSurfaceColor(string name, Color requestedColor, bool isScreenPage, Transform parent)
+    {
+        if (isScreenPage || requestedColor.a <= 0.05f)
+        {
+            return new Color(requestedColor.r, requestedColor.g, requestedColor.b, 0f);
+        }
+
+        if (ShouldPreservePanelGraphic(name))
+        {
+            return requestedColor;
+        }
+
+        // Every layout/content surface is deliberately transparent. Buttons,
+        // bars, generated artwork and decorative frames remain visible, but no
+        // generic rectangular UX fill is allowed to appear on any screen.
+        return new Color(requestedColor.r, requestedColor.g, requestedColor.b, 0f);
+    }
+
+    private bool ShouldPanelReceiveRaycasts(string name, Color displayedColor, bool isScreenPage)
+    {
+        if (isScreenPage || name == "Root")
+        {
+            return false;
+        }
+
+        return displayedColor.a > 0.05f
+            || name == "Dungeon Info Popup"
+            || name == "Dungeon World Map Panel"
+            || name.EndsWith(" Viewport", StringComparison.Ordinal);
+    }
+
+    private static bool ShouldPreservePanelGraphic(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return false;
+        }
+
+        return name == "Fill"
+            || name.EndsWith(" Bar", StringComparison.Ordinal)
+            || name.EndsWith(" Image", StringComparison.Ordinal)
+            || name.Contains("World Map Image")
+            || name.Contains("Opening World Map")
+            || name.Contains("Closed Dungeon Scroll");
     }
 
     private RectTransform AddFlatPanel(string name, Transform parent, Color color)
@@ -7490,7 +7625,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             return;
         }
 
-        var track = AddFlatPanel("Scrollbar Track", viewport, Rgba(174, 194, 209, 150));
+        var track = AddFlatPanel("Scrollbar Track", viewport, new Color(174f / 255f, 194f / 255f, 209f / 255f, 0f));
         track.anchorMin = new Vector2(1f, 0f);
         track.anchorMax = new Vector2(1f, 1f);
         track.pivot = new Vector2(1f, 0.5f);
@@ -7565,32 +7700,47 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var compactMapLabel = currentScreen == AetheriaScreen.DungeonSelect
             && size <= 16
             && (parentName.Contains("Pin Label") || parentName.StartsWith("Region "));
-        var readableSize = compactMapLabel ? Mathf.Max(16, size) : Mathf.Max(18, size);
-        var allowBestFit = compactMapLabel
-            || (value != null && (value.Length > 28 || value.Contains("\n")));
+        var readableSize = compactMapLabel ? Mathf.Max(18, size) : Mathf.Max(18, size);
         text.fontSize = readableSize;
-        text.fontStyle = style;
+        text.fontStyle = style == FontStyle.Normal ? FontStyle.Bold : style;
+        color = EnsureHighContrastTextColor(ResolveCharacterThemeTextColor(color, size, style));
         text.color = color;
         text.alignment = alignment;
         text.raycastTarget = false;
         text.horizontalOverflow = HorizontalWrapMode.Wrap;
         text.verticalOverflow = VerticalWrapMode.Truncate;
-        text.resizeTextForBestFit = allowBestFit;
-        text.resizeTextMinSize = compactMapLabel
-            ? 16
-            : Mathf.Max(17, readableSize - DynamicTextShrink(readableSize, value));
+        text.resizeTextForBestFit = true;
+        text.resizeTextMinSize = Mathf.Min(16, readableSize);
         text.resizeTextMaxSize = readableSize;
         text.lineSpacing = value != null && value.Contains("\n") ? 1.18f : 1f;
 
-        if (color.grayscale >= 0.58f)
-        {
-            var shadow = go.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, 0.42f);
-            shadow.effectDistance = new Vector2(0.8f, -0.8f);
-        }
+        // All generic UX boxes are invisible, so use one unambiguous treatment:
+        // light glyphs, a near-black outline, and a short dark shadow. Varying the
+        // stroke by text size prevents small Korean glyph counters from filling in.
+        var stroke = readableSize >= 32 ? 1.8f : readableSize >= 22 ? 1.55f : 1.25f;
+        var outline = go.AddComponent<Outline>();
+        outline.effectColor = new Color(0.01f, 0.02f, 0.035f, 0.96f);
+        outline.effectDistance = new Vector2(stroke, -stroke);
+
+        var shadow = go.AddComponent<Shadow>();
+        shadow.effectColor = new Color(0f, 0f, 0f, 0.38f);
+        shadow.effectDistance = new Vector2(0.9f, -0.9f);
 
         AddLayoutSize(go.GetComponent<RectTransform>(), -1, preferredHeight);
         return text;
+    }
+
+    private static Color EnsureHighContrastTextColor(Color color)
+    {
+        var opaque = new Color(color.r, color.g, color.b, 1f);
+        var luminance = opaque.r * 0.2126f + opaque.g * 0.7152f + opaque.b * 0.0722f;
+        if (luminance >= 0.82f)
+        {
+            return opaque;
+        }
+
+        var whiteBlend = Mathf.Clamp01((0.82f - luminance) / Mathf.Max(0.01f, 1f - luminance));
+        return Color.Lerp(opaque, Color.white, whiteBlend);
     }
 
     private int DynamicTextShrink(int size, string value)
@@ -7623,10 +7773,6 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var surface = Color.Lerp(Rgb(248, 251, 253), accent, 0.14f);
         image.color = surface;
 
-        var outline = go.AddComponent<Outline>();
-        outline.effectColor = new Color(accent.r, accent.g, accent.b, 0.72f);
-        outline.effectDistance = new Vector2(2f, -2f);
-
         var button = go.GetComponent<Button>();
         button.targetGraphic = image;
         if (onClick != null)
@@ -7638,6 +7784,25 @@ public sealed partial class AetheriaGame : MonoBehaviour
             });
         }
 
+        var hasCharacterThemeSkin = ApplyCharacterThemeButtonFrame(button);
+        var hasIllustratedSkin = hasCharacterThemeSkin;
+        if (!hasIllustratedSkin)
+        {
+            hasIllustratedSkin = ApplyGeneratedButtonSkin(image, accent);
+        }
+
+        if (hasCharacterThemeSkin)
+        {
+            image.color = Color.Lerp(Color.white, accent, 0.16f);
+        }
+
+        if (!hasIllustratedSkin)
+        {
+            var outline = go.AddComponent<Outline>();
+            outline.effectColor = new Color(accent.r, accent.g, accent.b, 0.72f);
+            outline.effectDistance = new Vector2(2f, -2f);
+        }
+
         var colors = button.colors;
         colors.normalColor = Color.white;
         colors.highlightedColor = Color.Lerp(Color.white, accent, 0.08f);
@@ -7646,16 +7811,40 @@ public sealed partial class AetheriaGame : MonoBehaviour
         button.colors = colors;
 
         var rect = go.GetComponent<RectTransform>();
-        AddSideAccent(rect, accent);
+        if (!hasIllustratedSkin)
+        {
+            AddSideAccent(rect, accent);
+        }
         AddLayoutSize(rect, 260, 62);
 
         var textSize = ButtonTextSize(label);
-        var buttonTextColor = textColor;
-        var labelText = AddText(go.transform, label, textSize, FontStyle.Bold, buttonTextColor, TextAnchor.MiddleCenter, 62);
-        labelText.resizeTextMinSize = Mathf.Max(18, textSize - 4);
-        Stretch(labelText.GetComponent<RectTransform>(), 16, 0, 12, 0);
+        var resolvedButtonTextColor = hasCharacterThemeSkin
+            ? CharacterThemeButtonText(ScreenCharacterThemeKey(), Color.white)
+            : buttonTextColor;
+        var resolvedDisabledTextColor = hasCharacterThemeSkin
+            ? Rgb(196, 205, 216)
+            : disabledButtonTextColor;
+        var labelText = AddText(go.transform, label, textSize, FontStyle.Bold, resolvedButtonTextColor, TextAnchor.MiddleCenter, 62);
+        labelText.resizeTextMinSize = 17;
+        Stretch(labelText.GetComponent<RectTransform>(), 34, 4, 34, 4);
+        var labelOutline = labelText.GetComponent<Outline>();
+        if (labelOutline != null)
+        {
+            labelOutline.effectColor = hasCharacterThemeSkin
+                ? new Color(1f, 1f, 1f, 0.94f)
+                : new Color(1f, 1f, 1f, 0.78f);
+            labelOutline.effectDistance = hasCharacterThemeSkin
+                ? new Vector2(1.1f, -1.1f)
+                : new Vector2(0.55f, -0.55f);
+        }
+        var labelShadow = labelText.GetComponent<Shadow>();
+        if (labelShadow != null)
+        {
+            labelShadow.effectColor = Color.clear;
+            labelShadow.effectDistance = Vector2.zero;
+        }
         var textPresenter = go.AddComponent<UiButtonTextPresenter>();
-        textPresenter.Configure(button, labelText, buttonTextColor, Rgb(116, 128, 140));
+        textPresenter.Configure(button, labelText, resolvedButtonTextColor, resolvedDisabledTextColor);
         return button;
     }
 

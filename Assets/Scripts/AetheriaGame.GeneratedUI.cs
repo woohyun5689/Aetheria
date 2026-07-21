@@ -38,7 +38,10 @@ public sealed partial class AetheriaGame
             sprite = Resources.Load<Sprite>(resourcePath);
         }
 
-        generatedSpriteCache[cacheKey] = sprite;
+        if (sprite != null)
+        {
+            generatedSpriteCache[cacheKey] = sprite;
+        }
         return sprite;
     }
 
@@ -68,13 +71,27 @@ public sealed partial class AetheriaGame
 
     private void AddGeneratedScreenBackdrop()
     {
-        var resourcePath = GeneratedBackdropPath();
-        if (root == null || string.IsNullOrEmpty(resourcePath))
+        if (root == null)
+        {
+            return;
+        }
+
+        var fallbackPath = GeneratedBackdropPath();
+        var characterPath = CharacterBackdropPath();
+        var resourcePath = string.IsNullOrEmpty(characterPath) ? fallbackPath : characterPath;
+        if (string.IsNullOrEmpty(resourcePath))
         {
             return;
         }
 
         var sprite = LoadGeneratedSprite(resourcePath, Vector4.zero);
+        var usesCharacterBackdrop = sprite != null && resourcePath == characterPath;
+        if (sprite == null && resourcePath != fallbackPath && !string.IsNullOrEmpty(fallbackPath))
+        {
+            resourcePath = fallbackPath;
+            sprite = LoadGeneratedSprite(resourcePath, Vector4.zero);
+        }
+
         if (sprite == null)
         {
             return;
@@ -91,7 +108,9 @@ public sealed partial class AetheriaGame
         backgroundFitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
         backgroundFitter.aspectRatio = sprite.rect.width / Mathf.Max(1f, sprite.rect.height);
 
-        var veilAlpha = currentScreen == AetheriaScreen.MainMenu ? 0.03f : 0.06f;
+        var veilAlpha = currentScreen == AetheriaScreen.MainMenu
+            ? 0.03f
+            : usesCharacterBackdrop ? 0.08f : 0.06f;
         var veil = AddFlatPanel("Generated Screen Veil", root, new Color(0.92f, 0.97f, 1f, veilAlpha));
         Stretch(veil, 0, 0, 0, 0);
         veil.SetSiblingIndex(1);
@@ -160,16 +179,15 @@ public sealed partial class AetheriaGame
 
     private bool ApplyGeneratedButtonSkin(Image image, Color accent)
     {
-        var sprite = LoadGeneratedSprite("UI/Generated/button_frame_bright", Vector4.zero);
+        var sprite = LoadGeneratedSprite("UI/Generated/button_frame_bright", new Vector4(272f, 136f, 272f, 136f));
         if (image == null || sprite == null)
         {
             return false;
         }
 
         image.sprite = sprite;
-        // The source frame is already close to the aspect ratio of our buttons.
-        // Scaling the complete frame keeps its side ornaments intact on compact map controls.
-        image.type = Image.Type.Simple;
+        image.type = Image.Type.Sliced;
+        image.pixelsPerUnitMultiplier = 8f;
         image.color = Color.Lerp(Color.white, accent, 0.18f);
         return true;
     }
@@ -225,7 +243,13 @@ public sealed partial class AetheriaGame
     {
         var holder = AddFlatPanel("Character Portrait " + state, parent, new Color(0, 0, 0, 0));
         AddLayoutSize(holder, width, height);
-        var image = holder.GetComponent<Image>();
+        holder.GetComponent<Image>().raycastTarget = false;
+        AddCharacterThemeHalo(holder, portraitName, 0.18f);
+
+        var visual = AddFlatPanel("Character Portrait Visual", holder, Color.clear);
+        Stretch(visual, 0, 0, 0, 0);
+        visual.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+        var image = visual.GetComponent<Image>();
         image.raycastTarget = false;
         image.sprite = LoadCharacterStateSprite(portraitName, state);
         image.preserveAspect = true;

@@ -124,7 +124,7 @@ public sealed partial class AetheriaGame
         arenaRow.childForceExpandHeight = true;
 
         combatHeroPanel = AddPanel("Player Combatant", combatStageContent, Rgba(231, 247, 252, 239));
-        AddSideAccent(combatHeroPanel, manaColor);
+        AddSideAccent(combatHeroPanel, ActiveCharacterAccent(manaColor));
         AddLayoutSize(combatHeroPanel, 690, -1);
         AddVertical(combatHeroPanel, 5, TextAnchor.UpperCenter, new RectOffset(16, 16, 10, 10));
         AddHeroCombatArt(combatHeroPanel);
@@ -244,7 +244,9 @@ public sealed partial class AetheriaGame
         AddLayoutSize(holder, 330, 285);
         holder.GetComponent<Image>().raycastTarget = false;
         var heroGlowAlpha = combatPresentationPhase == CombatPresentationPhase.EnemyResolving ? 0.07f : 0.28f;
-        combatHeroGlow = AddCombatGlow(holder, new Color(manaColor.r, manaColor.g, manaColor.b, heroGlowAlpha));
+        var heroTheme = ActiveCharacterAccent(manaColor);
+        AddCharacterThemeHalo(holder, player.portraitName, 0.20f);
+        combatHeroGlow = AddCombatGlow(holder, new Color(heroTheme.r, heroTheme.g, heroTheme.b, heroGlowAlpha));
         combatHeroArt = AddFlatPanel("Hero Combat Art", holder, Color.clear);
         Stretch(combatHeroArt, 0, 0, 0, 0);
         combatHeroArt.GetComponent<Image>().raycastTarget = false;
@@ -412,7 +414,7 @@ public sealed partial class AetheriaGame
         Stretch(overlay, 0, 0, 0, 0);
         overlayObject.GetComponent<LayoutElement>().ignoreLayout = true;
         var image = overlayObject.GetComponent<Image>();
-        image.color = new Color(0f, 0f, 0f, 0.001f);
+        image.color = new Color(0f, 0f, 0f, 0f);
         image.raycastTarget = true;
         var button = overlayObject.GetComponent<Button>();
         button.targetGraphic = image;
@@ -561,13 +563,13 @@ public sealed partial class AetheriaGame
     {
         if (phase == CombatPresentationPhase.EnemyResolving)
         {
-            return Rgba(255, 231, 234, 252);
+            return new Color(1f, 231f / 255f, 234f / 255f, 0f);
         }
         if (phase == CombatPresentationPhase.Result)
         {
-            return Rgba(255, 247, 218, 252);
+            return new Color(1f, 247f / 255f, 218f / 255f, 0f);
         }
-        return Rgba(224, 245, 252, 252);
+        return new Color(224f / 255f, 245f / 255f, 252f / 255f, 0f);
     }
 
     private void StartPlayerResolvedPresentation(CombatPresentationEvent presentation)
@@ -775,7 +777,7 @@ public sealed partial class AetheriaGame
             elapsed += Time.unscaledDeltaTime;
             var progress = Mathf.Clamp01(elapsed / duration);
             var pulse = Mathf.Sin(progress * Mathf.PI);
-            art.localScale = Vector3.one * (1f + pulse * (magic ? 0.10f : 0.065f));
+            art.localScale = Vector3.one * (1f + pulse * (magic ? 0.045f : 0.035f));
             if (glow != null)
             {
                 glow.color = new Color(baseGlow.r, baseGlow.g, baseGlow.b, Mathf.Clamp01(baseGlow.a + pulse * 0.34f));
@@ -793,7 +795,7 @@ public sealed partial class AetheriaGame
             elapsed += Time.unscaledDeltaTime;
             var progress = Mathf.Clamp01(elapsed / duration);
             var pulse = Mathf.Sin(progress * Mathf.PI * 2f) * (1f - progress);
-            art.localScale = Vector3.one * (1.08f + pulse * 0.08f);
+            art.localScale = Vector3.one * (1f + pulse * 0.045f);
             if (glow != null)
             {
                 glow.color = new Color(baseGlow.r, baseGlow.g, baseGlow.b, Mathf.Clamp01(baseGlow.a + Mathf.Abs(pulse) * 0.48f));
@@ -946,7 +948,7 @@ public sealed partial class AetheriaGame
         {
             return null;
         }
-        var go = new GameObject("Combat Floating Text", typeof(RectTransform), typeof(Text), typeof(Outline));
+        var go = new GameObject("Combat Floating Text", typeof(RectTransform), typeof(Text), typeof(Outline), typeof(Shadow));
         go.transform.SetParent(combatFxLayer, false);
         var rect = go.GetComponent<RectTransform>();
         var anchor = targetIsPlayer ? new Vector2(0.27f, 0.60f) : new Vector2(0.73f, 0.60f);
@@ -961,12 +963,15 @@ public sealed partial class AetheriaGame
         text.alignment = TextAnchor.MiddleCenter;
         text.horizontalOverflow = HorizontalWrapMode.Wrap;
         text.verticalOverflow = VerticalWrapMode.Overflow;
-        text.color = color;
+        text.color = EnsureHighContrastTextColor(color);
         text.text = value;
         text.raycastTarget = false;
         var outline = go.GetComponent<Outline>();
-        outline.effectColor = new Color(1f, 1f, 1f, 0.92f);
+        outline.effectColor = new Color(0.01f, 0.02f, 0.035f, 0.98f);
         outline.effectDistance = new Vector2(2f, -2f);
+        var shadow = go.GetComponent<Shadow>();
+        shadow.effectColor = new Color(0f, 0f, 0f, 0.48f);
+        shadow.effectDistance = new Vector2(1f, -1f);
         return text;
     }
 
@@ -1045,7 +1050,7 @@ public sealed partial class AetheriaGame
         if (combatTurnText != null)
         {
             combatTurnText.text = CombatPhaseTitle(phase);
-            combatTurnText.color = CombatPhaseAccent(phase);
+            combatTurnText.color = EnsureHighContrastTextColor(CombatPhaseAccent(phase));
         }
         if (combatTurnPillImage != null)
         {
@@ -1054,17 +1059,18 @@ public sealed partial class AetheriaGame
         if (combatActionText != null && !string.IsNullOrEmpty(action))
         {
             combatActionText.text = action;
-            combatActionText.color = CombatPhaseAccent(phase);
+            combatActionText.color = EnsureHighContrastTextColor(CombatPhaseAccent(phase));
         }
         if (combatCommandText != null)
         {
             combatCommandText.text = CombatPhaseCommandPrompt(phase);
-            combatCommandText.color = CombatPhaseAccent(phase);
+            combatCommandText.color = EnsureHighContrastTextColor(CombatPhaseAccent(phase));
         }
         if (combatHeroGlow != null)
         {
             var alpha = phase == CombatPresentationPhase.EnemyResolving ? 0.07f : (phase == CombatPresentationPhase.Result ? 0.16f : 0.28f);
-            combatHeroGlow.color = new Color(manaColor.r, manaColor.g, manaColor.b, alpha);
+            var heroTheme = ActiveCharacterAccent(manaColor);
+            combatHeroGlow.color = new Color(heroTheme.r, heroTheme.g, heroTheme.b, alpha);
         }
         if (combatEnemyGlow != null)
         {
@@ -1086,7 +1092,7 @@ public sealed partial class AetheriaGame
         if (combatActionText != null)
         {
             combatActionText.text = message;
-            combatActionText.color = dangerColor;
+            combatActionText.color = EnsureHighContrastTextColor(dangerColor);
         }
     }
 

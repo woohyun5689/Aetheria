@@ -1,0 +1,611 @@
+fileFormatVersion: 2
+guid: 4d4a7732e14f86a49be0aad7025fb58b
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -6770585691591689520
+    second: screen_overlay_0
+  - first:
+      213: -1273829994230756709
+    second: screen_overlay_1
+  - first:
+      213: -2725131317257907413
+    second: screen_overlay_2
+  - first:
+      213: 8092837404049280601
+    second: screen_overlay_3
+  - first:
+      213: -5962720992006157192
+    second: screen_overlay_4
+  - first:
+      213: 3669263020128933326
+    second: screen_overlay_5
+  - first:
+      213: 4466224160156211110
+    second: screen_overlay_6
+  - first:
+      213: -876573653777826150
+    second: screen_overlay_7
+  - first:
+      213: -8469102865601246411
+    second: screen_overlay_8
+  - first:
+      213: -4555845371641180956
+    second: screen_overlay_9
+  - first:
+      213: -6444220671730531601
+    second: screen_overlay_10
+  - first:
+      213: 8871585637584562556
+    second: screen_overlay_11
+  - first:
+      213: 7104778989847550061
+    second: screen_overlay_12
+  - first:
+      213: -4538659750040480045
+    second: screen_overlay_13
+  - first:
+      213: 425126070484739510
+    second: screen_overlay_14
+  - first:
+      213: -7486276909094405508
+    second: screen_overlay_15
+  - first:
+      213: -4229446172060953669
+    second: screen_overlay_16
+  - first:
+      213: -5746580073875638314
+    second: screen_overlay_17
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: screen_overlay_0
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 575
+        width: 162
+        height: 461
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0dab5538f2c0a02a0800000000000000
+      internalID: -6770585691591689520
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_1
+      rect:
+        serializedVersion: 2
+        x: 204
+        y: 1002
+        width: 484
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9a43a98e52725ee0800000000000000
+      internalID: -1273829994230756709
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_2
+      rect:
+        serializedVersion: 2
+        x: 695
+        y: 990
+        width: 197
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b23dc8c51836e2ad0800000000000000
+      internalID: -2725131317257907413
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_3
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 960
+        width: 128
+        height: 83
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 95e0a55cdb88f4070800000000000000
+      internalID: 8092837404049280601
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_4
+      rect:
+        serializedVersion: 2
+        x: 1028
+        y: 990
+        width: 197
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 87c45b089d8204da0800000000000000
+      internalID: -5962720992006157192
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_5
+      rect:
+        serializedVersion: 2
+        x: 1233
+        y: 1002
+        width: 484
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec51346b647dbe230800000000000000
+      internalID: 3669263020128933326
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_6
+      rect:
+        serializedVersion: 2
+        x: 1720
+        y: 877
+        width: 160
+        height: 159
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6a7d069e5373bfd30800000000000000
+      internalID: 4466224160156211110
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_7
+      rect:
+        serializedVersion: 2
+        x: 1838
+        y: 573
+        width: 31
+        height: 302
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a9e3b1bf7e8c5d3f0800000000000000
+      internalID: -876573653777826150
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_8
+      rect:
+        serializedVersion: 2
+        x: 38
+        y: 511
+        width: 55
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 53b4891a0d3b77a80800000000000000
+      internalID: -8469102865601246411
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_9
+      rect:
+        serializedVersion: 2
+        x: 1826
+        y: 511
+        width: 56
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ec48bbb5c266c0c0800000000000000
+      internalID: -4555845371641180956
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_10
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 207
+        width: 31
+        height: 300
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe2c54721778196a0800000000000000
+      internalID: -6444220671730531601
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_11
+      rect:
+        serializedVersion: 2
+        x: 1837
+        y: 207
+        width: 32
+        height: 300
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c796faa32243e1b70800000000000000
+      internalID: 8871585637584562556
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_12
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 44
+        width: 162
+        height: 162
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d68958939de399260800000000000000
+      internalID: 7104778989847550061
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_13
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 67
+        width: 485
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d6597211017301c0800000000000000
+      internalID: -4538659750040480045
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_14
+      rect:
+        serializedVersion: 2
+        x: 695
+        y: 56
+        width: 222
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b52000a8e956e500800000000000000
+      internalID: 425126070484739510
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_15
+      rect:
+        serializedVersion: 2
+        x: 1003
+        y: 56
+        width: 222
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c7af73fa0d66b1890800000000000000
+      internalID: -7486276909094405508
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_16
+      rect:
+        serializedVersion: 2
+        x: 1232
+        y: 67
+        width: 483
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb3dba57d1dfd45c0800000000000000
+      internalID: -4229446172060953669
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: screen_overlay_17
+      rect:
+        serializedVersion: 2
+        x: 1719
+        y: 44
+        width: 161
+        height: 162
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d7fd479edb0040b0800000000000000
+      internalID: -5746580073875638314
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      screen_overlay_0: -6770585691591689520
+      screen_overlay_1: -1273829994230756709
+      screen_overlay_10: -6444220671730531601
+      screen_overlay_11: 8871585637584562556
+      screen_overlay_12: 7104778989847550061
+      screen_overlay_13: -4538659750040480045
+      screen_overlay_14: 425126070484739510
+      screen_overlay_15: -7486276909094405508
+      screen_overlay_16: -4229446172060953669
+      screen_overlay_17: -5746580073875638314
+      screen_overlay_2: -2725131317257907413
+      screen_overlay_3: 8092837404049280601
+      screen_overlay_4: -5962720992006157192
+      screen_overlay_5: 3669263020128933326
+      screen_overlay_6: 4466224160156211110
+      screen_overlay_7: -876573653777826150
+      screen_overlay_8: -8469102865601246411
+      screen_overlay_9: -4555845371641180956
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
