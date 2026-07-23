@@ -8,7 +8,7 @@ public sealed partial class AetheriaGame
 {
     private void Update()
     {
-        if (currentScreen == AetheriaScreen.Guide && HotkeyPressed(KeyCode.Escape, Hotkey.Escape))
+        if (currentScreen == AetheriaScreen.Guide && CancelPressed())
         {
             if (guideReturnToMainMenu)
             {
@@ -56,7 +56,7 @@ public sealed partial class AetheriaGame
                 || HotkeyPressed(KeyCode.E, Hotkey.E)
                 || HotkeyPressed(KeyCode.R, Hotkey.R)
                 || HotkeyPressed(KeyCode.T, Hotkey.T)
-                || HotkeyPressed(KeyCode.Escape, Hotkey.Escape))
+                || CancelPressed())
             {
                 RejectCombatInput(CombatLockedMessage());
             }
@@ -78,7 +78,7 @@ public sealed partial class AetheriaGame
             return;
         }
 
-        if (HotkeyPressed(KeyCode.Escape, Hotkey.Escape))
+        if (CancelPressed())
         {
             ExitDungeon();
         }
@@ -99,7 +99,7 @@ public sealed partial class AetheriaGame
     {
         if (currentScreen != AetheriaScreen.Town)
         {
-            if (CanEscapeToTown() && HotkeyPressed(KeyCode.Escape, Hotkey.Escape))
+            if (CanEscapeToTown() && CancelPressed())
             {
                 ShowTown("마을로 돌아왔습니다.");
             }
@@ -140,6 +140,17 @@ public sealed partial class AetheriaGame
             || currentScreen == AetheriaScreen.SkillTraining
             || currentScreen == AetheriaScreen.Crafting
             || currentScreen == AetheriaScreen.DungeonSelect;
+    }
+
+    private bool CancelPressed()
+    {
+#if ENABLE_INPUT_SYSTEM
+        if (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame)
+        {
+            return true;
+        }
+#endif
+        return HotkeyPressed(KeyCode.Escape, Hotkey.Escape);
     }
 
     private bool HotkeyPressed(KeyCode legacyKey, Hotkey hotkey)

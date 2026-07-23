@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public sealed partial class AetheriaGame
 {
     private readonly Dictionary<string, Sprite> generatedSpriteCache = new Dictionary<string, Sprite>();
+    private readonly HashSet<Sprite> ownedGeneratedSprites = new HashSet<Sprite>();
 
     private Sprite LoadGeneratedSprite(string resourcePath, Vector4 border)
     {
@@ -32,6 +33,8 @@ public sealed partial class AetheriaGame
                 SpriteMeshType.FullRect,
                 safeBorder);
             sprite.name = "Generated " + resourcePath;
+            sprite.hideFlags = HideFlags.DontSave;
+            ownedGeneratedSprites.Add(sprite);
         }
         else
         {
@@ -45,27 +48,137 @@ public sealed partial class AetheriaGame
         return sprite;
     }
 
+    private void ReleaseGeneratedSprites()
+    {
+        foreach (var sprite in ownedGeneratedSprites)
+        {
+            if (sprite != null)
+            {
+                Destroy(sprite);
+            }
+        }
+        ownedGeneratedSprites.Clear();
+        generatedSpriteCache.Clear();
+    }
+
     private string GeneratedBackdropPath()
+    {
+        var candidates = GeneratedBackdropCandidates();
+        for (var i = 0; i < candidates.Length; i++)
+        {
+            if (Resources.Load<Texture2D>(candidates[i]) != null || Resources.Load<Sprite>(candidates[i]) != null)
+            {
+                return candidates[i];
+            }
+        }
+
+        return null;
+    }
+
+    private string[] GeneratedBackdropCandidates()
     {
         switch (currentScreen)
         {
             case AetheriaScreen.MainMenu:
             case AetheriaScreen.ClassSelect:
             case AetheriaScreen.Guide:
-                return "UI/Generated/menu_background_v2";
+                return new[]
+                {
+                    "UI/FacilityBackdrops/menu_hall",
+                    "UI/VisualRefresh/Backgrounds/menu",
+                    "UI/Generated/menu_background_v2",
+                    "UI/Generated/menu_background_bright"
+                };
             case AetheriaScreen.Town:
+                return new[]
+                {
+                    "UI/FacilityBackdrops/town_hub",
+                    "UI/VisualRefresh/Backgrounds/town",
+                    "UI/Generated/town_background_v2",
+                    "UI/Generated/town_background_bright"
+                };
             case AetheriaScreen.Inventory:
+                return new[]
+                {
+                    "UI/FacilityBackdrops/inventory_armory",
+                    "UI/VisualRefresh/Backgrounds/inventory",
+                    "UI/Generated/inventory_background_bright",
+                    "UI/Generated/town_background_v2"
+                };
             case AetheriaScreen.Enhancement:
+                return new[]
+                {
+                    "UI/FacilityBackdrops/forge",
+                    "UI/VisualRefresh/Backgrounds/forge",
+                    "UI/Generated/forge_background_bright",
+                    "UI/Generated/town_background_v2"
+                };
             case AetheriaScreen.SkillTraining:
+                return new[]
+                {
+                    "UI/FacilityBackdrops/skill_shrine",
+                    "UI/VisualRefresh/Backgrounds/skill_shrine",
+                    "UI/Generated/skill_background_bright",
+                    "UI/Generated/town_background_v2"
+                };
             case AetheriaScreen.Crafting:
-                return "UI/Generated/town_background_v2";
+                return new[]
+                {
+                    "UI/FacilityBackdrops/crafting_workshop",
+                    "UI/VisualRefresh/Backgrounds/crafting",
+                    "UI/Generated/crafting_background_bright",
+                    "UI/Generated/town_background_v2"
+                };
+            case AetheriaScreen.DungeonSelect:
+                return new[]
+                {
+                    "UI/VisualRefresh/Backgrounds/world_map",
+                    "UI/Generated/menu_background_v2",
+                    "UI/Generated/menu_background_bright"
+                };
             case AetheriaScreen.Combat:
             case AetheriaScreen.Victory:
             case AetheriaScreen.Defeat:
             case AetheriaScreen.GameClear:
-                return "UI/Generated/combat_background_v2";
+                var regionKey = CurrentVisualCombatRegionKey();
+                return new[]
+                {
+                    CurrentVisualCombatBackdropPath(regionKey),
+                    "UI/VisualRefresh/Backgrounds/Regions/" + regionKey,
+                    "UI/VisualRefresh/Backgrounds/combat_" + regionKey,
+                    "UI/Generated/combat_" + regionKey + "_bright",
+                    "UI/Generated/combat_background_v2",
+                    "UI/Generated/combat_background_bright"
+                };
             default:
-                return null;
+                return new string[0];
+        }
+    }
+
+    private string CurrentVisualCombatRegionKey()
+    {
+        if (currentDungeon != null)
+        {
+            return DungeonRegionKey(currentDungeon);
+        }
+
+        return string.IsNullOrEmpty(selectedDungeonRegionKey) ? "green" : selectedDungeonRegionKey;
+    }
+
+    private static string CurrentVisualCombatBackdropPath(string regionKey)
+    {
+        switch (regionKey)
+        {
+            case "frost": return "UI/SceneBackdrops/region_frostlands";
+            case "green": return "UI/SceneBackdrops/region_greenwood";
+            case "lava": return "UI/SceneBackdrops/region_volcanic";
+            case "elesia": return "UI/SceneBackdrops/region_elysia";
+            case "arcadia": return "UI/SceneBackdrops/region_arcadia";
+            case "desert": return "UI/SceneBackdrops/region_golden_desert";
+            case "shadow": return "UI/SceneBackdrops/region_shadowlands";
+            case "isles": return "UI/SceneBackdrops/region_blue_archipelago";
+            case "wind": return "UI/SceneBackdrops/region_windlands";
+            default: return "UI/SceneBackdrops/region_greenwood";
         }
     }
 
@@ -76,22 +189,15 @@ public sealed partial class AetheriaGame
             return;
         }
 
-        var fallbackPath = GeneratedBackdropPath();
-        var characterPath = CharacterBackdropPath();
-        var resourcePath = string.IsNullOrEmpty(characterPath) ? fallbackPath : characterPath;
+        EnsureGrowthResultVisualPresenter();
+
+        var resourcePath = GeneratedBackdropPath();
         if (string.IsNullOrEmpty(resourcePath))
         {
             return;
         }
 
         var sprite = LoadGeneratedSprite(resourcePath, Vector4.zero);
-        var usesCharacterBackdrop = sprite != null && resourcePath == characterPath;
-        if (sprite == null && resourcePath != fallbackPath && !string.IsNullOrEmpty(fallbackPath))
-        {
-            resourcePath = fallbackPath;
-            sprite = LoadGeneratedSprite(resourcePath, Vector4.zero);
-        }
-
         if (sprite == null)
         {
             return;
@@ -107,14 +213,38 @@ public sealed partial class AetheriaGame
         var backgroundFitter = background.gameObject.AddComponent<AspectRatioFitter>();
         backgroundFitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
         backgroundFitter.aspectRatio = sprite.rect.width / Mathf.Max(1f, sprite.rect.height);
+        AttachScreenParallax(background, 6f, -1f);
 
-        var veilAlpha = currentScreen == AetheriaScreen.MainMenu
-            ? 0.03f
-            : usesCharacterBackdrop ? 0.08f : 0.06f;
+        var characterPath = CharacterBackdropPath();
+        var characterSprite = string.IsNullOrEmpty(characterPath)
+            ? null
+            : LoadGeneratedSprite(characterPath, Vector4.zero);
+        if (characterSprite != null)
+        {
+            var characterLayer = AddFlatPanel("Character Theme Backdrop Layer", root, new Color(1f, 1f, 1f, CharacterBackdropLayerAlpha()));
+            Stretch(characterLayer, 0, 0, 0, 0);
+            characterLayer.SetSiblingIndex(1);
+            characterLayer.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            var characterImage = characterLayer.GetComponent<Image>();
+            characterImage.sprite = characterSprite;
+            characterImage.preserveAspect = false;
+            characterImage.raycastTarget = false;
+            var characterFitter = characterLayer.gameObject.AddComponent<AspectRatioFitter>();
+            characterFitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            characterFitter.aspectRatio = characterSprite.rect.width / Mathf.Max(1f, characterSprite.rect.height);
+            AttachScreenParallax(characterLayer, 10f, -1f);
+        }
+
+        var veilAlpha = currentScreen == AetheriaScreen.MainMenu ? 0.025f : 0.055f;
         var veil = AddFlatPanel("Generated Screen Veil", root, new Color(0.92f, 0.97f, 1f, veilAlpha));
         Stretch(veil, 0, 0, 0, 0);
-        veil.SetSiblingIndex(1);
+        veil.SetSiblingIndex(characterSprite == null ? 1 : 2);
         veil.GetComponent<Image>().raycastTarget = false;
+
+        // This ornament is deliberately added while only background layers exist.
+        // Every screen page is created afterwards, so the class motif remains
+        // visible without sitting over text or intercepting input.
+        AddCharacterThemeScreenOverlay();
     }
 
     private bool IsGeneratedScreenPage(string name, Transform parent)
@@ -123,7 +253,9 @@ public sealed partial class AetheriaGame
             && parent == root
             && name != "Root"
             && name != "Generated Screen Background"
-            && name != "Generated Screen Veil";
+            && name != "Generated Screen Veil"
+            && name != "Character Theme Backdrop Layer"
+            && name != "Character Theme Screen Overlay";
     }
 
     private bool ApplyGeneratedPanelSkin(string name, Image image, Color sourceColor)

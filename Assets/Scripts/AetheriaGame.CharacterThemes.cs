@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -133,6 +134,37 @@ public sealed partial class AetheriaGame
 
         var theme = CharacterThemeForKey(themeKey);
         return theme == null ? null : theme.ResourcePath("background");
+    }
+
+    private float CharacterBackdropLayerAlpha()
+    {
+        switch (currentScreen)
+        {
+            case AetheriaScreen.ClassSelect:
+                // Class selection is where the player should immediately read each
+                // hero's identity.  The generated class backdrop therefore leads the
+                // scene instead of being lost under the shared menu background.
+                return 0.82f;
+            case AetheriaScreen.Town:
+                return 0.24f;
+            case AetheriaScreen.Inventory:
+            case AetheriaScreen.Enhancement:
+            case AetheriaScreen.Crafting:
+                return 0.16f;
+            case AetheriaScreen.SkillTraining:
+                // Training is character-specific content; keep the class location
+                // clearly visible while the 30% read plates protect the copy.
+                return 0.76f;
+            case AetheriaScreen.Combat:
+                return 0.12f;
+            case AetheriaScreen.Victory:
+            case AetheriaScreen.Defeat:
+                return 0.22f;
+            case AetheriaScreen.GameClear:
+                return 0.32f;
+            default:
+                return 0f;
+        }
     }
 
     private Color ActiveCharacterAccent(Color fallback)
@@ -476,5 +508,152 @@ public sealed partial class AetheriaGame
         image.preserveAspect = true;
         image.raycastTarget = false;
         return true;
+    }
+
+    private Color CharacterPresentationAccent(Sprite sprite)
+    {
+        string key;
+        string state;
+        bool normalizedSet;
+        var hasCharacterIdentity = TryCharacterArtIdentity(sprite, out key, out state, out normalizedSet);
+        var theme = hasCharacterIdentity ? CharacterThemeForKey(key) : null;
+        var regionAccent = CharacterRegionPresentationAccent();
+        if (theme == null)
+        {
+            return regionAccent;
+        }
+
+        var regionBlend = currentScreen == AetheriaScreen.Combat ? 0.24f : 0.10f;
+        return Color.Lerp(theme.accent, regionAccent, regionBlend);
+    }
+
+    private Color CharacterRegionPresentationAccent()
+    {
+        switch (CurrentVisualCombatRegionKey())
+        {
+            case "frost": return new Color32(94, 213, 240, 255);
+            case "green": return new Color32(84, 205, 137, 255);
+            case "lava": return new Color32(255, 116, 58, 255);
+            case "elesia": return new Color32(238, 193, 86, 255);
+            case "arcadia": return new Color32(172, 116, 239, 255);
+            case "desert": return new Color32(242, 177, 70, 255);
+            case "shadow": return new Color32(151, 104, 230, 255);
+            case "isles": return new Color32(73, 177, 235, 255);
+            case "wind": return new Color32(67, 207, 191, 255);
+            default: return new Color32(84, 205, 137, 255);
+        }
+    }
+
+    private float CharacterPresentationScale(Sprite sprite, float fallback)
+    {
+        string key;
+        string state;
+        bool normalizedSet;
+        if (!TryCharacterArtIdentity(sprite, out key, out state, out normalizedSet) || !normalizedSet)
+        {
+            return fallback;
+        }
+
+        // CharactersV2 uses one 2:3 canvas. These small per-pose corrections were
+        // measured from the alpha bounds so feet share a baseline without clipping
+        // wide combat poses or making crouched victory/defeat art jump in size.
+        float correction;
+        switch (key + "/" + state)
+        {
+            case "archer/combat": correction = 0.964f; break;
+            case "archer/defeat": correction = 1.100f; break;
+            case "archer/idle": correction = 0.920f; break;
+            case "archer/rest": correction = 1.100f; break;
+            case "archer/skill": correction = 1.100f; break;
+            case "archer/victory": correction = 0.962f; break;
+            case "bomber/combat": correction = 1.100f; break;
+            case "bomber/defeat": correction = 1.102f; break;
+            case "bomber/idle": correction = 0.920f; break;
+            case "bomber/rest": correction = 1.100f; break;
+            case "bomber/skill": correction = 1.100f; break;
+            case "bomber/victory": correction = 1.100f; break;
+            case "knight/combat": correction = 1.036f; break;
+            case "knight/defeat": correction = 1.100f; break;
+            case "knight/idle": correction = 0.947f; break;
+            case "knight/rest": correction = 1.100f; break;
+            case "knight/skill": correction = 0.920f; break;
+            case "knight/victory": correction = 1.038f; break;
+            case "mage/combat": correction = 1.100f; break;
+            case "mage/defeat": correction = 1.100f; break;
+            case "mage/idle": correction = 0.920f; break;
+            case "mage/rest": correction = 1.100f; break;
+            case "mage/skill": correction = 1.102f; break;
+            case "mage/victory": correction = 0.920f; break;
+            case "monk/combat": correction = 1.083f; break;
+            case "monk/defeat": correction = 1.029f; break;
+            case "monk/idle": correction = 0.920f; break;
+            case "monk/rest": correction = 1.100f; break;
+            case "monk/skill": correction = 1.100f; break;
+            case "monk/victory": correction = 1.024f; break;
+            case "priest/combat": correction = 1.100f; break;
+            case "priest/defeat": correction = 1.100f; break;
+            case "priest/idle": correction = 1.010f; break;
+            case "priest/rest": correction = 1.074f; break;
+            case "priest/skill": correction = 1.017f; break;
+            case "priest/victory": correction = 1.102f; break;
+            case "rogue/combat": correction = 1.005f; break;
+            case "rogue/defeat": correction = 1.029f; break;
+            case "rogue/idle": correction = 0.920f; break;
+            case "rogue/rest": correction = 0.920f; break;
+            case "rogue/skill": correction = 1.102f; break;
+            case "rogue/victory": correction = 0.920f; break;
+            case "spirit/combat": correction = 1.021f; break;
+            case "spirit/defeat": correction = 1.102f; break;
+            case "spirit/idle": correction = 0.920f; break;
+            case "spirit/rest": correction = 0.920f; break;
+            case "spirit/skill": correction = 1.100f; break;
+            case "spirit/victory": correction = 0.920f; break;
+            default: correction = 1f; break;
+        }
+        return Mathf.Clamp(fallback * correction, 0.88f, 2.15f);
+    }
+
+    private static bool TryCharacterArtIdentity(Sprite sprite, out string key, out string state, out bool normalizedSet)
+    {
+        key = null;
+        state = null;
+        normalizedSet = false;
+        if (sprite == null || string.IsNullOrEmpty(sprite.name))
+        {
+            return false;
+        }
+
+        var path = sprite.name.Replace('\\', '/').ToLowerInvariant();
+        var marker = "charactersv2/";
+        var markerIndex = path.IndexOf(marker, StringComparison.Ordinal);
+        if (markerIndex >= 0)
+        {
+            normalizedSet = true;
+        }
+        else
+        {
+            marker = "characters/";
+            markerIndex = path.IndexOf(marker, StringComparison.Ordinal);
+        }
+
+        if (markerIndex < 0)
+        {
+            return false;
+        }
+
+        var identity = path.Substring(markerIndex + marker.Length).Split('/');
+        if (identity.Length < 2)
+        {
+            return false;
+        }
+
+        key = identity[0];
+        state = identity[1];
+        var extensionIndex = state.IndexOf('.', StringComparison.Ordinal);
+        if (extensionIndex >= 0)
+        {
+            state = state.Substring(0, extensionIndex);
+        }
+        return !string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(state);
     }
 }
