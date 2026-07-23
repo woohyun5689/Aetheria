@@ -2522,15 +2522,13 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
         SetDungeonMapHudVisible(mapParent, false);
 
-        var pinWorld = mapParent.TransformPoint(DungeonMapLocalPoint(mapParent, percent));
-        var pinInViewport = (Vector2)popupParent.InverseTransformPoint(pinWorld);
         var viewportRect = popupParent.rect;
-        var showRight = pinInViewport.x <= viewportRect.center.x;
-        var verticalPivot = pinInViewport.y > viewportRect.center.y + viewportRect.height * 0.18f
-            ? 1f
-            : pinInViewport.y < viewportRect.center.y - viewportRect.height * 0.18f ? 0f : 0.5f;
-        var popupSize = new Vector2(780f, 780f);
-        var dimmer = AddFlatPanel("Dungeon Info Modal Dimmer", popupParent, new Color(7f / 255f, 18f / 255f, 30f / 255f, 0.56f));
+        var availableWidth = viewportRect.width > 36f ? viewportRect.width - 36f : viewportRect.width;
+        var availableHeight = viewportRect.height > 36f ? viewportRect.height - 36f : viewportRect.height;
+        var popupSize = new Vector2(
+            Mathf.Min(1060f, Mathf.Max(1f, availableWidth)),
+            Mathf.Min(900f, Mathf.Max(1f, availableHeight)));
+        var dimmer = AddFlatPanel("Dungeon Info Modal Dimmer", popupParent, new Color(7f / 255f, 18f / 255f, 30f / 255f, 0.52f));
         Stretch(dimmer, 0f, 0f, 0f, 0f);
         dimmer.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
         var dimmerImage = dimmer.GetComponent<Image>();
@@ -2542,71 +2540,120 @@ public sealed partial class AetheriaGame : MonoBehaviour
         dimmerButton.navigation = dimmerNavigation;
         dimmer.SetAsLastSibling();
 
-        var window = AddFlatPanel("Dungeon Info Popup", popupParent, new Color(0.96f, 0.98f, 1f, DungeonMapPlateAlpha));
-        window.GetComponent<Image>().sprite = MapRoundedRectSprite();
-        AddSideAccent(window, statusColor);
+        var window = AddFlatPanel("Dungeon Info Popup", popupParent, new Color(12f / 255f, 33f / 255f, 45f / 255f, 0.94f));
+        var windowImage = window.GetComponent<Image>();
+        windowImage.sprite = MapRoundedRectSprite();
+        windowImage.type = Image.Type.Sliced;
+        windowImage.raycastTarget = true;
         window.anchorMin = new Vector2(0.5f, 0.5f);
         window.anchorMax = window.anchorMin;
-        window.pivot = new Vector2(showRight ? 0f : 1f, verticalPivot);
+        window.pivot = new Vector2(0.5f, 0.5f);
         window.sizeDelta = popupSize;
         window.localScale = Vector3.one;
-        window.anchoredPosition = ClampRectToViewport(
-            popupParent,
-            pinInViewport + new Vector2(showRight ? 34f : -34f, 0f),
-            popupSize,
-            window.pivot,
-            18f);
+        window.anchoredPosition = Vector2.zero;
         window.SetAsLastSibling();
         var popupLayout = window.GetComponent<LayoutElement>();
         if (popupLayout != null)
         {
             popupLayout.ignoreLayout = true;
         }
-        AddVertical(window, 5, TextAnchor.UpperLeft, new RectOffset(22, 22, 18, 18));
         ApplyCharacterThemePanelFrame(window, null, true);
 
-        var titleRow = AddRow("Dungeon Popup Title", window, 14, TextAnchor.MiddleLeft);
-        AddLayoutSize(titleRow, -1, 64);
-        ConfigureNonExpandingRow(titleRow);
-        titleRow.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.MiddleLeft;
-        AddDungeonRegionArtwork(titleRow, region, "Dungeon Popup Region Emblem", 58f);
-        AddText(titleRow, dungeon.number + ". " + dungeon.name, 28, FontStyle.Bold, unlocked ? goldColor : mutedColor, TextAnchor.MiddleLeft, 56);
-        var statePlate = AddFlatPanel("Dungeon State Badge", titleRow, new Color(statusColor.r, statusColor.g, statusColor.b, DungeonMapPlateAlpha));
-        statePlate.GetComponent<Image>().sprite = MapRoundedRectSprite();
-        AddLayoutSize(statePlate, 170, 46);
-        var stateText = AddText(statePlate, statusText, 18, FontStyle.Bold, statusColor, TextAnchor.MiddleCenter, 46);
-        Stretch(stateText.GetComponent<RectTransform>(), 8, 2, 8, 2);
+        var safeHorizontal = Mathf.Min(78f, popupSize.x * 0.075f);
+        var safeVertical = Mathf.Min(58f, popupSize.y * 0.065f);
+        var safeContent = AddFlatPanel("Dungeon Modal Safe Content", window, Color.clear);
+        safeContent.GetComponent<Image>().raycastTarget = false;
+        Stretch(safeContent, safeHorizontal, safeVertical, safeHorizontal, safeVertical);
+        safeContent.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+        AddVertical(safeContent, 10, TextAnchor.UpperCenter, new RectOffset(0, 0, 0, 0));
 
-        var facts = AddFlatPanel("Dungeon Route Facts", window, Color.clear);
-        facts.GetComponent<Image>().raycastTarget = false;
-        AddLayoutSize(facts, -1, 60);
+        var header = AddDungeonPopupGlassPanel(safeContent, "Expedition Modal Header Surface", 76f, statusColor);
+        var headerLayout = header.gameObject.AddComponent<HorizontalLayoutGroup>();
+        headerLayout.spacing = 14f;
+        headerLayout.padding = new RectOffset(22, 22, 8, 8);
+        headerLayout.childAlignment = TextAnchor.MiddleLeft;
+        headerLayout.childControlWidth = true;
+        headerLayout.childControlHeight = true;
+        headerLayout.childForceExpandWidth = false;
+        headerLayout.childForceExpandHeight = false;
+        AddDungeonRegionArtwork(header, region, "Dungeon Popup Region Emblem", 58f);
+        var titleText = AddText(header, dungeon.number + ". " + dungeon.name, 30, FontStyle.Bold, unlocked ? goldColor : mutedColor, TextAnchor.MiddleLeft, 58);
+        AddLayoutSize(titleText.GetComponent<RectTransform>(), -1, 58);
+        var statePlate = AddFlatPanel("Dungeon State Badge", header, new Color(statusColor.r, statusColor.g, statusColor.b, DungeonMapPlateAlpha));
+        var statePlateImage = statePlate.GetComponent<Image>();
+        statePlateImage.sprite = MapRoundedRectSprite();
+        statePlateImage.type = Image.Type.Sliced;
+        statePlateImage.raycastTarget = false;
+        ConstrainLayoutSize(statePlate, 184f, 48f);
+        var stateText = AddText(statePlate, statusText, 18, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, 48);
+        Stretch(stateText.GetComponent<RectTransform>(), 10, 3, 10, 3);
+
+        var facts = AddDungeonPopupGlassPanel(safeContent, "Expedition Modal Facts Surface", 64f, region != null ? region.color : manaColor);
         var factsLayout = facts.gameObject.AddComponent<HorizontalLayoutGroup>();
         factsLayout.spacing = 12;
+        factsLayout.padding = new RectOffset(12, 12, 4, 4);
         factsLayout.childAlignment = TextAnchor.MiddleLeft;
         factsLayout.childControlWidth = true;
         factsLayout.childControlHeight = true;
         factsLayout.childForceExpandWidth = true;
         factsLayout.childForceExpandHeight = true;
-        AddDungeonPopupFact(facts, DungeonRegionGlyph(region != null ? region.key : ""), "지역", region != null ? region.name : "미지의 대륙", region != null ? region.color : manaColor, region != null ? DungeonRegionVisualSprite(region.key) : null);
+        AddDungeonPopupFact(facts, DungeonRegionGlyph(region != null ? region.key : ""), "지역", region != null ? region.name : "미지의 대륙", region != null ? region.color : manaColor);
         AddDungeonPopupFact(facts, "Lv", "권장", "Lv." + dungeon.recommendedLevel, underLevel ? goldColor : goodColor);
         AddDungeonPopupFact(facts, "층", "구역", DungeonFloorCount(dungeon) + "개", manaColor);
-        AddDungeonRoutePreview(window, DungeonFloorCount(dungeon), statusColor, bossCleared);
 
-        AddText(window, dungeon.description, 18, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 58);
-        AddText(window, "원정 준비", 20, FontStyle.Bold, statusColor, TextAnchor.MiddleLeft, 28);
-        AddText(window, DungeonRecommendedPowerText(dungeon), 18, FontStyle.Bold, underLevel ? goldColor : textColor, TextAnchor.UpperLeft, 54);
-        AddDivider(window, statusColor);
-        AddText(window, "예상 전리품", 20, FontStyle.Bold, RarityColor(MaxRarityForDungeon(dungeon.number)), TextAnchor.MiddleLeft, 28);
-        AddText(window, DungeonLootRarityText(dungeon), 18, FontStyle.Bold, RarityColor(MaxRarityForDungeon(dungeon.number)), TextAnchor.UpperLeft, 68);
-        AddText(window, DungeonRewardAndDangerText(dungeon), 18, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 92);
-        AddDivider(window, new Color(statusColor.r, statusColor.g, statusColor.b, 0.70f));
-        AddText(window, "적 정보  ·  " + DungeonMonsterSummary(dungeon) + "  /  보스 " + DungeonBossName(dungeon), 18, FontStyle.Bold, mutedColor, TextAnchor.UpperLeft, 46);
-        AddText(window, "현재 영웅  ·  Lv." + player.level + "  HP " + player.hp + "/" + MaxHp() + "  MP " + player.mp + "/" + MaxMp() + "\n공격 " + Attack() + "  ·  마력 " + Magic() + "  ·  방어 " + Defense() + "  ·  속도 " + Speed(), 18, FontStyle.Bold, textColor, TextAnchor.UpperLeft, 58);
+        var routeSurface = AddDungeonPopupGlassPanel(safeContent, "Expedition Modal Route Surface", 64f, statusColor);
+        AddVertical(routeSurface, 0, TextAnchor.MiddleCenter, new RectOffset(8, 8, 5, 5));
+        AddDungeonRoutePreview(routeSurface, DungeonFloorCount(dungeon), statusColor, bossCleared);
 
-        var buttons = AddRow("Dungeon Popup Buttons", window, 16, TextAnchor.MiddleRight);
-        AddLayoutSize(buttons, -1, 66);
-        ConfigureNonExpandingRow(buttons);
-        buttons.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.MiddleRight;
+        var descriptionSurface = AddDungeonPopupGlassPanel(safeContent, "Expedition Modal Description Surface", 70f, statusColor);
+        var descriptionText = AddText(descriptionSurface, dungeon.description, 19, FontStyle.Normal, Color.white, TextAnchor.MiddleLeft, 54);
+        Stretch(descriptionText.GetComponent<RectTransform>(), 18, 8, 18, 8);
+
+        var details = AddRow("Dungeon Popup Details", safeContent, 14, TextAnchor.UpperCenter);
+        AddLayoutSize(details, -1, -1);
+        var detailsLayout = details.GetComponent<HorizontalLayoutGroup>();
+        detailsLayout.childForceExpandWidth = true;
+        detailsLayout.childForceExpandHeight = true;
+
+        var preparation = AddDungeonPopupGlassPanel(details, "Expedition Modal Preparation Surface", -1f, statusColor);
+        AddVertical(preparation, 6, TextAnchor.UpperLeft, new RectOffset(18, 18, 12, 12));
+        AddText(preparation, "원정 준비", 22, FontStyle.Bold, statusColor, TextAnchor.MiddleLeft, 30);
+        AddText(preparation, DungeonRecommendedPowerText(dungeon), 18, FontStyle.Bold, underLevel ? goldColor : Color.white, TextAnchor.UpperLeft, 76);
+        AddText(preparation, "적 정보", 20, FontStyle.Bold, manaColor, TextAnchor.MiddleLeft, 28);
+        AddText(
+            preparation,
+            "일반  " + DungeonMonsterSummary(dungeon) + "\n보스  " + DungeonBossName(dungeon),
+            18,
+            FontStyle.Bold,
+            Color.white,
+            TextAnchor.UpperLeft,
+            88);
+
+        var rewards = AddDungeonPopupGlassPanel(details, "Expedition Modal Rewards Surface", -1f, RarityColor(MaxRarityForDungeon(dungeon.number)));
+        AddVertical(rewards, 6, TextAnchor.UpperLeft, new RectOffset(18, 18, 12, 12));
+        AddText(rewards, "예상 전리품", 22, FontStyle.Bold, RarityColor(MaxRarityForDungeon(dungeon.number)), TextAnchor.MiddleLeft, 30);
+        AddText(rewards, DungeonLootRarityText(dungeon), 18, FontStyle.Bold, Color.white, TextAnchor.UpperLeft, 82);
+        AddText(rewards, DungeonRewardAndDangerText(dungeon), 18, FontStyle.Normal, Color.white, TextAnchor.UpperLeft, 112);
+        AddText(rewards, "현재 영웅", 20, FontStyle.Bold, manaColor, TextAnchor.MiddleLeft, 28);
+        AddText(
+            rewards,
+            "Lv." + player.level + "  HP " + player.hp + "/" + MaxHp() + "  MP " + player.mp + "/" + MaxMp()
+                + "\n공격 " + Attack() + "  ·  마력 " + Magic() + "  ·  방어 " + Defense() + "  ·  속도 " + Speed(),
+            18,
+            FontStyle.Bold,
+            Color.white,
+            TextAnchor.UpperLeft,
+            66);
+
+        var buttons = AddDungeonPopupGlassPanel(safeContent, "Expedition Modal Footer Surface", 78f, statusColor);
+        var buttonsLayout = buttons.gameObject.AddComponent<HorizontalLayoutGroup>();
+        buttonsLayout.spacing = 14f;
+        buttonsLayout.padding = new RectOffset(22, 22, 10, 10);
+        buttonsLayout.childAlignment = TextAnchor.MiddleRight;
+        buttonsLayout.childControlWidth = true;
+        buttonsLayout.childControlHeight = true;
+        buttonsLayout.childForceExpandWidth = false;
+        buttonsLayout.childForceExpandHeight = false;
         Action closePopup = () =>
         {
             SetDungeonMapHudVisible(mapParent, true);
@@ -2616,13 +2663,27 @@ public sealed partial class AetheriaGame : MonoBehaviour
         };
         dimmerButton.onClick.AddListener(() => closePopup());
         var closeButton = AddObjectActionButton(buttons, "닫기", () => closePopup(), panelAltColor, VisualActionRole.Back, "back", 190, 58);
-        var enterButton = AddObjectActionButton(buttons, unlocked ? "전투 시작" : "경로 잠금", () => StartCombat(dungeon, false), goodColor, VisualActionRole.Portal, "portal", 260, 58);
+        var enterButton = AddObjectActionButton(buttons, unlocked ? "전투 시작" : "경로 잠금", () => StartCombat(dungeon, false), goodColor, VisualActionRole.Portal, "portal", 280, 58);
         enterButton.interactable = unlocked && HasDungeonEncounter(dungeon);
         if (EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(
                 (enterButton.interactable ? enterButton : closeButton).gameObject);
         }
+    }
+
+    private RectTransform AddDungeonPopupGlassPanel(Transform parent, string name, float preferredHeight, Color accent)
+    {
+        var baseSurface = new Color(7f / 255f, 30f / 255f, 43f / 255f, 1f);
+        var accentSurface = new Color(accent.r, accent.g, accent.b, 1f);
+        var tint = Color.Lerp(baseSurface, accentSurface, 0.10f);
+        var panel = AddFlatPanel(name, parent, new Color(tint.r, tint.g, tint.b, 0.86f));
+        var image = panel.GetComponent<Image>();
+        image.sprite = MapRoundedRectSprite();
+        image.type = Image.Type.Sliced;
+        image.raycastTarget = false;
+        AddLayoutSize(panel, -1f, preferredHeight > 0f ? preferredHeight : -1f);
+        return panel;
     }
 
     private void SelectFirstDungeonMapButton(RectTransform mapParent, int preferredDungeonNumber)
@@ -2687,35 +2748,6 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
         var text = AddText(fact, label + "  " + value, 18, FontStyle.Bold, textColor, TextAnchor.MiddleLeft, 50);
         AddLayoutSize(text.GetComponent<RectTransform>(), -1, 50);
-    }
-
-    private Vector2 ClampRectToViewport(RectTransform viewport, Vector2 position, Vector2 popupSize, Vector2 pivot, float margin)
-    {
-        var bounds = viewport != null ? viewport.rect : new Rect(-960f, -540f, 1920f, 1080f);
-        var minX = bounds.xMin + margin + popupSize.x * pivot.x;
-        var maxX = bounds.xMax - margin - popupSize.x * (1f - pivot.x);
-        var minY = bounds.yMin + margin + popupSize.y * pivot.y;
-        var maxY = bounds.yMax - margin - popupSize.y * (1f - pivot.y);
-
-        if (minX > maxX)
-        {
-            position.x = 0f;
-        }
-        else
-        {
-            position.x = Mathf.Clamp(position.x, minX, maxX);
-        }
-
-        if (minY > maxY)
-        {
-            position.y = 0f;
-        }
-        else
-        {
-            position.y = Mathf.Clamp(position.y, minY, maxY);
-        }
-
-        return position;
     }
 
     private void ClearDungeonInfoPopups(RectTransform mapParent)

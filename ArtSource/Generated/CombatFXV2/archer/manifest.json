@@ -1,0 +1,273 @@
+{
+  "generator_mode": "built-in image_gen",
+  "atlas": "ArtSource/Generated/CombatFXV2/archer/atlas_raw.png",
+  "atlas_size": [
+    1536,
+    1024
+  ],
+  "grid": {
+    "columns": 4,
+    "rows": 4,
+    "cell_size": [
+      384,
+      256
+    ]
+  },
+  "skills": {
+    "archer_aimed_shot": {
+      "cast": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/archer_aimed_shot/fx_cast.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.152462,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "action": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/archer_aimed_shot/fx_action.png",
+        "size": [
+          1536,
+          1024
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.163559,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "impact": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/archer_aimed_shot/fx_impact.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.205059,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "archer_binding_arrow": {
+      "cast": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/archer_binding_arrow/fx_cast.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.199411,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "action": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/archer_binding_arrow/fx_action.png",
+        "size": [
+          1536,
+          1024
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.174682,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "impact": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/archer_binding_arrow/fx_impact.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.205653,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "archer_piercing_volley": {
+      "cast": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/archer_piercing_volley/fx_cast.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.155312,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "action": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/archer_piercing_volley/fx_action.png",
+        "size": [
+          1536,
+          1024
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.290847,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "impact": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/archer_piercing_volley/fx_impact.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.188596,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "archer_windstep_shot": {
+      "cast": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/archer_windstep_shot/fx_cast.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.177588,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "action": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/archer_windstep_shot/fx_action.png",
+        "size": [
+          1536,
+          1024
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.281047,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "impact": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/archer_windstep_shot/fx_impact.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.214553,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "support": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/archer_windstep_shot/fx_support.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.135454,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  }
+}

@@ -72,8 +72,8 @@ public sealed partial class AetheriaGame
         icon.anchorMin = new Vector2(0f, 0.5f);
         icon.anchorMax = new Vector2(0f, 0.5f);
         icon.pivot = new Vector2(0f, 0.5f);
-        icon.anchoredPosition = new Vector2(16f, 0f);
-        icon.sizeDelta = new Vector2(112f, 112f);
+        icon.anchoredPosition = new Vector2(16f, -12f);
+        icon.sizeDelta = new Vector2(CombatActionCardIconSize, CombatActionCardIconSize);
 
         var image = iconObject.GetComponent<Image>();
         var generatedSprite = LoadGeneratedSprite("UI/VisualRefresh/Combat/intent_attack", Vector4.zero);
@@ -161,13 +161,13 @@ public sealed partial class AetheriaGame
         }
 
         activeCombatCardTarget = presenter;
-        combatCardTargetGlowImage.color = new Color(accent.r, accent.g, accent.b, 0.18f);
+        combatCardTargetGlowImage.color = new Color(accent.r, accent.g, accent.b, 0.07f);
         combatCardTargetCoreImage.color = new Color(
             Mathf.Lerp(accent.r, 1f, 0.46f),
             Mathf.Lerp(accent.g, 1f, 0.46f),
             Mathf.Lerp(accent.b, 1f, 0.46f),
-            0.82f);
-        combatCardTargetRingImage.color = new Color(accent.r, accent.g, accent.b, 0.78f);
+            0.42f);
+        combatCardTargetRingImage.color = new Color(accent.r, accent.g, accent.b, 0.48f);
         combatCardTargetRoot.gameObject.SetActive(true);
         RefreshCombatCardTarget(presenter, card);
     }
@@ -251,7 +251,10 @@ public sealed partial class AetheriaGame
         }
 
         var startWorld = card.TransformPoint(new Vector3(card.rect.center.x, card.rect.yMax - 6f, 0f));
-        var targetWorld = target.TransformPoint(new Vector3(target.rect.center.x, target.rect.center.y, 0f));
+        var targetWorld = target.TransformPoint(new Vector3(
+            target.rect.center.x,
+            target.rect.yMin + target.rect.height * 0.22f,
+            0f));
         var start = (Vector2)combatCardTargetRoot.InverseTransformPoint(startWorld);
         var end = (Vector2)combatCardTargetRoot.InverseTransformPoint(targetWorld);
         var direction = end - start;
@@ -261,17 +264,17 @@ public sealed partial class AetheriaGame
             return;
         }
 
-        PositionCombatCardTargetLine(combatCardTargetGlow, start, end, 12f);
-        PositionCombatCardTargetLine(combatCardTargetCore, start, end, 2.6f);
+        PositionCombatCardTargetLine(combatCardTargetGlow, start, end, 4f);
+        PositionCombatCardTargetLine(combatCardTargetCore, start, end, 1.35f);
         combatCardTargetRing.anchoredPosition = end;
-        var pulse = 1f + Mathf.Sin(Time.unscaledTime * 5.2f) * 0.045f;
+        var pulse = 1f + Mathf.Sin(Time.unscaledTime * 5.2f) * 0.025f;
         combatCardTargetRing.localScale = Vector3.one * pulse;
 
         var coreColor = combatCardTargetCoreImage.color;
-        coreColor.a = 0.70f + Mathf.Sin(Time.unscaledTime * 6.4f) * 0.12f;
+        coreColor.a = 0.34f + Mathf.Sin(Time.unscaledTime * 6.4f) * 0.06f;
         combatCardTargetCoreImage.color = coreColor;
         var ringColor = combatCardTargetRingImage.color;
-        ringColor.a = 0.66f + Mathf.Sin(Time.unscaledTime * 5.2f) * 0.12f;
+        ringColor.a = 0.40f + Mathf.Sin(Time.unscaledTime * 5.2f) * 0.08f;
         combatCardTargetRingImage.color = ringColor;
     }
 
@@ -333,7 +336,7 @@ public sealed partial class AetheriaGame
         combatCardTargetRing.anchorMin = new Vector2(0.5f, 0.5f);
         combatCardTargetRing.anchorMax = new Vector2(0.5f, 0.5f);
         combatCardTargetRing.pivot = new Vector2(0.5f, 0.5f);
-        combatCardTargetRing.sizeDelta = new Vector2(238f, 238f);
+        combatCardTargetRing.sizeDelta = new Vector2(108f, 108f);
         combatCardTargetRingImage = ringObject.GetComponent<Image>();
         combatCardTargetRingImage.sprite = CombatCardTargetRingSprite();
         combatCardTargetRingImage.preserveAspect = true;

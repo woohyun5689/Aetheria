@@ -78,7 +78,12 @@ public sealed partial class AetheriaGame
             return false;
         }
 
-        var icon = AddSkillIconVisual(card, skillName, 112f, 112f, enabled ? 1f : 0.52f);
+        var icon = AddSkillIconVisual(
+            card,
+            skillName,
+            CombatActionCardIconSize,
+            CombatActionCardIconSize,
+            enabled ? 1f : 0.52f);
         if (icon == null)
         {
             return false;
@@ -89,8 +94,8 @@ public sealed partial class AetheriaGame
         icon.anchorMin = new Vector2(0f, 0.5f);
         icon.anchorMax = new Vector2(0f, 0.5f);
         icon.pivot = new Vector2(0f, 0.5f);
-        icon.anchoredPosition = new Vector2(16f, 0f);
-        icon.sizeDelta = new Vector2(112f, 112f);
+        icon.anchoredPosition = new Vector2(16f, -12f);
+        icon.sizeDelta = new Vector2(CombatActionCardIconSize, CombatActionCardIconSize);
         icon.SetAsLastSibling();
         return true;
     }

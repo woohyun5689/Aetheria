@@ -1,0 +1,14 @@
+Use case: stylized-concept
+Asset type: universal production game VFX overlay sprite atlas for a semi-real painterly fantasy RPG
+Primary request: Create one precisely aligned 2-column by 2-row atlas of four original neutral combat overlays. Every cell is one isolated effect designed to be tinted and layered over skill art at runtime. Do not render labels.
+Scene/backdrop: perfectly flat solid #00ff00 chroma-key background across the entire canvas, including wide uniform gutters between every cell.
+Style/medium: premium shipped-game VFX, semi-real painterly energy, bright monochrome white/ivory cores, smooth alpha-ready falloff, sharp readable silhouettes, restrained pale-gold sparks; original design only.
+Composition/framing: strict 2x2 equal-cell grid; center every effect in its own cell with generous padding; effects may not cross cell boundaries; no borders or dividers.
+Cell content:
+- Top left: white-hot contact flash, compact asymmetrical eight-point impact star with a dense center and several short tapered rays.
+- Top right: concentric shockwave ring, two thin broken circular pressure rings with a bright leading edge and a few outward radial ticks; large open transparent-looking center.
+- Bottom left: directional speed-streak bundle, a clean diagonal fan of long tapered white and pale-gold streaks, varied lengths, clear travel direction, sparse trailing dust.
+- Bottom right: small spark and debris cluster, scattered white-hot sparks, tiny angular ivory fragments and a few short ember dashes, loose radial spread.
+Color palette: neutral white, ivory, very pale gold and faint cool-gray accents only. Do not use green in any effect.
+Constraints: exactly 2 columns and 2 rows; no characters, scenery, UI, icons, text, letters, numbers, logos, trademarks, watermark, solid physical objects, sticker outlines, drop shadows, floor plane, reflection, background lighting, gradients, texture, or lighting variation in the chroma-key background. The background must remain one exact uniform #00ff00. Crisp separable edges and contained soft falloff.
+Avoid: magic sigils, recognizable weapons, colored elemental effects, opaque disks, heavy smoke, clutter, oversized effects touching cell edges.

@@ -1,0 +1,214 @@
+{
+  "generator_mode": "built-in image_gen",
+  "atlas": "ArtSource/Generated/CombatFXV2/rogue/atlas_raw.png",
+  "atlas_size": [
+    1536,
+    1024
+  ],
+  "grid": {
+    "columns": 3,
+    "rows": 4,
+    "cell_size": [
+      512,
+      256
+    ]
+  },
+  "skills": {
+    "rogue_shadow_strike": {
+      "cast": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/rogue_shadow_strike/fx_cast.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.127439,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "action": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/rogue_shadow_strike/fx_action.png",
+        "size": [
+          1536,
+          1024
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.263994,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "impact": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/rogue_shadow_strike/fx_impact.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.189814,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "support": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/rogue_shadow_strike/fx_support.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.143061,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "rogue_poison_dagger": {
+      "cast": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/rogue_poison_dagger/fx_cast.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.246296,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "action": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/rogue_poison_dagger/fx_action.png",
+        "size": [
+          1536,
+          1024
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.116462,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "impact": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/rogue_poison_dagger/fx_impact.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.133584,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "rogue_twilight_flurry": {
+      "cast": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/rogue_twilight_flurry/fx_cast.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.169675,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "action": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/rogue_twilight_flurry/fx_action.png",
+        "size": [
+          1536,
+          1024
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.261127,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "impact": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/rogue_twilight_flurry/fx_impact.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.191446,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  }
+}

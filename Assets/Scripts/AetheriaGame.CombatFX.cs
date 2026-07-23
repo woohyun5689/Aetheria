@@ -34,6 +34,15 @@ public sealed partial class AetheriaGame
         EnemyMagic
     }
 
+    private enum CombatFxMotion
+    {
+        Projectile,
+        Melee,
+        Vertical,
+        Area,
+        Beam
+    }
+
     private struct CombatFxLook
     {
         public CombatFxStyle style;
@@ -153,6 +162,56 @@ public sealed partial class AetheriaGame
         return false;
     }
 
+    private CombatFxMotion ResolveCombatFxMotion(CombatPresentationEvent presentation, CombatFxLook look)
+    {
+        var key = CombatFxSkillKey(presentation);
+        switch (key)
+        {
+            case "knight_shield_bash":
+            case "rogue_shadow_strike":
+            case "rogue_poison_dagger":
+            case "rogue_twilight_flurry":
+            case "monk_iron_fist_combo":
+            case "monk_pressure_lock":
+                return CombatFxMotion.Melee;
+
+            case "knight_holy_crush":
+            case "mage_lightning_storm":
+            case "priest_radiant_judgment":
+                return CombatFxMotion.Vertical;
+
+            case "bomber_chain_detonation":
+            case "spirit_earth_spirit":
+            case "monk_inner_burst":
+                return CombatFxMotion.Area;
+
+            case "priest_salvation_ray":
+            case "bomber_blazing_fire":
+                return CombatFxMotion.Beam;
+
+            case "bomber_shatter_bomb":
+                return CombatFxMotion.Projectile;
+        }
+
+        if (look.element == CombatFxElement.Lightning || look.element == CombatFxElement.Holy)
+        {
+            return CombatFxMotion.Vertical;
+        }
+        if (look.element == CombatFxElement.Fist
+            || look.element == CombatFxElement.Slash
+            || look.element == CombatFxElement.Shadow
+            || look.element == CombatFxElement.Poison
+            || look.element == CombatFxElement.EnemyPhysical)
+        {
+            return CombatFxMotion.Melee;
+        }
+        if (look.element == CombatFxElement.Explosion)
+        {
+            return CombatFxMotion.Area;
+        }
+        return CombatFxMotion.Projectile;
+    }
+
     private IEnumerator PlayClassCombatAttackFx(CombatPresentationEvent presentation, int generation)
     {
         if (presentation == null || !CombatViewIsValid(generation) || combatFxLayer == null)
@@ -161,36 +220,165 @@ public sealed partial class AetheriaGame
         }
 
         var look = ResolveCombatFxLook(presentation);
-        var from = CombatFxAnchorFor(presentation.attackerIsPlayer, 0.035f);
-        var to = CombatFxAnchorFor(presentation.targetIsPlayer, 0.005f);
+        var motion = ResolveCombatFxMotion(presentation, look);
+        var attackerAnchor = CombatFxAnchorFor(presentation.attackerIsPlayer, 0.035f);
+        var targetAnchor = CombatFxAnchorFor(presentation.targetIsPlayer, 0.005f);
         if (presentation.missed)
         {
-            to.y += 0.17f;
+            targetAnchor.y += 0.17f;
+        }
+        var from = attackerAnchor;
+        var to = targetAnchor;
+        var beamLength = 560f;
+        var beamAngle = 0f;
+        switch (motion)
+        {
+            case CombatFxMotion.Melee:
+                from = Vector2.Lerp(attackerAnchor, targetAnchor, 0.76f);
+                break;
+            case CombatFxMotion.Vertical:
+            case CombatFxMotion.Area:
+                from = targetAnchor;
+                to = targetAnchor;
+                break;
+            case CombatFxMotion.Beam:
+            {
+                from = Vector2.Lerp(attackerAnchor, targetAnchor, 0.52f);
+                to = from;
+                var layerSize = combatFxLayer.rect.size;
+                var beamDelta = new Vector2(
+                    (targetAnchor.x - attackerAnchor.x) * layerSize.x,
+                    (targetAnchor.y - attackerAnchor.y) * layerSize.y);
+                beamLength = Mathf.Clamp(beamDelta.magnitude + 90f, 380f, 920f);
+                beamAngle = Mathf.Atan2(beamDelta.y, beamDelta.x) * Mathf.Rad2Deg;
+                break;
+            }
         }
 
-        var rootFx = CreateCombatFxRoot("Class Attack FX - " + look.element, from, new Vector2(240f, 170f));
+        var rootFx = CreateCombatFxRoot(
+            "Class Attack FX - " + motion + " - " + look.element,
+            from,
+            motion == CombatFxMotion.Vertical || motion == CombatFxMotion.Area
+                ? new Vector2(360f, 330f)
+                : (motion == CombatFxMotion.Beam
+                    ? new Vector2(beamLength, 230f)
+                    : new Vector2(300f, 220f)));
         if (rootFx == null)
         {
             yield break;
         }
+        if (motion == CombatFxMotion.Beam)
+        {
+            rootFx.localEulerAngles = new Vector3(0f, 0f, beamAngle);
+        }
         var group = rootFx.gameObject.AddComponent<CanvasGroup>();
-        BuildCombatAttackGlyph(rootFx, look, presentation.attackerIsPlayer ? 1f : -1f, presentation);
+        var direction = presentation.attackerIsPlayer ? 1f : -1f;
+        BuildCombatAttackGlyph(rootFx, look, direction, presentation);
         var skillAttackArt = !string.IsNullOrEmpty(CombatFxSkillPath(presentation, "action"));
         var classAttackArt = !string.IsNullOrEmpty(CombatFxClassPath(look, "attack"));
+        var v2SpeedStreaks = CombatFxChild(rootFx, "V2 Action Speed Streaks");
+        var v2Trail0 = CombatFxChild(rootFx, "V2 Action Trail 0");
+        var v2Trail1 = CombatFxChild(rootFx, "V2 Action Trail 1");
+        var v2SpeedImage = v2SpeedStreaks != null ? v2SpeedStreaks.GetComponent<Image>() : null;
+        var v2Trail0Image = v2Trail0 != null ? v2Trail0.GetComponent<Image>() : null;
+        var v2Trail1Image = v2Trail1 != null ? v2Trail1.GetComponent<Image>() : null;
+        var v2SpeedAlpha = v2SpeedImage != null ? v2SpeedImage.color.a : 0f;
+        var v2Trail0Alpha = v2Trail0Image != null ? v2Trail0Image.color.a : 0f;
+        var v2Trail1Alpha = v2Trail1Image != null ? v2Trail1Image.color.a : 0f;
+        var v2Trail0Start = v2Trail0 != null ? v2Trail0.anchoredPosition : Vector2.zero;
+        var v2Trail1Start = v2Trail1 != null ? v2Trail1.anchoredPosition : Vector2.zero;
 
-        var duration = CombatFxTravelDuration(look.element);
+        var duration = motion == CombatFxMotion.Melee
+            ? 0.18f
+            : (motion == CombatFxMotion.Vertical
+                ? 0.27f
+                : (motion == CombatFxMotion.Area
+                    ? 0.30f
+                    : (motion == CombatFxMotion.Beam ? 0.25f : CombatFxTravelDuration(look.element))));
         var elapsed = 0f;
         while (elapsed < duration && CombatViewIsValid(generation) && rootFx != null)
         {
             elapsed += Time.unscaledDeltaTime;
             var progress = Mathf.Clamp01(elapsed / duration);
             var eased = 1f - Mathf.Pow(1f - progress, 3f);
-            var anchor = Vector2.LerpUnclamped(from, to, eased);
+            var anchor = motion == CombatFxMotion.Area || motion == CombatFxMotion.Vertical
+                ? targetAnchor
+                : Vector2.LerpUnclamped(from, to, eased);
             rootFx.anchorMin = anchor;
             rootFx.anchorMax = anchor;
-            rootFx.anchoredPosition = new Vector2(0f, Mathf.Sin(progress * Mathf.PI) * CombatFxArcHeight(look.element));
-            var pulse = Mathf.Lerp(0.82f, 1.10f, Mathf.Sin(progress * Mathf.PI * 0.5f));
+            if (motion == CombatFxMotion.Vertical)
+            {
+                rootFx.anchoredPosition = new Vector2(0f, Mathf.Lerp(128f, -8f, eased));
+            }
+            else if (motion == CombatFxMotion.Area)
+            {
+                rootFx.anchoredPosition = new Vector2(0f, Mathf.Sin(progress * Mathf.PI) * 12f);
+            }
+            else if (motion == CombatFxMotion.Beam)
+            {
+                rootFx.anchoredPosition = Vector2.zero;
+            }
+            else
+            {
+                rootFx.anchoredPosition = new Vector2(0f, Mathf.Sin(progress * Mathf.PI) * CombatFxArcHeight(look.element));
+            }
+            var pulse = motion == CombatFxMotion.Area
+                ? Mathf.Lerp(0.46f, 1.18f, eased)
+                : (motion == CombatFxMotion.Melee
+                    ? Mathf.Lerp(0.72f, 1.18f, Mathf.Sin(progress * Mathf.PI * 0.5f))
+                    : Mathf.Lerp(0.82f, 1.10f, Mathf.Sin(progress * Mathf.PI * 0.5f)));
             rootFx.localScale = Vector3.one * pulse;
+            if (motion == CombatFxMotion.Vertical)
+            {
+                rootFx.localEulerAngles = new Vector3(0f, 0f, Mathf.Lerp(-4f, 3f, progress));
+            }
+            else if (motion == CombatFxMotion.Area)
+            {
+                rootFx.localEulerAngles = new Vector3(0f, 0f, Mathf.Lerp(-18f, 14f, progress));
+            }
+            if (v2SpeedStreaks != null)
+            {
+                v2SpeedStreaks.localScale = new Vector3(
+                    Mathf.Lerp(0.66f, 1.32f, eased),
+                    Mathf.Lerp(0.86f, 1.08f, progress),
+                    1f);
+                if (v2SpeedImage != null)
+                {
+                    var streakColor = v2SpeedImage.color;
+                    streakColor.a = v2SpeedAlpha * Mathf.Sin(progress * Mathf.PI);
+                    v2SpeedImage.color = streakColor;
+                }
+            }
+            if (v2Trail0 != null)
+            {
+                var trail0Offset = motion == CombatFxMotion.Vertical
+                    ? new Vector2(0f, 28f * progress)
+                    : (motion == CombatFxMotion.Area
+                        ? new Vector2(0f, 5f * Mathf.Sin(progress * Mathf.PI))
+                        : new Vector2(-24f * direction * progress, 6f * Mathf.Sin(progress * Mathf.PI)));
+                v2Trail0.anchoredPosition = v2Trail0Start + trail0Offset;
+                if (v2Trail0Image != null)
+                {
+                    var trailColor = v2Trail0Image.color;
+                    trailColor.a = v2Trail0Alpha * Mathf.Sin(progress * Mathf.PI);
+                    v2Trail0Image.color = trailColor;
+                }
+            }
+            if (v2Trail1 != null)
+            {
+                var trail1Offset = motion == CombatFxMotion.Vertical
+                    ? new Vector2(0f, 52f * progress)
+                    : (motion == CombatFxMotion.Area
+                        ? new Vector2(0f, -5f * Mathf.Sin(progress * Mathf.PI))
+                        : new Vector2(-42f * direction * progress, -5f * Mathf.Sin(progress * Mathf.PI)));
+                v2Trail1.anchoredPosition = v2Trail1Start + trail1Offset;
+                if (v2Trail1Image != null)
+                {
+                    var trailColor = v2Trail1Image.color;
+                    trailColor.a = v2Trail1Alpha * Mathf.Sin(progress * Mathf.PI);
+                    v2Trail1Image.color = trailColor;
+                }
+            }
             if (!skillAttackArt
                 && !classAttackArt
                 && (look.element == CombatFxElement.Spirit || look.element == CombatFxElement.Explosion))
@@ -223,6 +411,16 @@ public sealed partial class AetheriaGame
         }
         var group = rootFx.gameObject.AddComponent<CanvasGroup>();
         BuildCombatImpactGlyph(rootFx, look, presentation.critical, presentation);
+        var v2Shockwave = CombatFxChild(rootFx, "V2 Impact Shockwave");
+        var v2Sparks = CombatFxChild(rootFx, "V2 Impact Sparks");
+        var v2ContactFlash = CombatFxChild(rootFx, "V2 Impact Contact Flash");
+        var v2ShockwaveImage = v2Shockwave != null ? v2Shockwave.GetComponent<Image>() : null;
+        var v2SparksImage = v2Sparks != null ? v2Sparks.GetComponent<Image>() : null;
+        var v2ContactImage = v2ContactFlash != null ? v2ContactFlash.GetComponent<Image>() : null;
+        var v2ShockwaveAlpha = v2ShockwaveImage != null ? v2ShockwaveImage.color.a : 0f;
+        var v2SparksAlpha = v2SparksImage != null ? v2SparksImage.color.a : 0f;
+        var v2ContactAlpha = v2ContactImage != null ? v2ContactImage.color.a : 0f;
+        var layeredV2Impact = v2Shockwave != null || v2Sparks != null || v2ContactFlash != null;
 
         var duration = look.element == CombatFxElement.Explosion ? 0.38f : (presentation.critical ? 0.36f : 0.31f);
         var elapsed = 0f;
@@ -231,13 +429,52 @@ public sealed partial class AetheriaGame
             elapsed += Time.unscaledDeltaTime;
             var progress = Mathf.Clamp01(elapsed / duration);
             var snap = 1f - Mathf.Pow(1f - Mathf.Clamp01(progress * 3.4f), 3f);
-            var scale = Mathf.Lerp(0.22f, presentation.critical ? 1.34f : 1.12f, snap);
+            var peakScale = layeredV2Impact
+                ? (presentation.critical ? 1.12f : 1.03f)
+                : (presentation.critical ? 1.34f : 1.12f);
+            var scale = Mathf.Lerp(layeredV2Impact ? 0.30f : 0.22f, peakScale, snap);
             if (progress > 0.34f)
             {
-                scale *= Mathf.Lerp(1f, presentation.critical ? 1.16f : 1.08f, (progress - 0.34f) / 0.66f);
+                var settleScale = layeredV2Impact
+                    ? (presentation.critical ? 1.05f : 1.03f)
+                    : (presentation.critical ? 1.16f : 1.08f);
+                scale *= Mathf.Lerp(1f, settleScale, (progress - 0.34f) / 0.66f);
             }
             rootFx.localScale = Vector3.one * scale;
             rootFx.localEulerAngles = new Vector3(0f, 0f, Mathf.Lerp(-10f, 20f, progress));
+            if (v2Shockwave != null)
+            {
+                v2Shockwave.localScale = Vector3.one * Mathf.Lerp(0.30f, presentation.critical ? 1.28f : 1.20f, progress);
+                v2Shockwave.localEulerAngles = new Vector3(0f, 0f, Mathf.Lerp(-28f, 34f, progress));
+                if (v2ShockwaveImage != null)
+                {
+                    var shockColor = v2ShockwaveImage.color;
+                    shockColor.a = v2ShockwaveAlpha * Mathf.Clamp01(1f - Mathf.Max(0f, progress - 0.18f) / 0.82f);
+                    v2ShockwaveImage.color = shockColor;
+                }
+            }
+            if (v2Sparks != null)
+            {
+                v2Sparks.localScale = Vector3.one * Mathf.Lerp(0.48f, presentation.critical ? 1.12f : 1.06f, snap);
+                v2Sparks.localEulerAngles = new Vector3(0f, 0f, Mathf.Lerp(-16f, 38f, progress));
+                if (v2SparksImage != null)
+                {
+                    var sparkColor = v2SparksImage.color;
+                    sparkColor.a = v2SparksAlpha * Mathf.Clamp01(1f - Mathf.Max(0f, progress - 0.46f) / 0.54f);
+                    v2SparksImage.color = sparkColor;
+                }
+            }
+            if (v2ContactFlash != null)
+            {
+                var contactSnap = 1f - Mathf.Pow(1f - Mathf.Clamp01(progress * 5.2f), 3f);
+                v2ContactFlash.localScale = Vector3.one * Mathf.Lerp(0.18f, 1.34f, contactSnap);
+                if (v2ContactImage != null)
+                {
+                    var contactColor = v2ContactImage.color;
+                    contactColor.a = v2ContactAlpha * Mathf.Clamp01(1f - progress * 4.1f);
+                    v2ContactImage.color = contactColor;
+                }
+            }
             group.alpha = Mathf.Clamp01(1f - Mathf.Max(0f, progress - 0.52f) / 0.48f);
             yield return null;
         }
@@ -264,6 +501,16 @@ public sealed partial class AetheriaGame
         }
         var group = rootFx.gameObject.AddComponent<CanvasGroup>();
         BuildCombatSupportGlyph(rootFx, look, healing, presentation);
+        var v2SupportCast = CombatFxChild(rootFx, "V2 Support Cast");
+        var v2GroundRing = CombatFxChild(rootFx, "V2 Support Ground Ring");
+        var v2Motes = CombatFxChild(rootFx, "V2 Support Motes");
+        var v2SupportCastImage = v2SupportCast != null ? v2SupportCast.GetComponent<Image>() : null;
+        var v2GroundImage = v2GroundRing != null ? v2GroundRing.GetComponent<Image>() : null;
+        var v2MotesImage = v2Motes != null ? v2Motes.GetComponent<Image>() : null;
+        var v2SupportCastAlpha = v2SupportCastImage != null ? v2SupportCastImage.color.a : 0f;
+        var v2GroundAlpha = v2GroundImage != null ? v2GroundImage.color.a : 0f;
+        var v2MotesAlpha = v2MotesImage != null ? v2MotesImage.color.a : 0f;
+        var v2GroundStart = v2GroundRing != null ? v2GroundRing.anchoredPosition : Vector2.zero;
 
         const float duration = 0.62f;
         var elapsed = 0f;
@@ -274,8 +521,50 @@ public sealed partial class AetheriaGame
             var rise = 30f * progress;
             rootFx.anchoredPosition = new Vector2(0f, rise);
             var reveal = 1f - Mathf.Pow(1f - Mathf.Clamp01(progress * 2.8f), 3f);
-            rootFx.localScale = Vector3.one * Mathf.Lerp(0.52f, 1.14f, reveal);
-            rootFx.localEulerAngles = new Vector3(0f, 0f, Mathf.Sin(progress * Mathf.PI) * (look.style == CombatFxStyle.Spirit ? 18f : 5f));
+            var supportScale = Mathf.Lerp(0.52f, 1.14f, reveal);
+            var supportRotation = Mathf.Sin(progress * Mathf.PI) * (look.style == CombatFxStyle.Spirit ? 18f : 5f);
+            rootFx.localScale = Vector3.one * supportScale;
+            rootFx.localEulerAngles = new Vector3(0f, 0f, supportRotation);
+            if (v2SupportCast != null)
+            {
+                v2SupportCast.localScale = Vector3.one * Mathf.Lerp(0.52f, 1.28f, reveal);
+                v2SupportCast.localEulerAngles = new Vector3(0f, 0f, Mathf.Lerp(-30f, 24f, progress));
+                if (v2SupportCastImage != null)
+                {
+                    var castColor = v2SupportCastImage.color;
+                    castColor.a = v2SupportCastAlpha * Mathf.Sin(progress * Mathf.PI);
+                    v2SupportCastImage.color = castColor;
+                }
+            }
+            if (v2GroundRing != null)
+            {
+                v2GroundRing.anchoredPosition = v2GroundStart + new Vector2(
+                    0f,
+                    -rise / Mathf.Max(0.01f, supportScale));
+                v2GroundRing.localScale = new Vector3(
+                    Mathf.Lerp(0.42f, 1.34f, reveal),
+                    Mathf.Lerp(0.62f, 1.12f, reveal),
+                    1f);
+                v2GroundRing.localEulerAngles = new Vector3(0f, 0f, -supportRotation);
+                if (v2GroundImage != null)
+                {
+                    var ringColor = v2GroundImage.color;
+                    ringColor.a = v2GroundAlpha * Mathf.Sin(progress * Mathf.PI);
+                    v2GroundImage.color = ringColor;
+                }
+            }
+            if (v2Motes != null)
+            {
+                v2Motes.anchoredPosition = new Vector2(0f, Mathf.Lerp(-18f, 46f, progress));
+                v2Motes.localScale = Vector3.one * Mathf.Lerp(0.64f, 1.20f, reveal);
+                v2Motes.localEulerAngles = new Vector3(0f, 0f, Mathf.Lerp(16f, -22f, progress));
+                if (v2MotesImage != null)
+                {
+                    var moteColor = v2MotesImage.color;
+                    moteColor.a = v2MotesAlpha * Mathf.Sin(progress * Mathf.PI);
+                    v2MotesImage.color = moteColor;
+                }
+            }
             group.alpha = Mathf.Clamp01(1f - Mathf.Max(0f, progress - 0.68f) / 0.32f);
             yield return null;
         }

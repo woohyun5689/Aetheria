@@ -1,0 +1,214 @@
+{
+  "generator_mode": "built-in image_gen",
+  "atlas": "ArtSource/Generated/CombatFXV2/monk/atlas_raw.png",
+  "atlas_size": [
+    1536,
+    1024
+  ],
+  "grid": {
+    "columns": 3,
+    "rows": 4,
+    "cell_size": [
+      512,
+      256
+    ]
+  },
+  "skills": {
+    "monk_iron_fist_combo": {
+      "cast": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/monk_iron_fist_combo/fx_cast.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.19755,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "action": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/monk_iron_fist_combo/fx_action.png",
+        "size": [
+          1536,
+          1024
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.197578,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "impact": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/monk_iron_fist_combo/fx_impact.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.225476,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "monk_pressure_lock": {
+      "cast": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/monk_pressure_lock/fx_cast.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.104662,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "action": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/monk_pressure_lock/fx_action.png",
+        "size": [
+          1536,
+          1024
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.060845,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "impact": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/monk_pressure_lock/fx_impact.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.094966,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "monk_inner_burst": {
+      "cast": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/monk_inner_burst/fx_cast.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.189625,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "action": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/monk_inner_burst/fx_action.png",
+        "size": [
+          1536,
+          1024
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.211795,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "impact": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/monk_inner_burst/fx_impact.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.259101,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "support": {
+        "path": "Assets/Resources/UI/VisualRefresh/CombatFX/SkillsV2/monk_inner_burst/fx_support.png",
+        "size": [
+          1024,
+          1536
+        ],
+        "mode": "RGBA",
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "visible_pixel_fraction": 0.096924,
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  }
+}

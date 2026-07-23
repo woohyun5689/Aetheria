@@ -134,8 +134,7 @@ public sealed partial class AetheriaGame
             || imageName == "Dungeon Map Top Overlay"
             || imageName == "Dungeon Map Legend"
             || imageName == "Dungeon Map Status Overlay"
-            || imageName == "Dungeon Quick Start"
-            || imageName == "Dungeon Info Popup";
+            || imageName == "Dungeon Quick Start";
         if (!readabilitySurface)
         {
             return;
