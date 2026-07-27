@@ -5,6 +5,15 @@ using UnityEngine;
 
 public sealed partial class AetheriaGame
 {
+#if UNITY_EDITOR
+    private const string SaveStorageChannel = "EditorTest";
+    private const string SaveKeyPrefix = "AetheriaUnityEditorSave_";
+    private const string LegacySaveKeyPrefix = "AetheriaUnitySave_";
+#else
+    private const string SaveStorageChannel = "Player";
+    private const string SaveKeyPrefix = "AetheriaUnityPlayerSave_";
+#endif
+
     private bool HasSave(int slot)
     {
         return AetheriaSaveFiles.HasSave(slot) || PlayerPrefs.HasKey(SaveKey(slot));
@@ -469,7 +478,7 @@ public sealed partial class AetheriaGame
 
     private string SaveKey(int slot)
     {
-        return "AetheriaUnitySave_" + Mathf.Clamp(slot, 0, SaveSlotCount - 1);
+        return SaveKeyPrefix + Mathf.Clamp(slot, 0, SaveSlotCount - 1);
     }
 
     private void DeleteSave(int slot)
@@ -495,11 +504,16 @@ public sealed partial class AetheriaGame
     private static class AetheriaSaveFiles
     {
         private const string SaveFolderName = "AetheriaSaves";
+#if UNITY_EDITOR
+        private const string EditorLegacyMigrationMarkerName = ".legacy_editor_saves_migrated_v1";
+#endif
+        private static bool storageReady;
 
         public static bool HasSave(int slot)
         {
             try
             {
+                EnsureStorageReady();
                 return File.Exists(SavePath(slot));
             }
             catch (Exception exception)
@@ -513,6 +527,7 @@ public sealed partial class AetheriaGame
         {
             try
             {
+                EnsureStorageReady();
                 var path = SavePath(slot);
                 return File.Exists(path) ? File.ReadAllText(path) : "";
             }
@@ -527,6 +542,7 @@ public sealed partial class AetheriaGame
         {
             try
             {
+                EnsureStorageReady();
                 var folder = SaveFolder();
                 Directory.CreateDirectory(folder);
                 var path = SavePath(slot);
@@ -545,6 +561,7 @@ public sealed partial class AetheriaGame
         {
             try
             {
+                EnsureStorageReady();
                 var path = SavePath(slot);
                 if (File.Exists(path))
                 {
@@ -559,12 +576,79 @@ public sealed partial class AetheriaGame
 
         private static string SaveFolder()
         {
-            return Path.Combine(Application.persistentDataPath, SaveFolderName);
+            return Path.Combine(Application.persistentDataPath, SaveFolderName, SaveStorageChannel);
         }
 
         private static string SavePath(int slot)
         {
             return Path.Combine(SaveFolder(), "slot_" + Mathf.Clamp(slot, 0, SaveSlotCount - 1) + ".json");
+        }
+
+        private static void EnsureStorageReady()
+        {
+            if (storageReady)
+            {
+                return;
+            }
+
+#if UNITY_EDITOR
+            try
+            {
+                var legacyFolder = Path.Combine(Application.persistentDataPath, SaveFolderName);
+                var editorFolder = SaveFolder();
+                Directory.CreateDirectory(editorFolder);
+                var markerPath = Path.Combine(editorFolder, EditorLegacyMigrationMarkerName);
+
+                if (!File.Exists(markerPath))
+                {
+                    var migrationFailed = false;
+                    var playerPrefsChanged = false;
+                    for (var slot = 0; slot < SaveSlotCount; slot++)
+                    {
+                        try
+                        {
+                            var fileName = "slot_" + slot + ".json";
+                            var legacyPath = Path.Combine(legacyFolder, fileName);
+                            var editorPath = Path.Combine(editorFolder, fileName);
+                            if (File.Exists(legacyPath) && !File.Exists(editorPath))
+                            {
+                                File.Copy(legacyPath, editorPath);
+                            }
+
+                            var legacyKey = LegacySaveKeyPrefix + slot;
+                            var editorKey = SaveKeyPrefix + slot;
+                            if (PlayerPrefs.HasKey(legacyKey) && !PlayerPrefs.HasKey(editorKey))
+                            {
+                                PlayerPrefs.SetString(editorKey, PlayerPrefs.GetString(legacyKey, ""));
+                                playerPrefsChanged = true;
+                            }
+                        }
+                        catch (Exception exception)
+                        {
+                            migrationFailed = true;
+                            Debug.LogWarning(
+                                "Failed to preserve legacy editor save slot " + slot + ": " + exception.Message);
+                        }
+                    }
+
+                    if (playerPrefsChanged)
+                    {
+                        PlayerPrefs.Save();
+                    }
+
+                    if (!migrationFailed)
+                    {
+                        File.WriteAllText(markerPath, "v1");
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning("Failed to preserve legacy editor saves: " + exception.Message);
+            }
+#endif
+
+            storageReady = true;
         }
     }
 }

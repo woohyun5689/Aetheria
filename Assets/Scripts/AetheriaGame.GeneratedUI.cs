@@ -86,15 +86,13 @@ public sealed partial class AetheriaGame
                         TitleBackgroundV1Path,
                         "UI/FacilityBackdrops/menu_hall",
                         "UI/VisualRefresh/Backgrounds/menu",
-                        "UI/Generated/menu_background_v2",
-                        "UI/Generated/menu_background_bright"
+                        "UI/Generated/menu_background_v2"
                     }
                     : new[]
                     {
                         "UI/FacilityBackdrops/menu_hall",
                         "UI/VisualRefresh/Backgrounds/menu",
-                        "UI/Generated/menu_background_v2",
-                        "UI/Generated/menu_background_bright"
+                        "UI/Generated/menu_background_v2"
                     };
             case AetheriaScreen.ClassSelect:
             case AetheriaScreen.Guide:
@@ -102,55 +100,48 @@ public sealed partial class AetheriaGame
                 {
                     "UI/FacilityBackdrops/menu_hall",
                     "UI/VisualRefresh/Backgrounds/menu",
-                    "UI/Generated/menu_background_v2",
-                    "UI/Generated/menu_background_bright"
+                    "UI/Generated/menu_background_v2"
                 };
             case AetheriaScreen.Town:
                 return new[]
                 {
                     "UI/FacilityBackdrops/town_hub",
                     "UI/VisualRefresh/Backgrounds/town",
-                    "UI/Generated/town_background_v2",
-                    "UI/Generated/town_background_bright"
+                    "UI/Generated/menu_background_v2"
                 };
             case AetheriaScreen.Inventory:
                 return new[]
                 {
                     "UI/FacilityBackdrops/inventory_armory",
                     "UI/VisualRefresh/Backgrounds/inventory",
-                    "UI/Generated/inventory_background_bright",
-                    "UI/Generated/town_background_v2"
+                    "UI/Generated/menu_background_v2"
                 };
             case AetheriaScreen.Enhancement:
                 return new[]
                 {
                     "UI/FacilityBackdrops/forge",
                     "UI/VisualRefresh/Backgrounds/forge",
-                    "UI/Generated/forge_background_bright",
-                    "UI/Generated/town_background_v2"
+                    "UI/Generated/menu_background_v2"
                 };
             case AetheriaScreen.SkillTraining:
                 return new[]
                 {
                     "UI/FacilityBackdrops/skill_shrine",
                     "UI/VisualRefresh/Backgrounds/skill_shrine",
-                    "UI/Generated/skill_background_bright",
-                    "UI/Generated/town_background_v2"
+                    "UI/Generated/menu_background_v2"
                 };
             case AetheriaScreen.Crafting:
                 return new[]
                 {
                     "UI/FacilityBackdrops/crafting_workshop",
                     "UI/VisualRefresh/Backgrounds/crafting",
-                    "UI/Generated/crafting_background_bright",
-                    "UI/Generated/town_background_v2"
+                    "UI/Generated/menu_background_v2"
                 };
             case AetheriaScreen.DungeonSelect:
                 return new[]
                 {
                     "UI/VisualRefresh/Backgrounds/world_map",
-                    "UI/Generated/menu_background_v2",
-                    "UI/Generated/menu_background_bright"
+                    "UI/Generated/menu_background_v2"
                 };
             case AetheriaScreen.Combat:
             case AetheriaScreen.Victory:
@@ -162,9 +153,7 @@ public sealed partial class AetheriaGame
                     CurrentVisualCombatBackdropPath(regionKey),
                     "UI/VisualRefresh/Backgrounds/Regions/" + regionKey,
                     "UI/VisualRefresh/Backgrounds/combat_" + regionKey,
-                    "UI/Generated/combat_" + regionKey + "_bright",
-                    "UI/Generated/combat_background_v2",
-                    "UI/Generated/combat_background_bright"
+                    "UI/Generated/menu_background_v2"
                 };
             default:
                 return new string[0];
@@ -338,37 +327,6 @@ public sealed partial class AetheriaGame
             sprite = LoadGeneratedSprite("CharactersV2/" + portraitName + "/idle", Vector4.zero);
         }
 
-        if (sprite != null)
-        {
-            return sprite;
-        }
-
-        sprite = LoadGeneratedSprite("Characters/" + portraitName + "/" + state, Vector4.zero);
-        if (sprite == null && state != "idle")
-        {
-            sprite = LoadGeneratedSprite("Characters/" + portraitName + "/idle", Vector4.zero);
-        }
-
-        if (sprite != null)
-        {
-            return sprite;
-        }
-
-        var resourcePath = "Portraits/" + portraitName;
-        sprite = Resources.Load<Sprite>(resourcePath);
-        if (sprite != null)
-        {
-            return sprite;
-        }
-
-        var texture = Resources.Load<Texture2D>(resourcePath);
-        if (texture == null)
-        {
-            return null;
-        }
-
-        sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-        sprite.name = "Portrait " + portraitName;
         return sprite;
     }
 

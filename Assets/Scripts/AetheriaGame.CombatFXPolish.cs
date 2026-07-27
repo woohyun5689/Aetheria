@@ -11,7 +11,6 @@ public sealed partial class AetheriaGame
     private const string CombatFxSigilPath = CombatFxVisualRoot + "fx_arcane_sigil";
     private const string CombatFxWardPath = CombatFxVisualRoot + "fx_ward_bloom";
     private const string CombatFxClassVisualRoot = CombatFxVisualRoot + "Classes/";
-    private const string CombatFxSkillVisualRoot = CombatFxVisualRoot + "Skills/";
     private const string CombatFxSkillV2VisualRoot = CombatFxVisualRoot + "SkillsV2/";
     private const string CombatFxV2VisualRoot = CombatFxVisualRoot + "V2/";
     private const string CombatFxV2ContactFlashPath = CombatFxV2VisualRoot + "fx_contact_flash";
@@ -116,13 +115,7 @@ public sealed partial class AetheriaGame
             return null;
         }
 
-        var v2Path = CombatFxSkillV2VisualRoot + key + "/fx_" + slot;
-        if (LoadGeneratedSprite(v2Path, Vector4.zero) != null)
-        {
-            return v2Path;
-        }
-
-        var path = CombatFxSkillVisualRoot + key + "/fx_" + slot;
+        var path = CombatFxSkillV2VisualRoot + key + "/fx_" + slot;
         return LoadGeneratedSprite(path, Vector4.zero) != null ? path : null;
     }
 

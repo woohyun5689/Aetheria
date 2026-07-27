@@ -988,15 +988,6 @@ public sealed partial class AetheriaGame
             return dungeonArt;
         }
 
-        if (currentEnemy != null && !string.IsNullOrEmpty(currentEnemy.spriteKey))
-        {
-            var uniqueSprite = LoadGeneratedSprite("EnemiesV3/" + currentEnemy.spriteKey, Vector4.zero);
-            if (uniqueSprite != null)
-            {
-                return uniqueSprite;
-            }
-        }
-
         return LoadGeneratedSprite("EnemiesV2/" + EnemySpriteArchetype(), Vector4.zero);
     }
 
