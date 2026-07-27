@@ -982,6 +982,12 @@ public sealed partial class AetheriaGame
 
     private Sprite LoadCurrentEnemySprite()
     {
+        var dungeonArt = LoadCurrentEnemyArtSprite();
+        if (dungeonArt != null)
+        {
+            return dungeonArt;
+        }
+
         if (currentEnemy != null && !string.IsNullOrEmpty(currentEnemy.spriteKey))
         {
             var uniqueSprite = LoadGeneratedSprite("EnemiesV3/" + currentEnemy.spriteKey, Vector4.zero);
