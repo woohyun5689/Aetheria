@@ -80,6 +80,22 @@ public sealed partial class AetheriaGame
         switch (currentScreen)
         {
             case AetheriaScreen.MainMenu:
+                return titleScreenActive
+                    ? new[]
+                    {
+                        TitleBackgroundV1Path,
+                        "UI/FacilityBackdrops/menu_hall",
+                        "UI/VisualRefresh/Backgrounds/menu",
+                        "UI/Generated/menu_background_v2",
+                        "UI/Generated/menu_background_bright"
+                    }
+                    : new[]
+                    {
+                        "UI/FacilityBackdrops/menu_hall",
+                        "UI/VisualRefresh/Backgrounds/menu",
+                        "UI/Generated/menu_background_v2",
+                        "UI/Generated/menu_background_bright"
+                    };
             case AetheriaScreen.ClassSelect:
             case AetheriaScreen.Guide:
                 return new[]
@@ -235,12 +251,6 @@ public sealed partial class AetheriaGame
             AttachScreenParallax(characterLayer, 10f, -1f);
         }
 
-        var veilAlpha = currentScreen == AetheriaScreen.MainMenu ? 0.025f : 0.055f;
-        var veil = AddFlatPanel("Generated Screen Veil", root, new Color(0.92f, 0.97f, 1f, veilAlpha));
-        Stretch(veil, 0, 0, 0, 0);
-        veil.SetSiblingIndex(characterSprite == null ? 1 : 2);
-        veil.GetComponent<Image>().raycastTarget = false;
-
         // This ornament is deliberately added while only background layers exist.
         // Every screen page is created afterwards, so the class motif remains
         // visible without sitting over text or intercepting input.
@@ -305,23 +315,14 @@ public sealed partial class AetheriaGame
         image.sprite = sprite;
         image.type = Image.Type.Sliced;
         var tint = Color.Lerp(Color.white, new Color(sourceColor.r, sourceColor.g, sourceColor.b, 1f), 0.08f);
-        image.color = new Color(tint.r, tint.g, tint.b, Mathf.Clamp(sourceColor.a, 0.84f, 0.98f));
+        image.color = new Color(tint.r, tint.g, tint.b, 1f);
         return true;
     }
 
     private bool ApplyGeneratedButtonSkin(Image image, Color accent)
     {
-        var sprite = LoadGeneratedSprite("UI/Generated/button_frame_bright", new Vector4(272f, 136f, 272f, 136f));
-        if (image == null || sprite == null)
-        {
-            return false;
-        }
-
-        image.sprite = sprite;
-        image.type = Image.Type.Sliced;
-        image.pixelsPerUnitMultiplier = 8f;
-        image.color = Color.Lerp(Color.white, accent, 0.18f);
-        return true;
+        return image != null
+            && ApplyOpaqueSceneButtonSkin(image, accent, IsDangerSceneButton(image, accent));
     }
 
     private Sprite LoadCharacterStateSprite(string portraitName, string state)

@@ -89,15 +89,15 @@ public sealed partial class AetheriaGame
 
         var luminance = label.color.r * 0.2126f + label.color.g * 0.7152f + label.color.b * 0.0722f;
         var darkGlyph = luminance < 0.54f;
-        var stroke = label.fontSize >= 32 ? 1.8f : label.fontSize >= 22 ? 1.55f : 1.25f;
+        var stroke = label.fontSize >= 32 ? 1.40f : label.fontSize >= 22 ? 1.15f : 0.90f;
         outline.effectColor = darkGlyph
-            ? new Color(1f, 1f, 1f, 0.94f)
-            : new Color(0.01f, 0.02f, 0.035f, 0.96f);
+            ? new Color(1f, 1f, 1f, 0.88f)
+            : new Color(0.01f, 0.02f, 0.035f, 0.90f);
         outline.effectDistance = new Vector2(stroke, -stroke);
         outline.useGraphicAlpha = true;
-        shadow.effectColor = new Color(0f, 0f, 0f, darkGlyph ? 0.24f : 0.38f);
-        shadow.effectDistance = new Vector2(0.9f, -0.9f);
-        shadow.useGraphicAlpha = true;
+        // Outline and drop shadow together made Korean glyphs look doubled on
+        // detailed backgrounds. Keep the thinner outline as the single edge cue.
+        shadow.enabled = false;
     }
 
     private static bool ContainsKorean(string value)
@@ -120,10 +120,18 @@ public sealed partial class AetheriaGame
         return false;
     }
 
-    private void EnforceThirtyPercentReadabilityPlate(Image image)
+    private void EnforceTransparentReadabilityPlate(Image image)
     {
         if (image == null)
         {
+            return;
+        }
+
+        if (image.GetComponent<UiOpaqueTextPanel>() != null)
+        {
+            var opaqueColor = image.color;
+            opaqueColor.a = 1f;
+            image.color = opaqueColor;
             return;
         }
 
@@ -148,6 +156,8 @@ public sealed partial class AetheriaGame
     private void ApplyUniversalImageButtonState(Button button)
     {
         if (button == null
+            || button.GetComponent<UiMainMenuImageButton>() != null
+            || button.GetComponent<UiOpaqueSceneImageButton>() != null
             || button.GetComponent<UiImageButtonStatePresenter>() != null
             || button.GetComponent<UiCombatCardPresenter>() != null
             || !ButtonHasVisibleArtwork(button))
@@ -603,7 +613,7 @@ public sealed partial class AetheriaGame
             var images = scope.GetComponentsInChildren<Image>(true);
             for (var i = 0; i < images.Length; i++)
             {
-                owner.EnforceThirtyPercentReadabilityPlate(images[i]);
+                owner.EnforceTransparentReadabilityPlate(images[i]);
                 owner.ApplyCharacterGroundingIfNeeded(images[i]);
             }
         }

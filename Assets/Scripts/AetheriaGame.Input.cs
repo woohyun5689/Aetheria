@@ -8,6 +8,15 @@ public sealed partial class AetheriaGame
 {
     private void Update()
     {
+        if (titleScreenActive)
+        {
+            if (Time.unscaledTime >= titleInputUnlockTime && TitleAdvancePressed())
+            {
+                RequestTitleAdvance();
+            }
+            return;
+        }
+
         if (currentScreen == AetheriaScreen.Guide && CancelPressed())
         {
             if (guideReturnToMainMenu)

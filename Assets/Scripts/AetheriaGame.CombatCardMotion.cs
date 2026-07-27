@@ -33,19 +33,19 @@ public sealed partial class AetheriaGame
         shortcutPlate.anchorMin = new Vector2(1f, 1f);
         shortcutPlate.anchorMax = new Vector2(1f, 1f);
         shortcutPlate.pivot = new Vector2(1f, 1f);
-        shortcutPlate.anchoredPosition = new Vector2(-9f, -9f);
-        shortcutPlate.sizeDelta = new Vector2(34f, 27f);
+        shortcutPlate.anchoredPosition = new Vector2(-16f, -14f);
+        shortcutPlate.sizeDelta = new Vector2(38f, 30f);
         shortcutPlate.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
         shortcutPlate.GetComponent<Image>().raycastTarget = false;
 
         var shortcutLabel = AddText(
             shortcutPlate,
             shortcut,
-            14,
+            17,
             FontStyle.Bold,
             textColor,
             TextAnchor.MiddleCenter,
-            27f);
+            30f);
         Stretch(shortcutLabel.GetComponent<RectTransform>(), 2f, 0f, 2f, 0f);
         shortcutLabel.raycastTarget = false;
 
@@ -81,7 +81,7 @@ public sealed partial class AetheriaGame
         image.preserveAspect = true;
         image.raycastTarget = false;
         image.color = generatedSprite != null
-            ? (enabled ? Color.white : new Color(0.64f, 0.66f, 0.69f, 0.64f))
+            ? (enabled ? Color.white : new Color(0.64f, 0.66f, 0.69f, 1f))
             : new Color(accent.r, accent.g, accent.b, enabled ? 0.34f : 0.18f);
 
         if (generatedSprite == null)
@@ -496,7 +496,7 @@ public sealed partial class AetheriaGame
                 inputGateReleased = true;
                 canvasGroup.interactable = true;
                 canvasGroup.blocksRaycasts = true;
-                canvasGroup.alpha = button.interactable ? baseAlpha : baseAlpha * 0.64f;
+                canvasGroup.alpha = baseAlpha;
                 rect.localScale = baseScale;
                 rect.localRotation = baseRotation * Quaternion.Euler(0f, 0f, fanAngle);
             }
@@ -526,7 +526,7 @@ public sealed partial class AetheriaGame
                 0.10f,
                 0.15f,
                 0.20f,
-                skipDealAnimation && !button.interactable ? 0.18f : 0f);
+                0f);
             disabledVeil.raycastTarget = false;
             veilRect.SetAsFirstSibling();
         }
@@ -552,7 +552,7 @@ public sealed partial class AetheriaGame
                 rect.anchoredPosition = basePosition + new Vector2(0f, fanYOffset);
                 rect.localScale = baseScale;
                 rect.localRotation = baseRotation * Quaternion.Euler(0f, 0f, fanAngle);
-                canvasGroup.alpha = button.interactable ? baseAlpha : baseAlpha * 0.64f;
+                canvasGroup.alpha = baseAlpha;
                 dealt = true;
                 yield break;
             }
@@ -572,7 +572,7 @@ public sealed partial class AetheriaGame
                     baseRotation * Quaternion.Euler(0f, 0f, fanAngle * 1.55f),
                     baseRotation * Quaternion.Euler(0f, 0f, fanAngle),
                     eased);
-                canvasGroup.alpha = Mathf.Lerp(0f, button.interactable ? baseAlpha : baseAlpha * 0.64f, eased);
+                canvasGroup.alpha = Mathf.Lerp(0f, baseAlpha, eased);
                 yield return null;
             }
             ReleaseInputGate();
@@ -651,7 +651,7 @@ public sealed partial class AetheriaGame
                 ? 0.975f
                 : (pressed ? (active ? 1.025f : 0.965f) : (active ? 1.07f : 1f));
             var targetRotation = baseRotation * Quaternion.Euler(0f, 0f, active ? 0f : fanAngle);
-            var targetAlpha = interactable ? baseAlpha : baseAlpha * 0.64f;
+            var targetAlpha = baseAlpha;
             var blend = 1f - Mathf.Exp(-18f * Time.unscaledDeltaTime);
 
             rect.anchoredPosition = Vector2.Lerp(rect.anchoredPosition, targetPosition, blend);
@@ -661,7 +661,7 @@ public sealed partial class AetheriaGame
             if (disabledVeil != null)
             {
                 var veilColor = disabledVeil.color;
-                veilColor.a = Mathf.Lerp(veilColor.a, interactable ? 0f : 0.18f, blend);
+                veilColor.a = 0f;
                 disabledVeil.color = veilColor;
             }
 

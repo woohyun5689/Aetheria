@@ -405,11 +405,11 @@ public sealed partial class AetheriaGame
         badge.anchorMin = new Vector2(0f, 1f);
         badge.anchorMax = badge.anchorMin;
         badge.pivot = new Vector2(0f, 1f);
-        badge.anchoredPosition = new Vector2(14f, -10f);
+        badge.anchoredPosition = new Vector2(18f, -16f);
         badge.sizeDelta = new Vector2(78f, 28f);
         badge.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
         badge.GetComponent<Image>().raycastTarget = false;
-        var label = AddText(badge, roleLabel, 18, FontStyle.Bold, accent, TextAnchor.MiddleCenter, 28f);
+        var label = AddText(badge, roleLabel, 16, FontStyle.Bold, accent, TextAnchor.MiddleCenter, 28f);
         Stretch(label.GetComponent<RectTransform>(), 4f, 0f, 4f, 0f);
         badge.SetAsLastSibling();
     }

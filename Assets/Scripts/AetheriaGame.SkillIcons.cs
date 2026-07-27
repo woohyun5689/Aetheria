@@ -83,7 +83,7 @@ public sealed partial class AetheriaGame
             skillName,
             CombatActionCardIconSize,
             CombatActionCardIconSize,
-            enabled ? 1f : 0.52f);
+            1f);
         if (icon == null)
         {
             return false;

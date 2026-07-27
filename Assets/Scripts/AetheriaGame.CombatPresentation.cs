@@ -76,8 +76,8 @@ public sealed partial class AetheriaGame
         Stretch(page, 0, 0, 0, 0);
         AddVertical(page, 8, TextAnchor.UpperCenter, new RectOffset(24, 24, 14, 14));
 
-        // Information chrome uses a dark glass treatment so the bright region art
-        // remains open while labels stay readable without heavy text outlines.
+        // Layout hosts remain transparent. Real actions use opaque image buttons
+        // and informational copy uses the shared high-contrast text treatment.
         var header = AddCombatGlassPanel("Combat Header Plate", page, ActiveCharacterAccent(manaColor), 0.84f);
         AddLayoutSize(header, -1, 64);
         var headerRow = header.gameObject.AddComponent<HorizontalLayoutGroup>();
@@ -87,8 +87,11 @@ public sealed partial class AetheriaGame
         headerRow.childControlWidth = true;
         headerRow.childControlHeight = true;
         headerRow.childForceExpandWidth = false;
-        AddText(
-            header,
+        var locationTitle = AddFlatPanel("Combat Location Title", header, Color.white);
+        AddLayoutSize(locationTitle, -1f, 52f);
+        ApplyOpaqueTextPanel(locationTitle, OpaqueTextPanelKind.Title);
+        var locationLabel = AddText(
+            locationTitle,
             (currentDungeon != null ? currentDungeon.name + "  " + currentDungeonFloor + "/" + DungeonFloorCount(currentDungeon) + "층" : "차원 전투")
                 + (currentEnemyIsBoss ? "  ·  보스전" : "  ·  일반 전투"),
             25,
@@ -96,10 +99,12 @@ public sealed partial class AetheriaGame
             Color.white,
             TextAnchor.MiddleLeft,
             48);
+        Stretch(locationLabel.rectTransform, 30f, 6f, 30f, 6f);
 
         var turnPill = AddCombatGlassPanel("Turn Banner", header, CombatPhaseAccent(phase), 0.88f);
         combatTurnPillImage = turnPill.GetComponent<Image>();
         AddLayoutSize(turnPill, 224, 46);
+        ApplyOpaqueTextPanel(turnPill, OpaqueTextPanelKind.Compact);
         combatTurnText = AddText(
             turnPill,
             CombatPhaseTitle(phase),
@@ -112,6 +117,7 @@ public sealed partial class AetheriaGame
 
         var actionRibbon = AddCombatGlassPanel("Current Action Ribbon", header, CombatPhaseAccent(phase), 0.76f);
         AddLayoutSize(actionRibbon, 360, 46);
+        ApplyOpaqueTextPanel(actionRibbon, OpaqueTextPanelKind.Compact);
         combatActionText = AddText(
             actionRibbon,
             pendingCombatPresentation != null
@@ -136,7 +142,7 @@ public sealed partial class AetheriaGame
         retreat.interactable = canChooseAction;
 
         // Open stage: no VS column, no vertical separator, no opaque combatant boxes.
-        var arena = AddFlatPanel("Combat Arena", page, new Color(0.90f, 0.96f, 1f, 0.025f));
+        var arena = AddFlatPanel("Combat Arena", page, Color.clear);
         AddLayoutSize(arena, -1, 574);
         var arenaImage = arena.GetComponent<Image>();
         arenaImage.raycastTarget = false;
@@ -160,8 +166,6 @@ public sealed partial class AetheriaGame
         AddEnemyCombatArt(combatEnemyPanel);
         AddEnemyCombatStatusHud(combatEnemyPanel);
 
-        AddEnemyIntentWidget(combatStageContent, phase);
-
         combatFxLayer = AddFlatPanel("Combat FX Layer", arena, new Color(0f, 0f, 0f, 0f));
         Stretch(combatFxLayer, 0, 0, 0, 0);
         combatFxLayer.GetComponent<Image>().raycastTarget = false;
@@ -173,6 +177,11 @@ public sealed partial class AetheriaGame
         flash.SetAsLastSibling();
         combatImpactFlash = flash.GetComponent<Image>();
         combatFxLayer.SetAsLastSibling();
+
+        // Keep the forecast above world-space VFX. Large summons and vertical
+        // impacts may cross the center of the arena, but they must never obscure
+        // the information the player needs to choose the next card.
+        AddEnemyIntentWidget(arena, phase);
 
         // These are the player's five fixed actions presented as cards. There is
         // intentionally no draw pile, random hand, or change to combat mechanics.
@@ -192,9 +201,9 @@ public sealed partial class AetheriaGame
         commandHeaderRow.childForceExpandWidth = false;
 
         var commandPrompt = AddFlatPanel("Action Prompt", commandHeader, Color.clear);
-        commandPrompt.GetComponent<Image>().raycastTarget = false;
         AddLayoutSize(commandPrompt, -1, 94);
-        AddVertical(commandPrompt, 1, TextAnchor.MiddleLeft, new RectOffset(8, 8, 2, 2));
+        ApplyOpaqueTextPanel(commandPrompt, OpaqueTextPanelKind.Body);
+        AddVertical(commandPrompt, 1, TextAnchor.MiddleLeft, new RectOffset(30, 30, 12, 12));
         combatCommandText = AddText(
             commandPrompt,
             CombatPhaseCommandPrompt(phase),
@@ -264,31 +273,15 @@ public sealed partial class AetheriaGame
         {
             AddCombatInputLockOverlay(commandButtons);
         }
+        ApplyVisualRefreshToScreen(page);
     }
 
     private RectTransform AddCombatGlassPanel(string name, Transform parent, Color accent, float alpha)
     {
-        var baseGlass = new Color(0.018f, 0.055f, 0.083f, 1f);
-        var accentOpaque = new Color(accent.r, accent.g, accent.b, 1f);
-        var surface = Color.Lerp(baseGlass, accentOpaque, 0.10f);
-        surface.a = Mathf.Clamp01(alpha);
-        var panel = AddFlatPanel(name, parent, surface);
+        var panel = AddFlatPanel(name, parent, Color.clear);
         var image = panel.GetComponent<Image>();
-        image.sprite = MapRoundedRectSprite();
-        image.type = Image.Type.Sliced;
+        image.sprite = null;
         image.raycastTarget = false;
-
-        var edge = AddFlatPanel(
-            name + " Glass Edge",
-            panel,
-            new Color(accent.r, accent.g, accent.b, Mathf.Min(0.62f, alpha * 0.70f)));
-        edge.anchorMin = new Vector2(0.04f, 1f);
-        edge.anchorMax = new Vector2(0.96f, 1f);
-        edge.pivot = new Vector2(0.5f, 1f);
-        edge.anchoredPosition = new Vector2(0f, -1f);
-        edge.sizeDelta = new Vector2(0f, 2f);
-        edge.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-        edge.GetComponent<Image>().raycastTarget = false;
         return panel;
     }
 
@@ -297,10 +290,14 @@ public sealed partial class AetheriaGame
         var accent = ActiveCharacterAccent(manaColor);
         var slot = AddFlatPanel("Player Combat Status HUD Slot", parent, Color.clear);
         slot.GetComponent<Image>().raycastTarget = false;
-        AddLayoutSize(slot, -1f, 174f);
+        AddLayoutSize(slot, -1f, 190f);
         var hud = AddCombatGlassPanel("Player Combat Status HUD", slot, accent, 0.88f);
-        SetCenteredFixedRect(hud, 560f, 174f);
-        AddVertical(hud, 2, TextAnchor.UpperCenter, new RectOffset(14, 14, 6, 6));
+        SetCenteredFixedRect(hud, 600f, 190f);
+        ApplyOpaqueTextPanel(hud, OpaqueTextPanelKind.Body);
+        var hudCanvas = hud.gameObject.AddComponent<Canvas>();
+        hudCanvas.overrideSorting = true;
+        hudCanvas.sortingOrder = 70;
+        AddVertical(hud, 2, TextAnchor.UpperCenter, new RectOffset(24, 24, 8, 16));
 
         AddText(
             hud,
@@ -332,10 +329,14 @@ public sealed partial class AetheriaGame
         var accent = currentEnemyIsBoss ? goldColor : EnemyThemeColor();
         var slot = AddFlatPanel("Enemy Combat Status HUD Slot", parent, Color.clear);
         slot.GetComponent<Image>().raycastTarget = false;
-        AddLayoutSize(slot, -1f, 174f);
+        AddLayoutSize(slot, -1f, 190f);
         var hud = AddCombatGlassPanel("Enemy Combat Status HUD", slot, accent, 0.88f);
-        SetCenteredFixedRect(hud, 560f, 174f);
-        AddVertical(hud, 2, TextAnchor.UpperCenter, new RectOffset(14, 14, 6, 6));
+        SetCenteredFixedRect(hud, 600f, 190f);
+        ApplyOpaqueTextPanel(hud, OpaqueTextPanelKind.Body);
+        var hudCanvas = hud.gameObject.AddComponent<Canvas>();
+        hudCanvas.overrideSorting = true;
+        hudCanvas.sortingOrder = 70;
+        AddVertical(hud, 2, TextAnchor.UpperCenter, new RectOffset(24, 24, 8, 16));
 
         AddText(
             hud,
@@ -411,6 +412,7 @@ public sealed partial class AetheriaGame
         intent.anchorMax = new Vector2(0.605f, 0.975f);
         intent.offsetMin = Vector2.zero;
         intent.offsetMax = Vector2.zero;
+        ApplyOpaqueTextPanel(intent, OpaqueTextPanelKind.Compact);
 
         var marker = AddFlatPanel("Enemy Intent Accent", intent, new Color(accent.r, accent.g, accent.b, 0.92f));
         marker.anchorMin = new Vector2(0f, 0.18f);
@@ -541,11 +543,19 @@ public sealed partial class AetheriaGame
         // but replace its monolithic label with a real card layout.
         var card = AddButton(parent, "", onClick, accent);
         card.gameObject.name = "Combat Action Card " + title;
+        var legacyWideFrame = card.transform.Find("Character Theme Button Frame");
+        if (legacyWideFrame != null)
+        {
+            legacyWideFrame.gameObject.SetActive(false);
+        }
+        ApplyOpaqueCombatCardSkin(card, accent, ScreenCharacterThemeKey());
         var rect = card.GetComponent<RectTransform>();
-        var preferredCardWidth = cardCount <= 3 ? 330f : cardCount == 4 ? 310f : 290f;
-        AddLayoutSize(rect, preferredCardWidth, 236f);
+        const float preferredCardWidth = 300f;
+        const float preferredCardHeight = 240f;
+        AddLayoutSize(rect, preferredCardWidth, preferredCardHeight);
         var layout = rect.GetComponent<LayoutElement>();
         layout.minWidth = preferredCardWidth;
+        layout.minHeight = preferredCardHeight;
         layout.flexibleWidth = 0f;
         layout.flexibleHeight = 0f;
 
@@ -562,8 +572,8 @@ public sealed partial class AetheriaGame
         var copy = AddFlatPanel("Action Card Copy", rect, Color.clear);
         copy.anchorMin = Vector2.zero;
         copy.anchorMax = Vector2.one;
-        copy.offsetMin = new Vector2(hasSkillIcon ? 126f : 18f, 17f);
-        copy.offsetMax = new Vector2(-14f, -44f);
+        copy.offsetMin = new Vector2(hasSkillIcon ? 126f : 18f, 49f);
+        copy.offsetMax = new Vector2(-14f, -56f);
         copy.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
         copy.GetComponent<Image>().raycastTarget = false;
         AddVertical(copy, 2, TextAnchor.UpperLeft, new RectOffset(0, 0, 0, 0));
@@ -576,7 +586,7 @@ public sealed partial class AetheriaGame
         var resourceLabel = AddText(copy, resource, 19, FontStyle.Bold, costColor, TextAnchor.MiddleLeft, 25f);
         ConfigureCombatCardCopyText(resourceLabel, costColor, 17, 19, 1f);
 
-        var descriptionLabel = AddText(copy, safeDescription, 18, FontStyle.Bold, cardInk, TextAnchor.UpperLeft, 110f);
+        var descriptionLabel = AddText(copy, safeDescription, 18, FontStyle.Bold, cardInk, TextAnchor.MiddleLeft, 72f);
         ConfigureCombatCardCopyText(descriptionLabel, cardInk, 16, 18, 1.08f);
 
         var accentRail = AddFlatPanel("Action Card Accent", rect, new Color(accent.r, accent.g, accent.b, 0.88f));
@@ -632,17 +642,15 @@ public sealed partial class AetheriaGame
         go.transform.SetParent(parent, false);
         var image = go.GetComponent<Image>();
         var logAccent = ActiveCharacterAccent(manaColor);
-        image.color = new Color(0.018f, 0.065f, 0.092f, 0.88f);
-        image.sprite = MapRoundedRectSprite();
-        image.type = Image.Type.Sliced;
         var button = go.GetComponent<Button>();
-        button.targetGraphic = image;
+        ApplyOpaqueSceneButtonSkin(button, logAccent);
+        ApplyCharacterThemeButtonFrame(button, ScreenCharacterThemeKey(), true);
         button.interactable = canToggle;
         var colors = button.colors;
         colors.normalColor = Color.white;
         colors.highlightedColor = Color.Lerp(Color.white, logAccent, 0.18f);
         colors.pressedColor = Color.Lerp(Color.white, logAccent, 0.32f);
-        colors.disabledColor = new Color(0.56f, 0.62f, 0.66f, 0.82f);
+        colors.disabledColor = new Color(0.72f, 0.74f, 0.76f, 1f);
         button.colors = colors;
         button.onClick.AddListener(() =>
         {
@@ -659,16 +667,17 @@ public sealed partial class AetheriaGame
 
         var content = AddFlatPanel("Compact Combat Log Content", go.transform, Color.clear);
         content.GetComponent<Image>().raycastTarget = false;
-        Stretch(content, 12f, 4f, 12f, 4f);
-        AddVertical(content, 0, TextAnchor.UpperLeft, new RectOffset(2, 2, 0, 0));
+        Stretch(content, 32f, 10f, 32f, 10f);
+        AddVertical(content, 2, TextAnchor.MiddleLeft, new RectOffset(0, 0, 0, 0));
 
-        var heading = AddText(content, combatLogExpanded ? "전투 기록  ▴" : "전투 기록  ▾", 17, FontStyle.Bold, manaColor, TextAnchor.MiddleLeft, 22);
-        ConfigureCompactCombatLogText(heading, 17, 22);
+        var heading = AddText(content, combatLogExpanded ? "전투 기록  ▴" : "전투 기록  ▾", 18, FontStyle.Bold, textColor, TextAnchor.MiddleLeft, 24);
+        ConfigureCompactCombatLogText(heading, 18, 24);
         var previewLines = CombatLogPreviewLines();
+        var previewHeight = combatLogExpanded ? 22f : 38f;
         for (var index = 0; index < previewLines.Count; index++)
         {
-            var line = AddText(content, previewLines[index], 16, index == previewLines.Count - 1 ? FontStyle.Bold : FontStyle.Normal, textColor, TextAnchor.MiddleLeft, 21);
-            ConfigureCompactCombatLogText(line, 16, 21);
+            var line = AddText(content, previewLines[index], 17, index == previewLines.Count - 1 ? FontStyle.Bold : FontStyle.Normal, textColor, TextAnchor.MiddleLeft, previewHeight);
+            ConfigureCompactCombatLogText(line, 17, previewHeight);
         }
         return button;
     }
@@ -682,7 +691,7 @@ public sealed partial class AetheriaGame
 
         text.fontSize = fontSize;
         text.resizeTextForBestFit = true;
-        text.resizeTextMinSize = 14;
+        text.resizeTextMinSize = 16;
         text.resizeTextMaxSize = fontSize;
         text.horizontalOverflow = HorizontalWrapMode.Wrap;
         text.verticalOverflow = VerticalWrapMode.Truncate;
@@ -700,14 +709,15 @@ public sealed partial class AetheriaGame
             return visible;
         }
 
-        var visibleCount = combatLogExpanded ? Mathf.Min(3, lines.Count) : 1;
+        var visibleCount = combatLogExpanded ? Mathf.Min(2, lines.Count) : 1;
         var start = lines.Count - visibleCount;
         for (var index = start; index < lines.Count; index++)
         {
             var compact = (lines[index] ?? "").Replace("\r", " ").Replace("\n", " ").Trim();
-            if (compact.Length > 40)
+            var maxLength = combatLogExpanded ? 42 : 58;
+            if (compact.Length > maxLength)
             {
-                compact = compact.Substring(0, 39) + "…";
+                compact = compact.Substring(0, maxLength - 1) + "…";
             }
             visible.Add(string.IsNullOrEmpty(compact) ? "기록 없음" : compact);
         }
@@ -915,9 +925,9 @@ public sealed partial class AetheriaGame
             return;
         }
 
-        var status = AddFlatPanel("Combat Status Chips", parent, new Color(accent.r, accent.g, accent.b, 0.30f));
+        var status = AddFlatPanel("Combat Status Chips", parent, Color.clear);
         var statusImage = status.GetComponent<Image>();
-        statusImage.sprite = MapRoundedRectSprite();
+        statusImage.sprite = null;
         statusImage.raycastTarget = false;
         AddLayoutSize(status, -1, 30);
         var label = StatusLine(effects);
@@ -1085,13 +1095,13 @@ public sealed partial class AetheriaGame
     {
         if (phase == CombatPresentationPhase.EnemyResolving)
         {
-            return new Color(1f, 231f / 255f, 234f / 255f, 0.30f);
+            return Color.clear;
         }
         if (phase == CombatPresentationPhase.Result)
         {
-            return new Color(1f, 247f / 255f, 218f / 255f, 0.30f);
+            return Color.clear;
         }
-        return new Color(224f / 255f, 245f / 255f, 252f / 255f, 0.30f);
+        return Color.clear;
     }
 
     private void StartPlayerResolvedPresentation(CombatPresentationEvent presentation)
@@ -1618,21 +1628,23 @@ public sealed partial class AetheriaGame
         if (combatTurnText != null)
         {
             combatTurnText.text = CombatPhaseTitle(phase);
-            combatTurnText.color = EnsureHighContrastTextColor(CombatPhaseAccent(phase));
+            combatTurnText.color = ResolveOpaqueTextPanelColor(CombatPhaseAccent(phase), combatTurnText.fontSize, combatTurnText.fontStyle);
         }
         if (combatTurnPillImage != null)
         {
-            combatTurnPillImage.color = CombatPhaseBackground(phase);
+            var phaseAccent = CombatPhaseAccent(phase);
+            var surface = Color.Lerp(Color.white, new Color(phaseAccent.r, phaseAccent.g, phaseAccent.b, 1f), 0.075f);
+            combatTurnPillImage.color = new Color(surface.r, surface.g, surface.b, 1f);
         }
         if (combatActionText != null && !string.IsNullOrEmpty(action))
         {
             combatActionText.text = action;
-            combatActionText.color = EnsureHighContrastTextColor(CombatPhaseAccent(phase));
+            combatActionText.color = ResolveOpaqueTextPanelColor(CombatPhaseAccent(phase), combatActionText.fontSize, combatActionText.fontStyle);
         }
         if (combatCommandText != null)
         {
             combatCommandText.text = CombatPhaseCommandPrompt(phase);
-            combatCommandText.color = EnsureHighContrastTextColor(CombatPhaseAccent(phase));
+            combatCommandText.color = ResolveOpaqueTextPanelColor(CombatPhaseAccent(phase), combatCommandText.fontSize, combatCommandText.fontStyle);
         }
         if (combatHeroGlow != null)
         {

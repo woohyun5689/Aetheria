@@ -67,8 +67,8 @@ public sealed partial class AetheriaGame
                 var button = DirectChildButton(target);
                 if (button != null && !string.IsNullOrEmpty(path))
                 {
-                    AddFixedVisual(button.transform, "Growth Equipment Icon", path, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(7f, 0f), new Vector2(50f, 50f));
-                    ReserveButtonCopySpace(button, 64f, 12f);
+                    AddFixedVisual(button.transform, "Growth Equipment Icon", path, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(7f, 0f), new Vector2(42f, 42f));
+                    ReserveButtonCopySpace(button, 50f, 12f);
                 }
             }
             else if (target.name == "Equipped Six Slots")
@@ -133,7 +133,17 @@ public sealed partial class AetheriaGame
                 var path = EquipmentVisualPath(target);
                 if (!string.IsNullOrEmpty(path))
                 {
-                    AddFixedVisual(target, "Growth Enhancement Equipment Art", path, Vector2.one, Vector2.one, Vector2.one, new Vector2(-12f, -9f), new Vector2(66f, 66f));
+                    var heading = target.Find("Enhancement Card Heading");
+                    var visualParent = heading != null ? heading : target;
+                    AddFixedVisual(
+                        visualParent,
+                        "Growth Enhancement Equipment Art",
+                        path,
+                        new Vector2(0f, 0.5f),
+                        new Vector2(0f, 0.5f),
+                        new Vector2(0f, 0.5f),
+                        new Vector2(5f, 0f),
+                        new Vector2(40f, 40f));
                 }
             }
 

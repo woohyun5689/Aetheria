@@ -138,6 +138,19 @@ public sealed partial class AetheriaGame
         return LoadGeneratedSprite(path, Vector4.zero) != null ? path : null;
     }
 
+    private static bool CombatFxSkillActionIsLeftFacing(string skillKey)
+    {
+        switch (skillKey)
+        {
+            case "rogue_poison_dagger":
+            case "rogue_twilight_flurry":
+            case "bomber_shatter_bomb":
+                return true;
+            default:
+                return false;
+        }
+    }
+
     private Image AddCombatFxOverlay(
         Transform parent,
         string name,
@@ -259,9 +272,12 @@ public sealed partial class AetheriaGame
         }
 
         var look = ResolveCombatFxLook(presentation);
-        var attackerAnchor = CombatFxAnchorFor(presentation.attackerIsPlayer, 0.035f);
+        var attackerAnchor = CombatFxAnchorFor(presentation.attackerIsPlayer, -0.005f);
+        attackerAnchor.x = presentation.attackerIsPlayer
+            ? Mathf.Max(0.36f, attackerAnchor.x + 0.06f)
+            : Mathf.Min(0.64f, attackerAnchor.x - 0.06f);
         var targetAnchor = CombatFxAnchorFor(presentation.targetIsPlayer, -0.015f);
-        var charge = CreateCombatFxRoot("Attack Telegraph Charge", attackerAnchor, new Vector2(210f, 210f));
+        var charge = CreateCombatFxRoot("Attack Telegraph Charge", attackerAnchor, new Vector2(184f, 184f));
         var reticle = CreateCombatFxRoot("Attack Telegraph Target", targetAnchor, new Vector2(178f, 178f));
         if (charge == null || reticle == null)
         {
@@ -273,16 +289,21 @@ public sealed partial class AetheriaGame
         var chargeGroup = charge.gameObject.AddComponent<CanvasGroup>();
         var reticleGroup = reticle.gameObject.AddComponent<CanvasGroup>();
         var skillCastPath = CombatFxSkillV2Path(presentation, "cast");
-        if (string.IsNullOrEmpty(skillCastPath))
-        {
-            AddCombatFxPart(charge, "Charge Backplate", Vector2.zero, new Vector2(188f, 188f), 0f, new Color(0.01f, 0.025f, 0.055f, 0.22f), true);
-        }
+        var hasV2Cast = !string.IsNullOrEmpty(skillCastPath);
+        AddCombatFxPart(
+            charge,
+            "Charge Backplate",
+            Vector2.zero,
+            hasV2Cast ? new Vector2(176f, 176f) : new Vector2(168f, 168f),
+            0f,
+            new Color(0.01f, 0.025f, 0.055f, hasV2Cast ? 0.16f : 0.22f),
+            true);
         AddCombatFxOverlay(
             charge,
             "V2 Cast Shockwave",
             CombatFxV2ShockwavePath,
             Vector2.zero,
-            new Vector2(196f, 196f),
+            new Vector2(172f, 172f),
             0f,
             new Color(look.primary.r, look.primary.g, look.primary.b, 0.58f));
         var skillChargePath = !string.IsNullOrEmpty(skillCastPath)
@@ -305,16 +326,20 @@ public sealed partial class AetheriaGame
             Vector2.zero,
             string.IsNullOrEmpty(chargePath)
                 ? (presentation.magic ? new Vector2(184f, 184f) : new Vector2(142f, 142f))
-                : (!string.IsNullOrEmpty(skillCastPath) ? new Vector2(198f, 198f) : new Vector2(158f, 158f)),
+                : (!string.IsNullOrEmpty(skillCastPath) ? new Vector2(170f, 170f) : new Vector2(142f, 142f)),
             0f,
             string.IsNullOrEmpty(chargePath)
                 ? new Color(look.primary.r, look.primary.g, look.primary.b, presentation.magic ? 0.86f : 0.58f)
                 : new Color(1f, 1f, 1f, !string.IsNullOrEmpty(skillCastPath) ? 0.98f : 0.88f),
             string.IsNullOrEmpty(skillCastPath) ? 0.42f : 0.12f);
-        if (string.IsNullOrEmpty(skillCastPath))
-        {
-            AddCombatFxPart(reticle, "Target Local Contrast", Vector2.zero, new Vector2(160f, 160f), 0f, new Color(0.01f, 0.025f, 0.045f, 0.18f), true);
-        }
+        AddCombatFxPart(
+            reticle,
+            "Target Local Contrast",
+            Vector2.zero,
+            new Vector2(160f, 160f),
+            0f,
+            new Color(0.01f, 0.025f, 0.045f, hasV2Cast ? 0.12f : 0.18f),
+            true);
         AddCombatFxSprite(
             reticle,
             "Generated Target Reticle",
@@ -383,6 +408,10 @@ public sealed partial class AetheriaGame
         var skillMotion = !string.IsNullOrEmpty(skillV2Path)
             ? ResolveCombatFxMotion(presentation, look)
             : CombatFxMotion.Projectile;
+        var skillArtDirection = !string.IsNullOrEmpty(skillV2Path)
+            && CombatFxSkillActionIsLeftFacing(CombatFxSkillKey(presentation))
+                ? -direction
+                : direction;
         var beamVisualWidth = skillMotion == CombatFxMotion.Beam
             ? Mathf.Max(360f, rootFx.sizeDelta.x - 36f)
             : 520f;
@@ -390,6 +419,29 @@ public sealed partial class AetheriaGame
         {
             if (!string.IsNullOrEmpty(skillV2Path))
             {
+                if (skillMotion == CombatFxMotion.Beam)
+                {
+                    var beamConnectionWidth = Mathf.Max(320f, beamVisualWidth - 24f);
+                    AddCombatFxPart(
+                        rootFx,
+                        "V2 Beam Connection Glow",
+                        Vector2.zero,
+                        new Vector2(beamConnectionWidth, 54f),
+                        0f,
+                        new Color(look.primary.r, look.primary.g, look.primary.b, 0.18f),
+                        true);
+                    var beamCoreTint = Color.Lerp(look.accent, Color.white, 0.64f);
+                    beamCoreTint.a = 0.38f;
+                    AddCombatFxPart(
+                        rootFx,
+                        "V2 Beam Connection Core",
+                        Vector2.zero,
+                        new Vector2(beamConnectionWidth, 11f),
+                        0f,
+                        beamCoreTint,
+                        true);
+                }
+
                 if (skillMotion == CombatFxMotion.Projectile
                     || skillMotion == CombatFxMotion.Beam
                     || skillMotion == CombatFxMotion.Melee)
@@ -402,56 +454,41 @@ public sealed partial class AetheriaGame
                         skillMotion == CombatFxMotion.Beam
                             ? new Vector2(beamVisualWidth + 28f, 186f)
                             : new Vector2(348f, 214f),
-                        direction > 0f ? 0f : 180f,
-                        new Color(look.accent.r, look.accent.g, look.accent.b, 0.48f));
+                        0f,
+                        new Color(look.accent.r, look.accent.g, look.accent.b, 0.30f));
                     if (speed != null)
                     {
                         speed.preserveAspect = false;
-                        if (direction < 0f)
-                        {
-                            speed.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
-                        }
+                        speed.rectTransform.localScale = new Vector3(direction, 1f, 1f);
                     }
                 }
 
-                for (var trailIndex = 0; trailIndex < 2; trailIndex++)
+                if (skillMotion == CombatFxMotion.Projectile || skillMotion == CombatFxMotion.Melee)
                 {
-                    var trailPosition = skillMotion == CombatFxMotion.Vertical
-                        ? new Vector2(0f, 38f + trailIndex * 30f)
-                        : (skillMotion == CombatFxMotion.Area
-                            ? Vector2.zero
-                            : new Vector2((-38f - trailIndex * 28f) * direction, trailIndex == 0 ? 8f : -9f));
-                    var trailRotation = skillMotion == CombatFxMotion.Area
-                        ? (trailIndex == 0 ? -13f : 17f)
-                        : (trailIndex == 0 ? -3f * direction : 4f * direction);
-                    var trailBaseSize = skillMotion == CombatFxMotion.Vertical
-                        ? new Vector2(468f, 312f)
-                        : (skillMotion == CombatFxMotion.Area
-                            ? new Vector2(390f, 260f)
-                            : (skillMotion == CombatFxMotion.Beam
-                                ? new Vector2(beamVisualWidth, 176f)
-                                : CombatFxClassAttackSize(look.style)));
-                    var trailTint = Color.Lerp(Color.white, look.primary, 0.12f);
-                    var trail = AddCombatFxSprite(
-                        rootFx,
-                        "V2 Action Trail " + trailIndex,
-                        skillV2Path,
-                        trailPosition,
-                        trailBaseSize * (trailIndex == 0 ? 0.94f : 0.86f),
-                        trailRotation,
-                        new Color(
-                            trailTint.r,
-                            trailTint.g,
-                            trailTint.b,
-                            trailIndex == 0 ? 0.30f : 0.15f),
-                        0f);
-                    if (trail != null && direction < 0f)
+                    for (var trailIndex = 0; trailIndex < 2; trailIndex++)
                     {
-                        trail.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
-                    }
-                    if (trail != null && skillMotion == CombatFxMotion.Beam)
-                    {
-                        trail.preserveAspect = false;
+                        var trailPosition = new Vector2(
+                            (-38f - trailIndex * 28f) * direction,
+                            trailIndex == 0 ? 8f : -9f);
+                        var trailRotation = trailIndex == 0 ? -3f * direction : 4f * direction;
+                        var trailTint = Color.Lerp(Color.white, look.primary, 0.12f);
+                        var trail = AddCombatFxSprite(
+                            rootFx,
+                            "V2 Action Trail " + trailIndex,
+                            skillV2Path,
+                            trailPosition,
+                            CombatFxClassAttackSize(look.style) * (trailIndex == 0 ? 0.94f : 0.86f),
+                            trailRotation,
+                            new Color(
+                                trailTint.r,
+                                trailTint.g,
+                                trailTint.b,
+                                trailIndex == 0 ? 0.18f : 0.09f),
+                            0f);
+                        if (trail != null && skillArtDirection < 0f)
+                        {
+                            trail.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
+                        }
                     }
                 }
             }
@@ -472,7 +509,7 @@ public sealed partial class AetheriaGame
                 0f,
                 new Color(1f, 1f, 1f, 0.99f),
                 !string.IsNullOrEmpty(skillV2Path) ? 0f : 0.24f);
-            if (skillImage != null && direction < 0f)
+            if (skillImage != null && skillArtDirection < 0f)
             {
                 skillImage.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
             }
@@ -561,9 +598,9 @@ public sealed partial class AetheriaGame
                     "V2 Impact Shockwave",
                     CombatFxV2ShockwavePath,
                     Vector2.zero,
-                    critical ? new Vector2(388f, 388f) : new Vector2(326f, 326f),
+                    critical ? new Vector2(388f, 388f) : new Vector2(294f, 294f),
                     0f,
-                    new Color(look.primary.r, look.primary.g, look.primary.b, critical ? 0.72f : 0.58f));
+                    new Color(look.primary.r, look.primary.g, look.primary.b, critical ? 0.72f : 0.50f));
             }
 
             var impact = AddCombatFxSprite(
@@ -571,9 +608,9 @@ public sealed partial class AetheriaGame
                 (!string.IsNullOrEmpty(skillV2Path) ? "V2 Skill Impact " : "Generated Skill Impact ") + CombatFxSkillKey(presentation),
                 skillPath,
                 Vector2.zero,
-                critical ? new Vector2(364f, 364f) : new Vector2(304f, 304f),
+                critical ? new Vector2(364f, 364f) : new Vector2(276f, 276f),
                 critical ? -5f : 0f,
-                new Color(1f, 1f, 1f, critical ? 1f : 0.98f),
+                new Color(1f, 1f, 1f, critical ? 1f : 0.90f),
                 !string.IsNullOrEmpty(skillV2Path) ? 0f : (critical ? 0.34f : 0.24f));
 
             if (!string.IsNullOrEmpty(skillV2Path))
@@ -583,9 +620,9 @@ public sealed partial class AetheriaGame
                     "V2 Impact Sparks",
                     CombatFxV2SparkClusterPath,
                     Vector2.zero,
-                    critical ? new Vector2(414f, 414f) : new Vector2(344f, 344f),
+                    critical ? new Vector2(414f, 414f) : new Vector2(310f, 310f),
                     critical ? -12f : 8f,
-                    new Color(look.accent.r, look.accent.g, look.accent.b, critical ? 0.92f : 0.74f));
+                    new Color(look.accent.r, look.accent.g, look.accent.b, critical ? 0.92f : 0.58f));
                 AddCombatFxOverlay(
                     rootFx,
                     "V2 Impact Contact Flash",
@@ -606,9 +643,9 @@ public sealed partial class AetheriaGame
                 "Generated Class Impact " + CombatFxClassKey(look.style),
                 classPath,
                 Vector2.zero,
-                critical ? new Vector2(364f, 364f) : new Vector2(304f, 304f),
+                critical ? new Vector2(364f, 364f) : new Vector2(276f, 276f),
                 critical ? -5f : 0f,
-                new Color(1f, 1f, 1f, critical ? 1f : 0.96f),
+                new Color(1f, 1f, 1f, critical ? 1f : 0.90f),
                 critical ? 0.34f : 0.24f) != null;
         }
 
@@ -667,6 +704,14 @@ public sealed partial class AetheriaGame
         {
             if (!string.IsNullOrEmpty(skillV2Path))
             {
+                AddCombatFxPart(
+                    rootFx,
+                    "V2 Support Contrast Backplate",
+                    new Vector2(0f, 2f),
+                    new Vector2(286f, 322f),
+                    0f,
+                    new Color(0.01f, 0.025f, 0.055f, 0.16f),
+                    true);
                 var castPath = CombatFxSkillV2Path(presentation, "cast");
                 if (!string.IsNullOrEmpty(castPath))
                 {

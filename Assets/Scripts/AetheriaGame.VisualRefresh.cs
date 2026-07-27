@@ -5,9 +5,9 @@ using UnityEngine.UI;
 
 public sealed partial class AetheriaGame
 {
-    // Text may sit on a backplate only when the background art makes it necessary.
-    // Keeping this value in one place prevents screen-by-screen opacity drift.
-    private const float VisualReadabilityPlateAlpha = 0.30f;
+    // Legacy generic rectangles stay invisible. Dedicated text hosts use the
+    // generated opaque text-panel artwork and are exempted with a marker.
+    private const float VisualReadabilityPlateAlpha = 0f;
 
     private enum VisualActionRole
     {
@@ -106,12 +106,8 @@ public sealed partial class AetheriaGame
             return null;
         }
 
-        var plateColor = new Color(tint.r, tint.g, tint.b, VisualReadabilityPlateAlpha);
-        var plate = AddFlatPanel("Text Readability Plate " + (name ?? ""), parent, plateColor);
-        var image = plate.GetComponent<Image>();
-        image.sprite = MapRoundedRectSprite();
-        image.type = Image.Type.Sliced;
-        image.raycastTarget = false;
+        var plate = AddFlatPanel("Text Readability Plate " + (name ?? ""), parent, Color.white);
+        ApplyOpaqueTextPanel(plate, ReadabilityPanelKindFromName(plate.gameObject.name));
         return plate;
     }
 
@@ -139,11 +135,7 @@ public sealed partial class AetheriaGame
         target.name = target.name.StartsWith("Text Readability Plate", StringComparison.Ordinal)
             ? target.name
             : "Text Readability Plate " + target.name;
-        image.sprite = MapRoundedRectSprite();
-        image.type = Image.Type.Sliced;
-        image.color = new Color(tint.r, tint.g, tint.b, VisualReadabilityPlateAlpha);
-        image.raycastTarget = false;
-        return true;
+        return ApplyOpaqueTextPanel(target, ReadabilityPanelKindFromName(target.gameObject.name));
     }
 
     private RectTransform AddReadabilityTextBlock(
@@ -164,8 +156,13 @@ public sealed partial class AetheriaGame
         }
 
         AddLayoutSize(plate, -1f, preferredHeight);
+        ApplyOpaqueTextPanel(
+            plate,
+            preferredHeight <= 68f
+                ? OpaqueTextPanelKind.Compact
+                : ReadabilityPanelKindFromName(plate.gameObject.name));
         var label = AddText(plate, value, size, style, textTint, alignment, preferredHeight);
-        Stretch(label.GetComponent<RectTransform>(), 14f, 6f, 14f, 6f);
+        Stretch(label.GetComponent<RectTransform>(), 22f, 10f, 22f, 10f);
         return plate;
     }
 
@@ -213,11 +210,8 @@ public sealed partial class AetheriaGame
             }
         }
 
-        DisableGenericButtonChrome(button);
-        hitImage.sprite = null;
-        hitImage.color = Color.clear;
-        hitImage.raycastTarget = true;
-        button.targetGraphic = hitImage;
+        var danger = role == VisualActionRole.Cancel;
+        ApplyOpaqueSceneButtonSkin(hitImage, accent, danger);
 
         var oldVisual = rect.Find("Object Action Visual");
         RectTransform visual;
@@ -275,31 +269,30 @@ public sealed partial class AetheriaGame
             labelRect.anchorMax = new Vector2(0.98f, 0.88f);
             labelRect.offsetMin = new Vector2(14f, 0f);
             labelRect.offsetMax = new Vector2(-8f, 0f);
-            label.color = Color.white;
+            var buttonInk = CharacterThemeButtonText(ScreenCharacterThemeKey(), Rgb(24, 45, 64));
+            buttonInk = Color.Lerp(buttonInk, new Color(accent.r, accent.g, accent.b, 1f), danger ? 0.12f : 0.06f);
+            label.color = new Color(buttonInk.r, buttonInk.g, buttonInk.b, 1f);
             label.alignment = TextAnchor.MiddleLeft;
             label.resizeTextMinSize = 17;
             label.resizeTextMaxSize = Mathf.Max(20, label.fontSize);
 
             var labelPlate = rect.Find("Text Readability Plate Object Button");
-            if (labelPlate == null)
+            if (labelPlate != null)
             {
-                var plate = AddReadabilityPlate(rect, "Object Button", Rgb(10, 18, 29));
-                // One continuous 30% surface makes the art and copy read as a
-                // single image button instead of a detached badge plus text box.
-                plate.anchorMin = new Vector2(0.01f, 0.08f);
-                plate.anchorMax = new Vector2(0.99f, 0.92f);
-                plate.offsetMin = Vector2.zero;
-                plate.offsetMax = Vector2.zero;
-                plate.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-                plate.SetAsFirstSibling();
-                visual.SetSiblingIndex(Mathf.Min(1, rect.childCount - 1));
-                label.transform.SetAsLastSibling();
+                labelPlate.gameObject.SetActive(false);
             }
+            visual.SetAsFirstSibling();
+            var characterFrame = rect.Find("Character Theme Button Frame");
+            if (characterFrame != null)
+            {
+                characterFrame.SetSiblingIndex(Mathf.Min(1, rect.childCount - 1));
+            }
+            label.transform.SetAsLastSibling();
 
             var textPresenter = button.GetComponent<UiButtonTextPresenter>();
             if (textPresenter != null)
             {
-                textPresenter.Configure(button, label, Color.white, Rgb(180, 190, 200));
+                textPresenter.Configure(button, label, buttonInk, Rgb(86, 91, 96));
             }
         }
 
@@ -554,8 +547,9 @@ public sealed partial class AetheriaGame
         shadow.sizeDelta = new Vector2(width, height);
         shadow.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
         var image = shadow.GetComponent<Image>();
-        image.sprite = MapRoundedRectSprite();
-        image.type = Image.Type.Sliced;
+        image.sprite = CombatGlowSprite();
+        image.type = Image.Type.Simple;
+        image.preserveAspect = false;
         image.raycastTarget = false;
         shadow.SetAsFirstSibling();
         return shadow;
@@ -576,9 +570,10 @@ public sealed partial class AetheriaGame
 
         var section = AddPanel("Visual Section Title " + (title ?? ""), parent, Color.clear);
         AddLayoutSize(section, -1f, preferredHeight);
+        ApplyOpaqueTextPanel(section, OpaqueTextPanelKind.Title);
         var row = section.gameObject.AddComponent<HorizontalLayoutGroup>();
         row.spacing = 12f;
-        row.padding = new RectOffset(2, 2, 4, 4);
+        row.padding = new RectOffset(22, 22, 8, 8);
         row.childAlignment = TextAnchor.MiddleLeft;
         row.childControlWidth = true;
         row.childControlHeight = true;
@@ -620,16 +615,13 @@ public sealed partial class AetheriaGame
         }
 
         var accent = VisualStatusColor(tone);
-        var chip = AddFlatPanel("Visual Status Chip " + (label ?? ""), parent, new Color(accent.r, accent.g, accent.b, VisualReadabilityPlateAlpha));
-        AddLayoutSize(chip, preferredWidth, preferredHeight);
-        var image = chip.GetComponent<Image>();
-        image.sprite = MapRoundedRectSprite();
-        image.type = Image.Type.Sliced;
-        image.raycastTarget = false;
+        var chip = AddFlatPanel("Visual Status Chip " + (label ?? ""), parent, Color.white);
+        ConstrainLayoutSize(chip, preferredWidth, preferredHeight);
+        ApplyOpaqueTextPanel(chip, OpaqueTextPanelKind.Body);
 
         var row = chip.gameObject.AddComponent<HorizontalLayoutGroup>();
         row.spacing = 6f;
-        row.padding = new RectOffset(8, 10, 4, 4);
+        row.padding = new RectOffset(12, 12, 5, 5);
         row.childAlignment = TextAnchor.MiddleCenter;
         row.childControlWidth = true;
         row.childControlHeight = true;
@@ -716,6 +708,7 @@ public sealed partial class AetheriaGame
         }
 
         EnsureVisualPolishDriver();
+        ApplyOpaqueTextPanelsForScreen(page);
         HideGenericUxBoxes(page);
     }
 
@@ -736,6 +729,11 @@ public sealed partial class AetheriaGame
             }
 
             var imageName = image.gameObject.name ?? "";
+            if (image.GetComponent<UiOpaqueTextPanel>() != null)
+            {
+                image.color = new Color(image.color.r, image.color.g, image.color.b, 1f);
+                continue;
+            }
             if (imageName.StartsWith("Text Readability Plate", StringComparison.Ordinal)
                 || imageName.StartsWith("Visual Status Chip", StringComparison.Ordinal))
             {
@@ -883,7 +881,7 @@ public sealed partial class AetheriaGame
             {
                 visualImage.color = button.interactable
                     ? enabledColor
-                    : new Color(0.55f, 0.58f, 0.61f, Mathf.Min(0.66f, enabledColor.a));
+                    : new Color(0.55f, 0.58f, 0.61f, 1f);
             }
         }
     }

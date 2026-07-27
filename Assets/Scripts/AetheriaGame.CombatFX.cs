@@ -181,7 +181,6 @@ public sealed partial class AetheriaGame
                 return CombatFxMotion.Vertical;
 
             case "bomber_chain_detonation":
-            case "spirit_earth_spirit":
             case "monk_inner_burst":
                 return CombatFxMotion.Area;
 
@@ -190,6 +189,7 @@ public sealed partial class AetheriaGame
                 return CombatFxMotion.Beam;
 
             case "bomber_shatter_bomb":
+            case "spirit_earth_spirit":
                 return CombatFxMotion.Projectile;
         }
 
@@ -285,6 +285,7 @@ public sealed partial class AetheriaGame
         var v2SpeedAlpha = v2SpeedImage != null ? v2SpeedImage.color.a : 0f;
         var v2Trail0Alpha = v2Trail0Image != null ? v2Trail0Image.color.a : 0f;
         var v2Trail1Alpha = v2Trail1Image != null ? v2Trail1Image.color.a : 0f;
+        var v2SpeedScaleSign = v2SpeedStreaks != null && v2SpeedStreaks.localScale.x < 0f ? -1f : 1f;
         var v2Trail0Start = v2Trail0 != null ? v2Trail0.anchoredPosition : Vector2.zero;
         var v2Trail1Start = v2Trail1 != null ? v2Trail1.anchoredPosition : Vector2.zero;
 
@@ -339,7 +340,7 @@ public sealed partial class AetheriaGame
             if (v2SpeedStreaks != null)
             {
                 v2SpeedStreaks.localScale = new Vector3(
-                    Mathf.Lerp(0.66f, 1.32f, eased),
+                    v2SpeedScaleSign * Mathf.Lerp(0.66f, 1.32f, eased),
                     Mathf.Lerp(0.86f, 1.08f, progress),
                     1f);
                 if (v2SpeedImage != null)
@@ -538,12 +539,17 @@ public sealed partial class AetheriaGame
             }
             if (v2GroundRing != null)
             {
-                v2GroundRing.anchoredPosition = v2GroundStart + new Vector2(
-                    0f,
-                    -rise / Mathf.Max(0.01f, supportScale));
+                var safeSupportScale = Mathf.Max(0.01f, supportScale);
+                var fixedGroundOffset = v2GroundStart - new Vector2(0f, rise);
+                var localGroundOffset = Quaternion.Euler(0f, 0f, -supportRotation)
+                    * new Vector3(
+                        fixedGroundOffset.x / safeSupportScale,
+                        fixedGroundOffset.y / safeSupportScale,
+                        0f);
+                v2GroundRing.anchoredPosition = new Vector2(localGroundOffset.x, localGroundOffset.y);
                 v2GroundRing.localScale = new Vector3(
-                    Mathf.Lerp(0.42f, 1.34f, reveal),
-                    Mathf.Lerp(0.62f, 1.12f, reveal),
+                    Mathf.Lerp(0.42f, 1.34f, reveal) / safeSupportScale,
+                    Mathf.Lerp(0.62f, 1.12f, reveal) / safeSupportScale,
                     1f);
                 v2GroundRing.localEulerAngles = new Vector3(0f, 0f, -supportRotation);
                 if (v2GroundImage != null)
@@ -565,7 +571,9 @@ public sealed partial class AetheriaGame
                     v2MotesImage.color = moteColor;
                 }
             }
-            group.alpha = Mathf.Clamp01(1f - Mathf.Max(0f, progress - 0.68f) / 0.32f);
+            var supportFadeIn = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(progress / 0.16f));
+            var supportFadeOut = Mathf.Clamp01(1f - Mathf.Max(0f, progress - 0.68f) / 0.32f);
+            group.alpha = supportFadeIn * supportFadeOut;
             yield return null;
         }
 

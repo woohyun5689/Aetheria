@@ -204,7 +204,7 @@ public sealed partial class AetheriaGame
 
         var row = AddFlatPanel("Combat Status Icon Row", parent, Color.clear);
         row.GetComponent<Image>().raycastTarget = false;
-        AddLayoutSize(row, -1f, 38f);
+        AddLayoutSize(row, -1f, 46f);
         var rowLayout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
         rowLayout.spacing = 6f;
         rowLayout.padding = new RectOffset(2, 2, 2, 2);
@@ -231,11 +231,11 @@ public sealed partial class AetheriaGame
             var effect = orderedEffects[index];
 
             var tint = CombatStatusTint(effect.type, fallbackAccent);
-            var chip = AddFlatPanel("Combat Status " + effect.type, row, new Color(tint.r, tint.g, tint.b, 0.30f));
+            var chip = AddFlatPanel("Combat Status " + effect.type, row, Color.clear);
             chip.GetComponent<Image>().raycastTarget = false;
-            AddLayoutSize(chip, 100f, 34f);
+            AddLayoutSize(chip, 112f, 42f);
             var chipLayout = chip.GetComponent<LayoutElement>();
-            chipLayout.minWidth = 94f;
+            chipLayout.minWidth = 112f;
             chipLayout.flexibleWidth = 1f;
 
             var icon = AddFlatPanel("Combat Status Icon", chip, Color.clear);
@@ -254,14 +254,18 @@ public sealed partial class AetheriaGame
             var value = effect.type == "shield"
                 ? RoundToGameInt(effect.value).ToString()
                 : Mathf.Max(0, effect.duration) + "턴";
-            var label = AddText(chip, StatusName(effect.type) + " " + value, 16, FontStyle.Bold, tint, TextAnchor.MiddleLeft, 34f);
-            Stretch(label.GetComponent<RectTransform>(), 35f, 1f, 4f, 1f);
+            var label = AddText(chip, StatusName(effect.type) + " " + value, 15, FontStyle.Bold, tint, TextAnchor.MiddleLeft, 42f);
+            Stretch(label.GetComponent<RectTransform>(), 35f, 0f, 4f, 0f);
+            label.resizeTextForBestFit = true;
+            label.resizeTextMinSize = 13;
+            label.resizeTextMaxSize = 15;
+            label.horizontalOverflow = HorizontalWrapMode.Overflow;
         }
 
         if (orderedEffects.Count > visibleCount)
         {
-            var extra = AddText(row, "+" + (orderedEffects.Count - visibleCount), 16, FontStyle.Bold, fallbackAccent, TextAnchor.MiddleCenter, 34f);
-            AddLayoutSize(extra.GetComponent<RectTransform>(), 38f, 34f);
+            var extra = AddText(row, "+" + (orderedEffects.Count - visibleCount), 16, FontStyle.Bold, fallbackAccent, TextAnchor.MiddleCenter, 42f);
+            AddLayoutSize(extra.GetComponent<RectTransform>(), 38f, 42f);
         }
         return true;
     }

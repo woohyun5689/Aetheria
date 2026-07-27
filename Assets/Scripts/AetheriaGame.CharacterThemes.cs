@@ -152,9 +152,10 @@ public sealed partial class AetheriaGame
             case AetheriaScreen.Crafting:
                 return 0.16f;
             case AetheriaScreen.SkillTraining:
-                // Training is character-specific content; keep the class location
-                // clearly visible while the 30% read plates protect the copy.
-                return 0.76f;
+                // The training facility is already a complete scene. Use the
+                // character location as identity color rather than a second full
+                // background, which previously produced a pale double exposure.
+                return 0.34f;
             case AetheriaScreen.Combat:
                 return 0.12f;
             case AetheriaScreen.Victory:
@@ -258,29 +259,9 @@ public sealed partial class AetheriaGame
 
     private void AddCharacterThemeScreenOverlay()
     {
-        var theme = CharacterThemeForKey(ScreenCharacterThemeKey());
-        if (root == null || theme == null)
-        {
-            return;
-        }
-
-        var sprite = LoadGeneratedSprite(theme.ResourcePath("screen_overlay"), Vector4.zero);
-        if (sprite == null)
-        {
-            return;
-        }
-
-        // The ornament is a background motif, not a foreground frame. Keeping it
-        // subtle prevents its top crest and rails from running through screen titles.
-        var overlayAlpha = currentScreen == AetheriaScreen.ClassSelect ? 0.14f : 0.18f;
-        var overlay = AddFlatPanel("Character Theme Screen Overlay", root, new Color(1f, 1f, 1f, overlayAlpha));
-        Stretch(overlay, 0, 0, 0, 0);
-        overlay.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-        var image = overlay.GetComponent<Image>();
-        image.sprite = sprite;
-        image.preserveAspect = false;
-        image.raycastTarget = false;
-        overlay.SetAsLastSibling();
+        // Character identity now comes from the dedicated background and the
+        // character-specific button/card frames. The old full-screen ornament
+        // was a 14-18% translucent layer and made every scene look fogged.
     }
 
     private bool ShouldApplyCharacterThemePanel(string name, Color sourceColor)
@@ -381,19 +362,36 @@ public sealed partial class AetheriaGame
             return false;
         }
 
-        var sprite = LoadGeneratedSprite(theme.ResourcePath("panel_frame"), Vector4.zero);
+        var sprite = LoadGeneratedSprite(
+            theme.ResourcePath("panel_frame"),
+            new Vector4(180f, 180f, 180f, 180f));
         if (sprite == null)
         {
             return false;
         }
 
-        image.sprite = sprite;
-        image.type = Image.Type.Simple;
-        image.preserveAspect = false;
-        image.color = Color.white;
-        image.raycastTarget = true;
-        button.targetGraphic = image;
         DisableGenericButtonChrome(button);
+        if (!ApplyOpaqueCombatCardSkin(button, theme.accent))
+        {
+            image.color = Color.white;
+        }
+
+        var frameTransform = button.transform.Find("Character Theme Class Card Frame") as RectTransform;
+        if (frameTransform == null)
+        {
+            frameTransform = AddFlatPanel("Character Theme Class Card Frame", button.transform, Color.white);
+            Stretch(frameTransform, 0f, 0f, 0f, 0f);
+            frameTransform.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+        }
+        frameTransform.gameObject.SetActive(true);
+        frameTransform.SetAsFirstSibling();
+        var frameImage = frameTransform.GetComponent<Image>();
+        frameImage.sprite = sprite;
+        frameImage.type = Image.Type.Sliced;
+        frameImage.preserveAspect = false;
+        frameImage.pixelsPerUnitMultiplier = 4f;
+        frameImage.color = Color.white;
+        frameImage.raycastTarget = false;
 
         var normal = selected
             ? Color.Lerp(Color.white, theme.accent, 0.34f)
@@ -403,7 +401,7 @@ public sealed partial class AetheriaGame
         colors.highlightedColor = Color.Lerp(normal, theme.accent, 0.18f);
         colors.pressedColor = Color.Lerp(normal, theme.accent, 0.32f);
         colors.selectedColor = Color.Lerp(Color.white, theme.accent, 0.38f);
-        colors.disabledColor = new Color(0.74f, 0.76f, 0.78f, 0.72f);
+        colors.disabledColor = new Color(0.74f, 0.76f, 0.78f, 1f);
         colors.colorMultiplier = 1f;
         colors.fadeDuration = 0.08f;
         button.colors = colors;
@@ -417,9 +415,9 @@ public sealed partial class AetheriaGame
             return false;
         }
 
-        var key = string.IsNullOrEmpty(keyOverride) ? ActiveCharacterThemeKey() : keyOverride;
+        var key = string.IsNullOrEmpty(keyOverride) ? ScreenCharacterThemeKey() : keyOverride;
         var theme = CharacterThemeForKey(key);
-        if (theme == null || (!force && currentScreen == AetheriaScreen.ClassSelect))
+        if (theme == null)
         {
             return false;
         }
@@ -436,13 +434,27 @@ public sealed partial class AetheriaGame
             return false;
         }
 
-        image.sprite = sprite;
-        image.type = Image.Type.Sliced;
-        image.pixelsPerUnitMultiplier = 4f;
-        image.color = Color.white;
-        image.raycastTarget = true;
-        button.targetGraphic = image;
         DisableGenericButtonChrome(button);
+        if (!ApplyOpaqueSceneButtonSkin(image, theme.accent))
+        {
+            image.color = Color.white;
+        }
+
+        var frameTransform = button.transform.Find("Character Theme Button Frame") as RectTransform;
+        if (frameTransform == null)
+        {
+            frameTransform = AddFlatPanel("Character Theme Button Frame", button.transform, Color.white);
+            Stretch(frameTransform, 0f, 0f, 0f, 0f);
+            frameTransform.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+        }
+        frameTransform.gameObject.SetActive(true);
+        frameTransform.SetAsFirstSibling();
+        var frameImage = frameTransform.GetComponent<Image>();
+        frameImage.sprite = sprite;
+        frameImage.type = Image.Type.Sliced;
+        frameImage.pixelsPerUnitMultiplier = 4f;
+        frameImage.color = Color.white;
+        frameImage.raycastTarget = false;
         return true;
     }
 
