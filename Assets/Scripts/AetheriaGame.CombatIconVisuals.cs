@@ -204,10 +204,10 @@ public sealed partial class AetheriaGame
 
         var row = AddFlatPanel("Combat Status Icon Row", parent, Color.clear);
         row.GetComponent<Image>().raycastTarget = false;
-        AddLayoutSize(row, -1f, 46f);
+        AddLayoutSize(row, -1f, 34f);
         var rowLayout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
         rowLayout.spacing = 6f;
-        rowLayout.padding = new RectOffset(2, 2, 2, 2);
+        rowLayout.padding = new RectOffset(2, 2, 1, 1);
         rowLayout.childAlignment = TextAnchor.MiddleCenter;
         rowLayout.childControlWidth = true;
         rowLayout.childControlHeight = true;
@@ -233,7 +233,7 @@ public sealed partial class AetheriaGame
             var tint = CombatStatusTint(effect.type, fallbackAccent);
             var chip = AddFlatPanel("Combat Status " + effect.type, row, Color.clear);
             chip.GetComponent<Image>().raycastTarget = false;
-            AddLayoutSize(chip, 112f, 42f);
+            AddLayoutSize(chip, 112f, 32f);
             var chipLayout = chip.GetComponent<LayoutElement>();
             chipLayout.minWidth = 112f;
             chipLayout.flexibleWidth = 1f;
@@ -242,7 +242,7 @@ public sealed partial class AetheriaGame
             icon.anchorMin = new Vector2(0f, 0.5f);
             icon.anchorMax = new Vector2(0f, 0.5f);
             icon.pivot = new Vector2(0f, 0.5f);
-            icon.sizeDelta = new Vector2(28f, 28f);
+            icon.sizeDelta = new Vector2(24f, 24f);
             icon.anchoredPosition = new Vector2(4f, 0f);
             icon.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
             var iconImage = icon.GetComponent<Image>();
@@ -254,8 +254,8 @@ public sealed partial class AetheriaGame
             var value = effect.type == "shield"
                 ? RoundToGameInt(effect.value).ToString()
                 : Mathf.Max(0, effect.duration) + "턴";
-            var label = AddText(chip, StatusName(effect.type) + " " + value, 15, FontStyle.Bold, tint, TextAnchor.MiddleLeft, 42f);
-            Stretch(label.GetComponent<RectTransform>(), 35f, 0f, 4f, 0f);
+            var label = AddText(chip, StatusName(effect.type) + " " + value, 15, FontStyle.Bold, tint, TextAnchor.MiddleLeft, 32f);
+            Stretch(label.GetComponent<RectTransform>(), 31f, 0f, 4f, 0f);
             label.resizeTextForBestFit = true;
             label.resizeTextMinSize = 11;
             label.resizeTextMaxSize = 15;
@@ -265,8 +265,8 @@ public sealed partial class AetheriaGame
 
         if (orderedEffects.Count > visibleCount)
         {
-            var extra = AddText(row, "+" + (orderedEffects.Count - visibleCount), 16, FontStyle.Bold, fallbackAccent, TextAnchor.MiddleCenter, 42f);
-            AddLayoutSize(extra.GetComponent<RectTransform>(), 38f, 42f);
+            var extra = AddText(row, "+" + (orderedEffects.Count - visibleCount), 16, FontStyle.Bold, fallbackAccent, TextAnchor.MiddleCenter, 32f);
+            AddLayoutSize(extra.GetComponent<RectTransform>(), 38f, 32f);
         }
         return true;
     }

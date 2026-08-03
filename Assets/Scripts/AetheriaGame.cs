@@ -472,7 +472,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddText(header, "마을  →  지도  →  전투  →  성장", 23, FontStyle.Bold, goldColor, TextAnchor.MiddleCenter, 34);
 
         var flow = AddRow("Guide Flow", page, 14, TextAnchor.UpperCenter);
-        ConstrainLayoutSize(flow, 1720, 334);
+        ConstrainLayoutSize(flow, 1720, 350);
         ConfigureNonExpandingRow(flow);
         AddGuideFlowRoute(flow);
         AddGuideStep(flow, "1  마을", "‘던전 탐험’을 누릅니다.\n체력이 부족하면 여관에서 먼저 회복하세요.", goodColor, "UI/VisualRefresh/Objects/inn");
@@ -482,7 +482,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
         var rules = AddReadabilityPlate(page, "Guide Rules", Rgb(9, 25, 47));
         ConstrainLayoutSize(rules, 1720, 424);
-        AddVertical(rules, 8, TextAnchor.UpperLeft, new RectOffset(30, 30, 18, 18));
+        AddVertical(rules, 8, TextAnchor.UpperLeft, new RectOffset(40, 40, 26, 22));
         AddText(rules, "전투에서 이것만 기억하세요", 30, FontStyle.Bold, Color.white, TextAnchor.MiddleLeft, 42);
         AddMessageBanner(rules, "목표: 적 HP를 0으로 만들기  ·  스킬은 MP를 사용  ·  적 턴에는 잠시 기다리기", goodColor, 70);
         AddText(rules,
@@ -490,7 +490,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             + "• 스킬 버튼이 회색으로 비활성화되면 MP가 부족하거나 침묵 상태입니다. 기본 공격은 MP를 쓰지 않습니다.\n"
             + "• 일반 층을 돌파하면 다음 층으로 이어지고, 마지막 층의 보스를 쓰러뜨리면 다음 던전이 열립니다.\n"
             + "• 위험하면 ESC 또는 ‘던전 나가기’로 마을에 돌아갈 수 있습니다.",
-            21, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 175);
+            20, FontStyle.Bold, textColor, TextAnchor.UpperLeft, 175);
         AddText(rules, "추천 첫 행동: 마을에서 ‘던전으로 출발’ → ‘추천 전투 시작’", 24, FontStyle.Bold, goldColor, TextAnchor.MiddleCenter, 44);
 
         var buttons = AddRow("Guide Actions", page, 14, TextAnchor.MiddleCenter);
@@ -519,9 +519,9 @@ public sealed partial class AetheriaGame : MonoBehaviour
     private void AddGuideStep(Transform parent, string title, string description, Color accent, string visualPath)
     {
         var card = AddReadabilityPlate(parent, "Guide Step " + title, Rgb(9, 25, 47));
-        ConstrainLayoutSize(card, 398, 320);
+        ConstrainLayoutSize(card, 398, 336);
         AddSideAccent(card, accent);
-        AddVertical(card, 7, TextAnchor.UpperCenter, new RectOffset(18, 18, 16, 16));
+        AddVertical(card, 7, TextAnchor.UpperCenter, new RectOffset(28, 28, 24, 22));
         var visualSprite = LoadGeneratedSprite(visualPath, Vector4.zero);
         if (visualSprite != null)
         {
@@ -538,10 +538,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         }
         AddText(card, title, 28, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, 40);
         AddDivider(card, new Color(accent.r, accent.g, accent.b, 0.80f));
-        // This is the exact remaining card budget after the visual, title and
-        // divider. Keeping it at 149 prevents the last guide line escaping a
-        // fixed-height card on compact displays.
-        AddText(card, description, 20, FontStyle.Normal, Color.white, TextAnchor.UpperLeft, 149);
+        AddText(card, description, 19, FontStyle.Bold, Color.white, TextAnchor.UpperLeft, 149);
     }
 
     private void ShowDeleteSaveConfirm(int slot)
@@ -2008,8 +2005,8 @@ public sealed partial class AetheriaGame : MonoBehaviour
         quickStart.anchorMax = new Vector2(1f, 0f);
         quickStart.pivot = new Vector2(1f, 0f);
         quickStart.anchoredPosition = new Vector2(-14f, 14f);
-        quickStart.sizeDelta = new Vector2(520f, 182f);
-        AddVertical(quickStart, 5, TextAnchor.MiddleCenter, new RectOffset(18, 18, 12, 12));
+        quickStart.sizeDelta = new Vector2(520f, 202f);
+        AddVertical(quickStart, 5, TextAnchor.MiddleCenter, new RectOffset(18, 18, 24, 14));
 
         AddText(quickStart, "나침반이 가리키는 추천 경로", 20, FontStyle.Bold, manaColor, TextAnchor.MiddleCenter, 28);
         AddText(quickStart, recommended.number + ". " + recommended.name + "  ·  권장 Lv." + recommended.recommendedLevel, 22, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, 34);

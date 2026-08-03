@@ -67,10 +67,10 @@ public sealed partial class AetheriaGame
     private float nextCombatRejectTime;
     private bool combatLogExpanded;
     private const float CombatActionCardIconSize = 100f;
-    // The arena is a fixed 574px high band. This leaves exactly enough room
-    // for the art, its status HUD and panel padding at the 1080px reference
-    // layout, without pushing the HUD below the visible combat stage.
-    private const float CombatArtSlotHeight = 326f;
+    // Reserve enough of the fixed arena band for status chips without letting
+    // the final stat line collide with the ornamental HUD border.
+    private const float CombatArtSlotHeight = 306f;
+    private const float CombatStatusHudHeight = 210f;
 
     private void BuildCombatScreen(bool resultBackdrop)
     {
@@ -207,7 +207,7 @@ public sealed partial class AetheriaGame
         var commandPrompt = AddFlatPanel("Action Prompt", commandHeader, Color.clear);
         AddLayoutSize(commandPrompt, -1, 94);
         ApplyOpaqueTextPanel(commandPrompt, OpaqueTextPanelKind.Body);
-        AddVertical(commandPrompt, 1, TextAnchor.MiddleLeft, new RectOffset(30, 30, 12, 12));
+        AddVertical(commandPrompt, 1, TextAnchor.MiddleLeft, new RectOffset(30, 30, 18, 8));
         combatCommandText = AddText(
             commandPrompt,
             CombatPhaseCommandPrompt(phase),
@@ -215,8 +215,8 @@ public sealed partial class AetheriaGame
             FontStyle.Bold,
             CombatPhaseAccent(phase),
             TextAnchor.MiddleLeft,
-            40);
-        AddText(commandPrompt, "카드를 선택해 적을 공격하세요  ·  마우스 또는 패드 조작  ·  ESC 후퇴", 17, FontStyle.Normal, mutedColor, TextAnchor.MiddleLeft, 25);
+            34);
+        AddText(commandPrompt, "카드를 선택해 적을 공격하세요  ·  마우스 또는 패드 조작  ·  ESC 후퇴", 18, FontStyle.Bold, textColor, TextAnchor.MiddleLeft, 24);
 
         var logToggle = AddCombatLogToggle(commandHeader, canChooseAction);
         AddLayoutSize(logToggle.GetComponent<RectTransform>(), 580, 90);
@@ -294,23 +294,23 @@ public sealed partial class AetheriaGame
         var accent = ActiveCharacterAccent(manaColor);
         var slot = AddFlatPanel("Player Combat Status HUD Slot", parent, Color.clear);
         slot.GetComponent<Image>().raycastTarget = false;
-        AddLayoutSize(slot, -1f, 190f);
+        AddLayoutSize(slot, -1f, CombatStatusHudHeight);
         var hud = AddCombatGlassPanel("Player Combat Status HUD", slot, accent, 0.88f);
-        SetCenteredFixedRect(hud, 600f, 190f);
+        SetCenteredFixedRect(hud, 600f, CombatStatusHudHeight);
         ApplyOpaqueTextPanel(hud, OpaqueTextPanelKind.Body);
         var hudCanvas = hud.gameObject.AddComponent<Canvas>();
         hudCanvas.overrideSorting = true;
         hudCanvas.sortingOrder = 70;
-        AddVertical(hud, 2, TextAnchor.UpperCenter, new RectOffset(24, 24, 8, 16));
+        AddVertical(hud, 2, TextAnchor.UpperCenter, new RectOffset(24, 24, 14, 8));
 
         AddText(
             hud,
             player.heroName + "  ·  Lv." + player.level + "  " + player.heroClass,
-            23,
+            22,
             FontStyle.Bold,
             Color.Lerp(accent, Color.white, 0.42f),
             TextAnchor.MiddleCenter,
-            30f);
+            28f);
         var displayedHeroHp = DisplayedCombatHp(true, player.hp);
         combatHeroHpBar = AddCombatBar(hud, displayedHeroHp, MaxHp(), dangerColor, "HP");
         if (MaxMp() > 0)
@@ -318,14 +318,15 @@ public sealed partial class AetheriaGame
             AddCombatBar(hud, player.mp, MaxMp(), manaColor, "MP");
         }
         AddCombatStatusSummary(hud, playerStatusEffects, accent);
-        AddText(
+        var stats = AddText(
             hud,
             "공격 " + Attack() + "  ·  마력 " + Magic() + "  ·  방어 " + Defense() + "  ·  속도 " + Speed(),
-            18,
+            17,
             FontStyle.Bold,
             new Color(0.76f, 0.86f, 0.91f, 1f),
             TextAnchor.MiddleCenter,
-            24f);
+            22f);
+        AnchorCombatHudFooter(stats);
     }
 
     private void AddEnemyCombatStatusHud(Transform parent)
@@ -333,23 +334,23 @@ public sealed partial class AetheriaGame
         var accent = currentEnemyIsBoss ? goldColor : EnemyThemeColor();
         var slot = AddFlatPanel("Enemy Combat Status HUD Slot", parent, Color.clear);
         slot.GetComponent<Image>().raycastTarget = false;
-        AddLayoutSize(slot, -1f, 190f);
+        AddLayoutSize(slot, -1f, CombatStatusHudHeight);
         var hud = AddCombatGlassPanel("Enemy Combat Status HUD", slot, accent, 0.88f);
-        SetCenteredFixedRect(hud, 600f, 190f);
+        SetCenteredFixedRect(hud, 600f, CombatStatusHudHeight);
         ApplyOpaqueTextPanel(hud, OpaqueTextPanelKind.Body);
         var hudCanvas = hud.gameObject.AddComponent<Canvas>();
         hudCanvas.overrideSorting = true;
         hudCanvas.sortingOrder = 70;
-        AddVertical(hud, 2, TextAnchor.UpperCenter, new RectOffset(24, 24, 8, 16));
+        AddVertical(hud, 2, TextAnchor.UpperCenter, new RectOffset(24, 24, 14, 8));
 
         AddText(
             hud,
             currentEnemyIsBoss ? "BOSS  ·  " + currentEnemy.name : currentEnemy.name,
-            23,
+            22,
             FontStyle.Bold,
             Color.Lerp(accent, Color.white, 0.36f),
             TextAnchor.MiddleCenter,
-            30f);
+            28f);
         var displayedEnemyHp = DisplayedCombatHp(false, currentEnemy.hp);
         combatEnemyHpBar = AddCombatBar(hud, displayedEnemyHp, currentEnemy.maxHp, accent, "HP");
         if (currentEnemy.maxMp > 0)
@@ -357,14 +358,36 @@ public sealed partial class AetheriaGame
             AddCombatBar(hud, currentEnemy.mp, currentEnemy.maxMp, manaColor, "MP");
         }
         AddCombatStatusSummary(hud, enemyStatusEffects, accent);
-        AddText(
+        var stats = AddText(
             hud,
             EnemyCombatHint(),
-            18,
+            17,
             FontStyle.Bold,
             new Color(0.76f, 0.86f, 0.91f, 1f),
             TextAnchor.MiddleCenter,
-            24f);
+            22f);
+        AnchorCombatHudFooter(stats);
+    }
+
+    private static void AnchorCombatHudFooter(Text footer)
+    {
+        if (footer == null)
+        {
+            return;
+        }
+
+        var layout = footer.GetComponent<LayoutElement>();
+        if (layout != null)
+        {
+            layout.ignoreLayout = true;
+        }
+
+        var rect = footer.rectTransform;
+        rect.anchorMin = new Vector2(0f, 0f);
+        rect.anchorMax = new Vector2(1f, 0f);
+        rect.pivot = new Vector2(0.5f, 0f);
+        rect.offsetMin = new Vector2(24f, 30f);
+        rect.offsetMax = new Vector2(-24f, 52f);
     }
 
     private static void SetCenteredFixedRect(RectTransform rect, float width, float height)

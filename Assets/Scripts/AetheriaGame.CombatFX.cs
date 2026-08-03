@@ -273,7 +273,8 @@ public sealed partial class AetheriaGame
         }
         var group = rootFx.gameObject.AddComponent<CanvasGroup>();
         var direction = presentation.attackerIsPlayer ? 1f : -1f;
-        BuildCombatAttackGlyph(rootFx, look, direction, presentation);
+        var glyphDirection = motion == CombatFxMotion.Beam ? 1f : direction;
+        BuildCombatAttackGlyph(rootFx, look, glyphDirection, presentation);
         var skillAttackArt = !string.IsNullOrEmpty(CombatFxSkillPath(presentation, "action"));
         var classAttackArt = !string.IsNullOrEmpty(CombatFxClassPath(look, "attack"));
         var v2SpeedStreaks = CombatFxChild(rootFx, "V2 Action Speed Streaks");
@@ -512,6 +513,19 @@ public sealed partial class AetheriaGame
         var v2GroundAlpha = v2GroundImage != null ? v2GroundImage.color.a : 0f;
         var v2MotesAlpha = v2MotesImage != null ? v2MotesImage.color.a : 0f;
         var v2GroundStart = v2GroundRing != null ? v2GroundRing.anchoredPosition : Vector2.zero;
+        RectTransform groundFxRoot = null;
+        if (v2GroundRing != null)
+        {
+            groundFxRoot = CreateCombatFxRoot(
+                healing ? "Class Healing Ground FX" : "Class Guard Ground FX",
+                anchor,
+                new Vector2(300f, 330f));
+            if (groundFxRoot != null)
+            {
+                groundFxRoot.SetSiblingIndex(rootFx.GetSiblingIndex());
+                v2GroundRing.SetParent(groundFxRoot, false);
+            }
+        }
 
         const float duration = 0.62f;
         var elapsed = 0f;
@@ -539,19 +553,32 @@ public sealed partial class AetheriaGame
             }
             if (v2GroundRing != null)
             {
-                var safeSupportScale = Mathf.Max(0.01f, supportScale);
-                var fixedGroundOffset = v2GroundStart - new Vector2(0f, rise);
-                var localGroundOffset = Quaternion.Euler(0f, 0f, -supportRotation)
-                    * new Vector3(
-                        fixedGroundOffset.x / safeSupportScale,
-                        fixedGroundOffset.y / safeSupportScale,
-                        0f);
-                v2GroundRing.anchoredPosition = new Vector2(localGroundOffset.x, localGroundOffset.y);
-                v2GroundRing.localScale = new Vector3(
-                    Mathf.Lerp(0.42f, 1.34f, reveal) / safeSupportScale,
-                    Mathf.Lerp(0.62f, 1.12f, reveal) / safeSupportScale,
+                var groundScale = new Vector3(
+                    Mathf.Lerp(0.42f, 1.34f, reveal),
+                    Mathf.Lerp(0.62f, 1.12f, reveal),
                     1f);
-                v2GroundRing.localEulerAngles = new Vector3(0f, 0f, -supportRotation);
+                if (groundFxRoot != null)
+                {
+                    v2GroundRing.anchoredPosition = v2GroundStart;
+                    v2GroundRing.localScale = groundScale;
+                    v2GroundRing.localEulerAngles = Vector3.zero;
+                }
+                else
+                {
+                    var safeSupportScale = Mathf.Max(0.01f, supportScale);
+                    var fixedGroundOffset = v2GroundStart - new Vector2(0f, rise);
+                    var localGroundOffset = Quaternion.Euler(0f, 0f, -supportRotation)
+                        * new Vector3(
+                            fixedGroundOffset.x / safeSupportScale,
+                            fixedGroundOffset.y / safeSupportScale,
+                            0f);
+                    v2GroundRing.anchoredPosition = new Vector2(localGroundOffset.x, localGroundOffset.y);
+                    v2GroundRing.localScale = new Vector3(
+                        groundScale.x / safeSupportScale,
+                        groundScale.y / safeSupportScale,
+                        1f);
+                    v2GroundRing.localEulerAngles = new Vector3(0f, 0f, -supportRotation);
+                }
                 if (v2GroundImage != null)
                 {
                     var ringColor = v2GroundImage.color;
@@ -580,6 +607,10 @@ public sealed partial class AetheriaGame
         if (rootFx != null)
         {
             Destroy(rootFx.gameObject);
+        }
+        if (groundFxRoot != null)
+        {
+            Destroy(groundFxRoot.gameObject);
         }
     }
 

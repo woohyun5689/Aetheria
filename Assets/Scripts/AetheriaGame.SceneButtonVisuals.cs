@@ -91,19 +91,49 @@ public sealed partial class AetheriaGame
         }
 
         var usesCharacterCard = themedSprite != null;
-        image.sprite = sprite;
-        image.type = usesCharacterCard ? Image.Type.Simple : Image.Type.Sliced;
-        image.preserveAspect = false;
-        image.pixelsPerUnitMultiplier = usesCharacterCard ? 1f : 4f;
+        var surfaceTint = Color.Lerp(
+            Rgb(250, 248, 241),
+            new Color(accent.r, accent.g, accent.b, 1f),
+            0.035f);
         if (usesCharacterCard)
         {
-            image.color = Color.white;
+            image.sprite = MapRoundedRectSprite();
+            image.type = Image.Type.Sliced;
+            image.preserveAspect = false;
+            image.pixelsPerUnitMultiplier = 1f;
+            image.color = new Color(surfaceTint.r, surfaceTint.g, surfaceTint.b, 1f);
+
+            var themedFrame = button.transform.Find("Themed Action Frame") as RectTransform;
+            if (themedFrame == null)
+            {
+                themedFrame = AddFlatPanel("Themed Action Frame", button.transform, Color.white);
+                themedFrame.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            }
+            themedFrame.gameObject.SetActive(true);
+            Stretch(themedFrame, 0f, 0f, 0f, 0f);
+            themedFrame.SetAsFirstSibling();
+            var frameImage = themedFrame.GetComponent<Image>();
+            frameImage.sprite = themedSprite;
+            frameImage.type = Image.Type.Simple;
+            frameImage.preserveAspect = false;
+            frameImage.color = Color.white;
+            frameImage.raycastTarget = false;
         }
         else
         {
+            image.sprite = sprite;
+            image.type = Image.Type.Sliced;
+            image.preserveAspect = false;
+            image.pixelsPerUnitMultiplier = 4f;
             var tint = Color.Lerp(Color.white, new Color(accent.r, accent.g, accent.b, 1f), 0.025f);
             image.color = new Color(tint.r, tint.g, tint.b, 1f);
+            var themedFrame = button.transform.Find("Themed Action Frame");
+            if (themedFrame != null)
+            {
+                themedFrame.gameObject.SetActive(false);
+            }
         }
+
         image.raycastTarget = true;
         button.targetGraphic = image;
         if (button.GetComponent<UiOpaqueSceneImageButton>() == null)
