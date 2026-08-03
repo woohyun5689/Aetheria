@@ -53,6 +53,20 @@ public sealed partial class AetheriaGame : MonoBehaviour
     private const int MaxGeneralLogLines = 12;
     private const float UiScrollbarWidth = 12f;
     private const int UiButtonDefaultTextSize = 24;
+    // Shared action sizes. Keep buttons that appear beside one another on the
+    // same visual grid while letting gameplay cards retain their larger format.
+    private const float UiStandardButtonWidth = 260f;
+    private const float UiStandardButtonHeight = 62f;
+    private const float UiCompactActionButtonWidth = 180f;
+    private const float UiCompactActionButtonHeight = 66f;
+    private const float UiMainMenuActionButtonWidth = 350f;
+    private const float UiMainMenuActionButtonHeight = 96f;
+    private const float UiClassActionButtonWidth = 520f;
+    private const float UiClassActionButtonHeight = 74f;
+    private const float UiFeatureActionButtonWidth = 420f;
+    private const float UiFeatureActionButtonHeight = 156f;
+    private const float UiPopupActionButtonWidth = 240f;
+    private const float UiPopupActionButtonHeight = 58f;
     private static AetheriaGame instance;
     private static readonly int[] CraftingRecipeCosts = { 40, 80, 150, 280, 520, 900, 1500, 2400, 3600, 5200, 7600 };
     private static readonly int[] RaritySellValues = { 8, 14, 24, 50, 120, 260, 520, 1000, 1600, 2600, 4200, 6500, 9000 };
@@ -93,6 +107,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
     private Canvas canvas;
     private RectTransform root;
     private Font uiFont;
+    private Font uiHeadingFont;
     private PlayerState player;
     private bool playerDataValidated;
     private EnemyState currentEnemy;
@@ -148,6 +163,13 @@ public sealed partial class AetheriaGame : MonoBehaviour
         {
             uiFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         }
+        uiHeadingFont = Font.CreateDynamicFontFromOSFont(
+            new[] { "HCR Batang", "HAN Batang", "Batang", "Noto Sans KR", "Malgun Gothic" },
+            22);
+        if (uiHeadingFont == null)
+        {
+            uiHeadingFont = uiFont;
+        }
 
         CreateCanvas();
         ShowTitleScreen();
@@ -164,6 +186,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         ReleaseCombatPresentationResources();
         ReleaseRuntimeSkillIconResources();
         ReleaseDungeonRegionVisuals();
+        ReleaseStreamingSprites();
         ReleaseGeneratedSprites();
         ReleaseTitleScreenResources();
         instance = null;
@@ -242,21 +265,21 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var buttons = AddRow("Menu Buttons", frame, 12, TextAnchor.MiddleCenter);
         ConstrainLayoutSize(buttons, 1460, 100);
         ConfigureNonExpandingRow(buttons);
-        var loadButton = AddMainMenuActionButton(buttons, "Main Menu Continue", HasSave(activeSlot) ? "원정 계속하기" : "저장 기록 없음", LoadSelectedSaveSlot, goodColor, 355, 96);
+        var loadButton = AddMainMenuActionButton(buttons, "Main Menu Continue", HasSave(activeSlot) ? "원정 계속하기" : "저장 기록 없음", LoadSelectedSaveSlot, goodColor, UiMainMenuActionButtonWidth, UiMainMenuActionButtonHeight);
         loadButton.interactable = HasSave(activeSlot);
         var canStartAdventure = !HasSave(activeSlot) || HasEmptySaveSlot();
         var newAdventureLabel = !HasSave(activeSlot) ? "새 원정 시작" : (HasEmptySaveSlot() ? "빈 일지에 새 원정" : "빈 일지 없음");
         var newAdventureButton = AddMainMenuActionButton(buttons, "Main Menu New Adventure", newAdventureLabel, () =>
         {
             ShowClassSelect(HasSave(activeSlot) ? FirstEmptySaveSlot() : activeSlot);
-        }, manaColor, 355, 96);
+        }, manaColor, UiMainMenuActionButtonWidth, UiMainMenuActionButtonHeight);
         newAdventureButton.interactable = canStartAdventure;
         var resetButton = AddMainMenuActionButton(buttons, "Main Menu Delete Record", "기록 삭제 " + (activeSlot + 1), () =>
         {
             ShowDeleteSaveConfirm(activeSlot);
-        }, dangerColor, 335, 96);
+        }, dangerColor, UiMainMenuActionButtonWidth, UiMainMenuActionButtonHeight);
         resetButton.interactable = HasSave(activeSlot);
-        AddMainMenuActionButton(buttons, "Main Menu Guide", "플레이 방법", () => ShowHowToPlay(true), goldColor, 335, 96);
+        AddMainMenuActionButton(buttons, "Main Menu Guide", "플레이 방법", () => ShowHowToPlay(true), goldColor, UiMainMenuActionButtonWidth, UiMainMenuActionButtonHeight);
 
         AddMainMenuHint(frame, "처음이라면 ‘플레이 방법’에서 전투 흐름을 먼저 확인하세요.");
         ApplyVisualRefreshToScreen(frame);
@@ -317,7 +340,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             AddReadabilityTextBlock(showcase, "Selected Hero Name", selectedHeroClass.name + "  ·  " + ClassRoleLabel(selectedHeroClass.name), 32, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, 54, Rgb(9, 25, 47));
             AddGroundingShadow(showcase, 380, 52, new Vector2(0f, 168f), 0.22f);
             AddCharacterArt(showcase, selectedHeroClass.portraitName, "idle", 440, 500);
-            AddReadabilityTextBlock(showcase, "Selected Hero Description", selectedHeroClass.description, 21, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, 92, Rgb(9, 25, 47));
+            AddReadabilityTextBlock(showcase, "Selected Hero Description", selectedHeroClass.description, 21, FontStyle.Normal, Color.white, TextAnchor.MiddleCenter, 92, Rgb(9, 25, 47));
             var statRow = AddRow("Selected Hero Stat Badges", showcase, 8, TextAnchor.MiddleCenter);
             ConstrainLayoutSize(statRow, -1, 48);
             statRow.GetComponent<HorizontalLayoutGroup>().childForceExpandHeight = false;
@@ -392,9 +415,10 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
         var buttons = AddRow("Class Select Actions", page, 16, TextAnchor.MiddleCenter);
         AddLayoutSize(buttons, -1, 78);
-        var startButton = AddObjectActionButton(buttons, selectedHeroClass != null ? selectedHeroClass.name + "으로 원정 시작" : "영웅을 먼저 선택하세요", StartSelectedHeroClass, selectedAccent, VisualActionRole.Confirm, "start_expedition", 760, 74);
+        ConfigureNonExpandingRow(buttons);
+        var startButton = AddObjectActionButton(buttons, selectedHeroClass != null ? selectedHeroClass.name + "으로 원정 시작" : "영웅을 먼저 선택하세요", StartSelectedHeroClass, selectedAccent, VisualActionRole.Confirm, "start_expedition", UiClassActionButtonWidth, UiClassActionButtonHeight);
         startButton.interactable = selectedHeroClass != null;
-        AddObjectActionButton(buttons, "메인 메뉴로", ShowMainMenu, panelAltColor, VisualActionRole.Back, "back", 400, 74);
+        AddObjectActionButton(buttons, "메인 메뉴로", ShowMainMenu, panelAltColor, VisualActionRole.Back, "back", UiClassActionButtonWidth, UiClassActionButtonHeight);
         ApplyVisualRefreshToScreen(page);
     }
 
@@ -514,7 +538,10 @@ public sealed partial class AetheriaGame : MonoBehaviour
         }
         AddText(card, title, 28, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, 40);
         AddDivider(card, new Color(accent.r, accent.g, accent.b, 0.80f));
-        AddText(card, description, 20, FontStyle.Bold, Color.white, TextAnchor.UpperLeft, 154);
+        // This is the exact remaining card budget after the visual, title and
+        // divider. Keeping it at 149 prevents the last guide line escaping a
+        // fixed-height card on compact displays.
+        AddText(card, description, 20, FontStyle.Normal, Color.white, TextAnchor.UpperLeft, 149);
     }
 
     private void ShowDeleteSaveConfirm(int slot)
@@ -532,7 +559,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         panel.anchorMax = panel.anchorMin;
         panel.pivot = new Vector2(0.5f, 0.5f);
         panel.anchoredPosition = Vector2.zero;
-        panel.sizeDelta = new Vector2(760f, 430f);
+        panel.sizeDelta = new Vector2(760f, 470f);
         AddVertical(panel, 14, TextAnchor.MiddleCenter, new RectOffset(42, 42, 30, 30));
 
         AddDeleteRecordVisual(panel, 64);
@@ -587,83 +614,90 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var hudStats = AddPanel("HUD Stats", hud, new Color(0, 0, 0, 0));
         AddLayoutSize(hudStats, 790, 164);
         ApplyOpaqueTextPanel(hudStats, OpaqueTextPanelKind.Compact);
-        AddVertical(hudStats, 2, TextAnchor.MiddleLeft, new RectOffset(28, 28, 12, 12));
-        AddText(hudStats, "Lv." + player.level + "  " + player.heroName + "  ·  " + player.heroClass, 28, FontStyle.Bold, Color.white, TextAnchor.MiddleLeft, 32);
-        AddText(hudStats, "원정 " + unlockedDungeonLabel + "   골드 " + player.gold + " G   전투력 " + EquippedPowerTotal(player), 18, FontStyle.Bold, goldColor, TextAnchor.MiddleLeft, 22);
-        AddBar(hudStats, player.hp, MaxHp(), dangerColor, "HP");
-        AddBar(hudStats, player.mp, MaxMp(), manaColor, "MP");
-        AddBar(hudStats, player.xp, XpToNext(), goodColor, "XP");
+        // 164px inner HUD budget: 20px padding + 30 + 20 + 3x26 bars
+        // + four 1px gaps = 152px. This leaves a small safety margin without
+        // shrinking the readable bar labels.
+        AddVertical(hudStats, 1, TextAnchor.MiddleLeft, new RectOffset(28, 28, 10, 10));
+        AddText(hudStats, "Lv." + player.level + "  " + player.heroName + "  ·  " + player.heroClass, 28, FontStyle.Bold, Color.white, TextAnchor.MiddleLeft, 30);
+        AddText(hudStats, "원정 " + unlockedDungeonLabel + "   골드 " + player.gold + " G   전투력 " + EquippedPowerTotal(player), 18, FontStyle.Bold, goldColor, TextAnchor.MiddleLeft, 20);
+        AddBar(hudStats, player.hp, MaxHp(), dangerColor, "HP", 26f);
+        AddBar(hudStats, player.mp, MaxMp(), manaColor, "MP", 26f);
+        AddBar(hudStats, player.xp, XpToNext(), goodColor, "XP", 26f);
 
         var topActions = AddRow("Town Quick Actions", hud, 8, TextAnchor.MiddleRight);
         ConstrainLayoutSize(topActions, -1, 70);
-        topActions.GetComponent<HorizontalLayoutGroup>().childForceExpandHeight = false;
+        var topActionsLayout = topActions.GetComponent<HorizontalLayoutGroup>();
+        topActionsLayout.childForceExpandWidth = false;
+        topActionsLayout.childForceExpandHeight = false;
         var saveButton = AddObjectActionButton(topActions, "저장", () =>
         {
             SaveGame();
             ShowTown("슬롯 " + (activeSlot + 1) + "에 저장했습니다.");
-        }, neonPurple, VisualActionRole.Journal, "save", 180, 66);
-        var restButton = AddObjectActionButton(topActions, "여관 25 G", Rest, manaColor, VisualActionRole.Inn, "inn", 190, 66);
-        var guideButton = AddObjectActionButton(topActions, "방법", () => ShowHowToPlay(false), goodColor, VisualActionRole.Guide, "guide", 170, 66);
+        }, neonPurple, VisualActionRole.Journal, "save", UiCompactActionButtonWidth, UiCompactActionButtonHeight);
+        var guideButton = AddObjectActionButton(topActions, "방법", () => ShowHowToPlay(false), goodColor, VisualActionRole.Guide, "guide", UiCompactActionButtonWidth, UiCompactActionButtonHeight);
         var menuButton = AddObjectActionButton(topActions, "메뉴", () =>
         {
             SaveGame();
             ShowMainMenu();
-        }, panelAltColor, VisualActionRole.Menu, "menu", 170, 66);
+        }, panelAltColor, VisualActionRole.Menu, "menu", UiCompactActionButtonWidth, UiCompactActionButtonHeight);
 
         var body = AddRow("Town Command Deck", page, 18, TextAnchor.UpperCenter);
         AddLayoutSize(body, -1, 842);
 
         var heroShowcase = AddPanel("Hero Showcase", body, Color.clear);
         AddLayoutSize(heroShowcase, 430, -1);
-        AddVertical(heroShowcase, 8, TextAnchor.UpperCenter, new RectOffset(10, 10, 12, 12));
-        AddReadabilityTextBlock(heroShowcase, "Hero Caption", townCharacterState == "rest" ? "회복 완료" : player.heroName + " · " + player.heroClass, 25, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, 48, Rgb(9, 25, 47));
-        AddGroundingShadow(heroShowcase, 340, 48, new Vector2(0f, 172f), 0.22f);
-        AddCharacterArt(heroShowcase, player.portraitName, townCharacterState, 400, 650);
-        AddReadabilityTextBlock(heroShowcase, "Hero Combat Style", "HP " + player.hp + "/" + MaxHp() + "   MP " + player.mp + "/" + MaxMp() + "\n" + (BasicAttackUsesMagic() ? "마법 공격형" : "물리 공격형"), 19, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, 68, Rgb(9, 25, 47));
+        // The persistent HUD already owns the character name, class and vital
+        // stats. Keep the showcase focused on the illustration so it does not
+        // repeat those details in two translucent-looking caption strips.
+        AddVertical(heroShowcase, 0, TextAnchor.MiddleCenter, new RectOffset(10, 10, 10, 10));
+        var townHeroPortrait = AddCharacterArt(heroShowcase, player.portraitName, townCharacterState, 400, 650);
+        AddTownHeroPortraitFrame(townHeroPortrait, player.portraitName);
 
         var commandBoard = AddPanel("Adventure Command Board", body, Color.clear);
         AddLayoutSize(commandBoard, 880, -1);
         AddVertical(commandBoard, 10, TextAnchor.UpperCenter, new RectOffset(10, 10, 10, 10));
-        AddReadabilityTextBlock(commandBoard, "Town Command Header", "아에테리아 원정본부\n던전 탐험 → 전투 → 장비 정비 → 더 강한 던전", 26, FontStyle.Bold, Color.white, TextAnchor.MiddleLeft, 84, Rgb(9, 25, 47));
-        AddReadabilityTextBlock(commandBoard, "Town Message", string.IsNullOrEmpty(message) ? "다음 행동을 선택하세요." : message, 19, FontStyle.Bold, Color.white, TextAnchor.MiddleLeft, 56, Rgb(9, 25, 47));
 
         var actionGrid = AddPanel("Town Action Grid", commandBoard, new Color(0, 0, 0, 0));
         AddLayoutSize(actionGrid, -1, 500);
         var actionLayout = actionGrid.gameObject.AddComponent<GridLayoutGroup>();
-        actionLayout.cellSize = new Vector2(420, 156);
+        actionLayout.cellSize = new Vector2(UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
         actionLayout.spacing = new Vector2(12, 12);
         actionLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         actionLayout.constraintCount = 2;
         actionLayout.childAlignment = TextAnchor.MiddleCenter;
 
-        AddObjectActionButton(actionGrid, "던전 탐험\n추천 원정지 선택", EnterDungeonSelectFromTown, goodColor, VisualActionRole.Portal, "portal", 420, 156);
-        AddObjectActionButton(actionGrid, "가방 · 장비\n전투 세팅", () => ShowInventory("가방과 착용 장비를 정비합니다."), panelAltColor, VisualActionRole.Satchel, "satchel", 420, 156);
-        AddObjectActionButton(actionGrid, "대장간\n장비 강화", () => ShowEnhancement("착용 장비를 부위별로 강화합니다."), goldColor, VisualActionRole.Anvil, "anvil", 420, 156);
-        AddObjectActionButton(actionGrid, "스킬 수련\n기술 강화", () => ShowSkillTraining("골드로 직업 스킬을 강화합니다."), manaColor, VisualActionRole.Tome, "skill_tome", 420, 156);
-        AddObjectActionButton(actionGrid, "장비 조합\n상위 등급 제작", () => ShowCrafting("같은 등급 장비 3개를 다음 등급으로 조합합니다."), neonPurple, VisualActionRole.Alchemy, "alchemy", 420, 156);
-        AddObjectActionButton(actionGrid, "여관 휴식\nHP · MP 회복", Rest, dangerColor, VisualActionRole.Inn, "inn", 420, 156);
-
-        AddReadabilityTextBlock(commandBoard, "Town Compact Stats", StatLine() + "\n가방 " + InventoryCountLabel() + "   최근 기록 " + player.generalLogs.Count, 18, FontStyle.Bold, Color.white, TextAnchor.MiddleLeft, 96, Rgb(9, 25, 47));
+        AddObjectActionButton(actionGrid, "던전 탐험\n추천 원정지 선택", EnterDungeonSelectFromTown, goodColor, VisualActionRole.Portal, "portal", UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
+        AddObjectActionButton(actionGrid, "가방 · 장비\n전투 세팅", () => ShowInventory("가방과 착용 장비를 정비합니다."), panelAltColor, VisualActionRole.Satchel, "satchel", UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
+        AddObjectActionButton(actionGrid, "대장간\n장비 강화", () => ShowEnhancement("착용 장비를 부위별로 강화합니다."), goldColor, VisualActionRole.Anvil, "anvil", UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
+        AddObjectActionButton(actionGrid, "스킬 수련\n기술 강화", () => ShowSkillTraining("골드로 직업 스킬을 강화합니다."), manaColor, VisualActionRole.Tome, "skill_tome", UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
+        AddObjectActionButton(actionGrid, "장비 조합\n상위 등급 제작", () => ShowCrafting("같은 등급 장비 3개를 다음 등급으로 조합합니다."), neonPurple, VisualActionRole.Alchemy, "alchemy", UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
+        AddObjectActionButton(actionGrid, "여관 휴식\nHP · MP 회복", Rest, dangerColor, VisualActionRole.Inn, "inn", UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
 
         var fieldJournal = AddReadabilityPlate(body, "Field Journal", Rgb(9, 25, 47));
         AddLayoutSize(fieldJournal, -1, -1);
-        AddVertical(fieldJournal, 12, TextAnchor.UpperLeft, new RectOffset(20, 20, 20, 20));
-        AddText(fieldJournal, "원정 기록", 30, FontStyle.Bold, Color.white, TextAnchor.MiddleLeft, 42);
+        // This tall ornamental frame has a much larger visual no-copy zone
+        // than a plain card: its gold side pillars and header crest otherwise
+        // sit directly on top of the journal title and section copy. Reserve
+        // that inset as layout space, instead of trying to solve it with text
+        // offsets that would break at a different aspect ratio.
+        AddVertical(fieldJournal, 10, TextAnchor.UpperLeft, new RectOffset(48, 42, 44, 36));
+        AddText(fieldJournal, "원정 기록", 28, FontStyle.Bold, Color.white, TextAnchor.MiddleLeft, 38);
         AddDivider(fieldJournal, Rgba(111, 211, 255, 135));
-        AddText(fieldJournal, "진행도\n해금 던전 " + unlockedDungeonLabel + "\n보유 골드 " + player.gold + " G\n장비 전투력 " + EquippedPowerTotal(player), 19, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 120);
+        AddText(fieldJournal, "진행도", 19, FontStyle.Bold, goldColor, TextAnchor.MiddleLeft, 28);
+        AddText(fieldJournal, "해금 던전  " + unlockedDungeonLabel + "\n보유 골드  " + player.gold + " G\n장비 전투력  " + EquippedPowerTotal(player), 15, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 72);
         AddDivider(fieldJournal, Rgba(111, 211, 255, 95));
-        AddText(fieldJournal, "착용 장비", 22, FontStyle.Bold, goldColor, TextAnchor.MiddleLeft, 34);
+        AddText(fieldJournal, "착용 장비", 19, FontStyle.Bold, goldColor, TextAnchor.MiddleLeft, 28);
         AddText(fieldJournal,
-            EquipmentLine("무기", player.weapon) + "\n"
-            + EquipmentLine("방어구", player.armor) + "\n"
-            + EquipmentLine("장신구 1", player.charm) + "\n"
-            + EquipmentLine("장신구 2", player.charm2) + "\n"
-            + EquipmentLine("장신구 3", player.charm3) + "\n"
-            + EquipmentLine("장신구 4", player.charm4),
-            18, FontStyle.Bold, textColor, TextAnchor.UpperLeft, 190);
+            FieldJournalEquipmentLine("무기", player.weapon) + "\n"
+            + FieldJournalEquipmentLine("방어", player.armor) + "\n"
+            + FieldJournalEquipmentLine("장신 1", player.charm) + "\n"
+            + FieldJournalEquipmentLine("장신 2", player.charm2) + "\n"
+            + FieldJournalEquipmentLine("장신 3", player.charm3) + "\n"
+            + FieldJournalEquipmentLine("장신 4", player.charm4),
+            14, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 132);
         AddDivider(fieldJournal, Rgba(111, 211, 255, 95));
-        AddText(fieldJournal, "최근 소식", 22, FontStyle.Bold, neonPurple, TextAnchor.MiddleLeft, 34);
-        AddText(fieldJournal, RecentLogText(), 18, FontStyle.Bold, Color.white, TextAnchor.UpperLeft, 190);
+        AddText(fieldJournal, "최근 소식", 19, FontStyle.Bold, neonPurple, TextAnchor.MiddleLeft, 28);
+        AddText(fieldJournal, FieldJournalRecentText(), 14, FontStyle.Normal, Color.white, TextAnchor.UpperLeft, 96);
         ApplyVisualRefreshToScreen(page);
     }
 
@@ -717,7 +751,6 @@ public sealed partial class AetheriaGame : MonoBehaviour
             SaveGame();
             ShowTown("슬롯 " + (activeSlot + 1) + "에 저장했습니다.");
         }, neonPurple);
-        AddButton(topActions, "여관 휴식 (25 G)", Rest, manaColor);
         AddButton(topActions, "메인 메뉴", () =>
         {
             SaveGame();
@@ -922,7 +955,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         if (selectLabel != null)
         {
             selectLabel.resizeTextForBestFit = true;
-            selectLabel.resizeTextMinSize = 16;
+            selectLabel.resizeTextMinSize = 13;
         }
         AddGrowthBadge(row, TypeLabel(item.type), Rgb(74, 112, 138), 68, 56);
         AddGrowthBadge(row, RarityLabel(item.rarity), RarityColor(item.rarity), 78, 56);
@@ -1189,7 +1222,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddGrowthReadPlate(forgeStage, Rgb(244, 239, 224));
         AddVertical(forgeStage, 8, TextAnchor.UpperCenter, new RectOffset(22, 22, 20, 20));
         AddText(forgeStage, "강화할 장비를 고르세요", 27, FontStyle.Bold, goldColor, TextAnchor.MiddleCenter, 42);
-        AddText(forgeStage, "모루에 올린 장비의 전투력을\n한 단계 끌어올립니다.", 19, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, 58);
+        AddText(forgeStage, "모루에 올린 장비의 전투력을\n한 단계 끌어올립니다.", 19, FontStyle.Normal, textColor, TextAnchor.MiddleCenter, 58);
         AddForgeAnvilGraphic(forgeStage);
         AddGrowthProgressBar(forgeStage, GearEnhancementSuccessChance, goodColor, "기본 성공률  " + RoundToGameInt(GearEnhancementSuccessChance * 100f) + "%", 34);
         AddText(forgeStage, "현재 장착한 6개 부위만 강화 가능\n강화 단계와 희귀도가 높을수록 비용 증가", 18, FontStyle.Normal, mutedColor, TextAnchor.MiddleCenter, 62);
@@ -1240,7 +1273,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddGrowthReadPlate(heroStage, Rgb(239, 246, 250));
         AddVertical(heroStage, 8, TextAnchor.UpperCenter, new RectOffset(18, 18, 18, 18));
         AddText(heroStage, "기술 수련", 27, FontStyle.Bold, accent, TextAnchor.MiddleCenter, 38);
-        AddText(heroStage, player.heroName + " · " + player.heroClass, 19, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, 30);
+        AddText(heroStage, player.heroName + " · " + player.heroClass, 19, FontStyle.Normal, textColor, TextAnchor.MiddleCenter, 30);
         AddCharacterArt(heroStage, player.portraitName, "skill", 340, 520);
         AddText(heroStage, "각 기술은 최대 Lv." + MaxSkillLevel + "\n현재 효과와 다음 효과를 비교하세요.", 18, FontStyle.Normal, mutedColor, TextAnchor.MiddleCenter, 58);
 
@@ -1338,25 +1371,26 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddLayoutSize(body, -1, 830);
         body.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
 
-        var ingredientColumn = AddPanel("Crafting Ingredient Column", body, Color.clear);
-        AddLayoutSize(ingredientColumn, 420, -1);
-        AddVertical(ingredientColumn, 8, TextAnchor.UpperLeft, new RectOffset(0, 0, 0, 0));
-        AddOpaqueSectionHeading(ingredientColumn, "Crafting Ingredient Heading", "조합 가능 재료", textColor, 44);
-        var ingredientList = AddScrollList("Crafting Ingredient Summary", ingredientColumn, Color.clear, -1, -1, 7, new RectOffset(12, 16, 10, 12));
-        AddReadabilityTextBlock(ingredientList, "Crafting Ingredient Hint", "네임드 장비는 재료에서 제외됩니다.", 18, FontStyle.Normal, mutedColor, TextAnchor.MiddleLeft, 42, Rgb(245, 248, 250));
-        for (var rarity = 0; rarity <= MaxRecipeIngredientRarity; rarity++)
-        {
-            AddCraftingIngredientSummary(ingredientList, rarity, CountCraftIngredients(rarity));
-        }
-
         var recipeColumn = AddPanel("Crafting Recipe Column", body, Color.clear);
         AddLayoutSize(recipeColumn, -1, -1);
         AddVertical(recipeColumn, 8, TextAnchor.UpperLeft, new RectOffset(0, 0, 0, 0));
         AddOpaqueSectionHeading(recipeColumn, "Crafting Recipe Heading", "재료 3개   →   합성진   →   결과 장비", textColor, 44);
-        var recipeList = AddScrollList("Crafting Recipe Flow", recipeColumn, Color.clear, -1, -1, 10, new RectOffset(12, 18, 10, 12));
+
+        // 11 crafting tiers fit in six compact rows at the 1920x1080 base layout.
+        // A fixed two-column grid keeps every recipe immediately visible rather
+        // than hiding higher rarities behind a scroll view.
+        var recipeGrid = AddPanel("Crafting Recipe Grid", recipeColumn, Color.clear);
+        AddLayoutSize(recipeGrid, -1, 778);
+        var recipeLayout = recipeGrid.gameObject.AddComponent<GridLayoutGroup>();
+        recipeLayout.cellSize = new Vector2(900, 121);
+        recipeLayout.spacing = new Vector2(12, 8);
+        recipeLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+        recipeLayout.constraintCount = 2;
+        recipeLayout.childAlignment = TextAnchor.UpperCenter;
+        recipeLayout.padding = new RectOffset(8, 8, 6, 6);
         for (var rarity = 0; rarity <= MaxRecipeIngredientRarity; rarity++)
         {
-            AddCraftingRecipeFlow(recipeList, rarity);
+            AddCraftingRecipeFlow(recipeGrid, rarity);
         }
         ApplyVisualRefreshToScreen(page);
     }
@@ -1398,53 +1432,34 @@ public sealed partial class AetheriaGame : MonoBehaviour
         button.interactable = item != null && item.level < MaxGearEnhancementLevel && player.gold >= cost;
     }
 
-    private void AddCraftingIngredientSummary(Transform parent, int rarity, int count)
-    {
-        var row = AddPanel("Crafting Ingredient " + rarity, parent, Color.clear);
-        AddLayoutSize(row, -1, 52);
-        var layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
-        layout.spacing = 8;
-        layout.childAlignment = TextAnchor.MiddleLeft;
-        layout.childControlWidth = true;
-        layout.childControlHeight = true;
-        layout.childForceExpandWidth = false;
-        layout.childForceExpandHeight = true;
-        AddGrowthBadge(row, RarityLabel(rarity), RarityColor(rarity), 170, 44);
-        AddGrowthBadge(row, count + "개 보유", count >= 3 ? goodColor : mutedColor, 150, 44);
-    }
-
     private void AddCraftingRecipeFlow(Transform parent, int rarity)
     {
         var count = CountCraftIngredients(rarity);
         var cost = RecipeCraftCost(rarity);
         var resultRarity = rarity + 1;
         var card = AddPanel("Crafting Recipe " + rarity, parent, Color.clear);
-        AddLayoutSize(card, -1, 154);
+        AddLayoutSize(card, -1, 121);
         AddGrowthReadPlate(card, Rgb(242, 239, 248));
-        AddVertical(card, 5, TextAnchor.UpperLeft, new RectOffset(12, 12, 9, 9));
-        AddText(card, RarityLabel(rarity) + " 조합   ·   보유 " + count + "/3", 20, FontStyle.Bold, RarityColor(rarity), TextAnchor.MiddleLeft, 30);
+        AddVertical(card, 3, TextAnchor.UpperLeft, new RectOffset(12, 12, 7, 7));
+        AddText(card, RarityLabel(rarity) + " 조합", 19, FontStyle.Bold, RarityColor(rarity), TextAnchor.MiddleLeft, 24);
 
         var flow = AddPanel("Crafting Material Flow", card, Color.clear);
-        AddLayoutSize(flow, -1, 96);
+        AddLayoutSize(flow, -1, 76);
         var layout = flow.gameObject.AddComponent<HorizontalLayoutGroup>();
-        layout.spacing = 7;
+        layout.spacing = 8;
         layout.childAlignment = TextAnchor.MiddleLeft;
         layout.childControlWidth = true;
         layout.childControlHeight = true;
         layout.childForceExpandWidth = false;
         layout.childForceExpandHeight = true;
 
-        AddGrowthBadge(flow, "재료 1\n" + RarityLabel(rarity), RarityColor(rarity), 108, 74);
-        AddGrowthFlowText(flow, "+", 28);
-        AddGrowthBadge(flow, "재료 2\n" + RarityLabel(rarity), RarityColor(rarity), 108, 74);
-        AddGrowthFlowText(flow, "+", 28);
-        AddGrowthBadge(flow, "재료 3\n" + RarityLabel(rarity), RarityColor(rarity), 108, 74);
-        AddGrowthFlowText(flow, "→", 34);
-        AddGrowthBadge(flow, "합성진\n" + cost + " G", neonPurple, 132, 82);
-        AddGrowthFlowText(flow, "→", 34);
-        AddGrowthBadge(flow, "결과\n" + RarityLabel(resultRarity), RarityColor(resultRarity), 142, 82);
-        var button = AddButton(flow, "조합 실행\n" + count + "/3", () => CraftByRecipe(rarity), RarityColor(resultRarity));
-        AddLayoutSize(button.GetComponent<RectTransform>(), 180, 76);
+        AddGrowthBadge(flow, "재료 3개\n" + RarityLabel(rarity), RarityColor(rarity), 158, 68);
+        AddGrowthFlowText(flow, "→", 30);
+        AddGrowthBadge(flow, "합성진\n" + cost + " G", neonPurple, 120, 70);
+        AddGrowthFlowText(flow, "→", 30);
+        AddGrowthBadge(flow, "결과\n" + RarityLabel(resultRarity), RarityColor(resultRarity), 140, 70);
+        var button = AddButton(flow, "조합 실행", () => CraftByRecipe(rarity), RarityColor(resultRarity));
+        ConstrainLayoutSize(button.GetComponent<RectTransform>(), 180, 70);
         button.interactable = count >= 3 && player.gold >= cost;
     }
 
@@ -1516,7 +1531,9 @@ public sealed partial class AetheriaGame : MonoBehaviour
     {
         var badge = AddFlatPanel("Growth Badge " + label, parent, Color.white);
         AddLayoutSize(badge, width, height);
-        ApplyOpaqueTextPanel(badge, OpaqueTextPanelKind.Body);
+        ApplyOpaqueTextPanel(
+            badge,
+            height <= 56f ? OpaqueTextPanelKind.Compact : OpaqueTextPanelKind.Body);
         var text = AddText(badge, label, 18, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, height);
         Stretch(text.GetComponent<RectTransform>(), 10, 5, 10, 5);
         return badge;
@@ -1836,21 +1853,44 @@ public sealed partial class AetheriaGame : MonoBehaviour
         portalTopLayout.childForceExpandWidth = false;
         portalTopLayout.childForceExpandHeight = true;
 
-        var titleCopy = AddFlatPanel("Dungeon Map Title Copy", portalTop, Color.white);
+        // This is a short information strip.  Do not use the generated title
+        // ornament here: its centre medallion competes with the progress copy
+        // at this height.
+        var titleCopy = AddFlatPanel("Dungeon Map Title Copy", portalTop, Rgb(246, 248, 241));
         AddLayoutSize(titleCopy, -1f, 58f);
-        ApplyOpaqueTextPanel(titleCopy, OpaqueTextPanelKind.Title);
-        var titleLayout = titleCopy.gameObject.AddComponent<HorizontalLayoutGroup>();
-        titleLayout.spacing = 10f;
-        titleLayout.padding = new RectOffset(26, 26, 8, 8);
-        titleLayout.childAlignment = TextAnchor.MiddleLeft;
-        titleLayout.childControlWidth = true;
-        titleLayout.childControlHeight = true;
-        titleLayout.childForceExpandWidth = false;
-        titleLayout.childForceExpandHeight = true;
-        var mapTitle = AddText(titleCopy, "원정 지도", 25, FontStyle.Bold, manaColor, TextAnchor.MiddleLeft, 42);
-        AddLayoutSize(mapTitle.rectTransform, -1f, 42f);
-        var mapProgress = AddText(titleCopy, currentDungeonLabel, 16, FontStyle.Bold, goldColor, TextAnchor.MiddleLeft, 42);
-        AddLayoutSize(mapProgress.rectTransform, 72f, 42f);
+        var titleImage = titleCopy.GetComponent<Image>();
+        titleImage.sprite = MapRoundedRectSprite();
+        titleImage.type = Image.Type.Sliced;
+        titleImage.preserveAspect = false;
+        titleImage.pixelsPerUnitMultiplier = 1f;
+        titleImage.raycastTarget = false;
+        var titleMarker = titleCopy.gameObject.AddComponent<UiOpaqueTextPanel>();
+        titleMarker.kind = OpaqueTextPanelKind.Compact;
+
+        var titleAccent = AddFlatPanel("Dungeon Map Title Accent", titleCopy, manaColor);
+        titleAccent.anchorMin = new Vector2(0f, 0.16f);
+        titleAccent.anchorMax = new Vector2(0f, 0.84f);
+        titleAccent.pivot = new Vector2(0f, 0.5f);
+        titleAccent.anchoredPosition = new Vector2(8f, 0f);
+        titleAccent.sizeDelta = new Vector2(3f, 0f);
+        titleAccent.GetComponent<Image>().raycastTarget = false;
+
+        var mapTitle = AddText(titleCopy, "원정 지도", 24, FontStyle.Bold, manaColor, TextAnchor.MiddleLeft, 42f);
+        Stretch(mapTitle.rectTransform, 20f, 6f, 112f, 6f);
+
+        var progressBadge = AddFlatPanel("Dungeon Map Progress Badge", titleCopy, Rgb(238, 231, 211));
+        var progressImage = progressBadge.GetComponent<Image>();
+        progressImage.sprite = MapRoundedRectSprite();
+        progressImage.type = Image.Type.Sliced;
+        progressImage.pixelsPerUnitMultiplier = 1f;
+        progressImage.raycastTarget = false;
+        progressBadge.anchorMin = new Vector2(1f, 0.5f);
+        progressBadge.anchorMax = new Vector2(1f, 0.5f);
+        progressBadge.pivot = new Vector2(1f, 0.5f);
+        progressBadge.anchoredPosition = new Vector2(-14f, 0f);
+        progressBadge.sizeDelta = new Vector2(82f, 34f);
+        var mapProgress = AddText(progressBadge, currentDungeonLabel, 15, FontStyle.Bold, goldColor, TextAnchor.MiddleCenter, 30f);
+        Stretch(mapProgress.rectTransform, 6f, 2f, 6f, 2f);
 
         if (includeResetButton)
         {
@@ -1859,55 +1899,69 @@ public sealed partial class AetheriaGame : MonoBehaviour
                 ResetDungeonMapView();
                 ShowDungeonSelect();
             }, panelAltColor);
-            AddLayoutSize(resetButton.GetComponent<RectTransform>(), 180, 60);
+            AddLayoutSize(resetButton.GetComponent<RectTransform>(), UiCompactActionButtonWidth, 60);
         }
 
         var townButton = AddButton(portalTop, "마을로", () => ShowTown("마을로 돌아왔습니다."), panelAltColor);
-        AddLayoutSize(townButton.GetComponent<RectTransform>(), 130, 60);
+        AddLayoutSize(townButton.GetComponent<RectTransform>(), UiCompactActionButtonWidth, 60);
     }
 
     private void AddDungeonMapLegendOverlay(RectTransform portalPage, List<DungeonData> dungeons)
     {
-        var legend = AddFlatPanel("Dungeon Map Legend", portalPage, new Color(0.96f, 0.98f, 1f, DungeonMapPlateAlpha));
-        legend.GetComponent<Image>().sprite = MapRoundedRectSprite();
-        legend.GetComponent<Image>().raycastTarget = false;
+        // A map legend is a compact navigation ribbon, not a paragraph card.
+        // The quick-start panel owns the recommended destination and CTA;
+        // this strip only identifies the four map states.
+        var legend = AddFlatPanel("Dungeon Map Legend", portalPage, Rgb(246, 248, 241));
+        var legendImage = legend.GetComponent<Image>();
+        legendImage.sprite = MapRoundedRectSprite();
+        legendImage.type = Image.Type.Sliced;
+        legendImage.pixelsPerUnitMultiplier = 1f;
+        legendImage.raycastTarget = false;
+        var legendMarker = legend.GetComponent<UiOpaqueTextPanel>();
+        if (legendMarker == null)
+        {
+            legendMarker = legend.gameObject.AddComponent<UiOpaqueTextPanel>();
+        }
+        legendMarker.kind = OpaqueTextPanelKind.Compact;
         legend.anchorMin = new Vector2(0f, 1f);
         legend.anchorMax = new Vector2(0f, 1f);
         legend.pivot = new Vector2(0f, 1f);
         legend.anchoredPosition = new Vector2(14f, -14f);
-        legend.sizeDelta = new Vector2(820f, 72f);
+        legend.sizeDelta = new Vector2(620f, 64f);
+
+        var accent = AddFlatPanel("Map Legend Accent", legend, manaColor);
+        accent.anchorMin = new Vector2(0.04f, 1f);
+        accent.anchorMax = new Vector2(0.96f, 1f);
+        accent.pivot = new Vector2(0.5f, 1f);
+        accent.anchoredPosition = new Vector2(0f, -4f);
+        accent.sizeDelta = new Vector2(0f, 3f);
+        accent.GetComponent<Image>().raycastTarget = false;
+        accent.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+
         var layout = legend.gameObject.AddComponent<HorizontalLayoutGroup>();
-        layout.spacing = 10;
-        layout.padding = new RectOffset(14, 14, 7, 7);
+        layout.spacing = 8f;
+        layout.padding = new RectOffset(18, 18, 10, 10);
         layout.childAlignment = TextAnchor.MiddleLeft;
         layout.childControlWidth = true;
         layout.childControlHeight = true;
         layout.childForceExpandWidth = false;
-        layout.childForceExpandHeight = true;
+        layout.childForceExpandHeight = false;
 
-        var legendTitle = AddText(legend, "원정 경로", 21, FontStyle.Bold, textColor, TextAnchor.MiddleLeft, 54);
-        var legendTitleLayout = legendTitle.GetComponent<LayoutElement>();
-        legendTitleLayout.preferredWidth = 112f;
-        legendTitleLayout.flexibleWidth = 0f;
+        var legendTitle = AddText(legend, "원정 경로", 20, FontStyle.Bold, textColor, TextAnchor.MiddleLeft, 40f);
+        ConstrainLayoutSize(legendTitle.rectTransform, 116f, 40f);
         AddDungeonLegendItem(legend, "현", "현재", goldColor);
         AddDungeonLegendItem(legend, "추", "추천", manaColor);
         AddDungeonLegendItem(legend, "완", "완료", goodColor);
         AddDungeonLegendItem(legend, "잠", "잠금", mutedColor);
-
-        var recommended = NextRecommendedDungeon(dungeons);
-        if (recommended != null)
-        {
-            AddText(legend, "추천  " + recommended.number + ". " + recommended.name, 18, FontStyle.Bold, manaColor, TextAnchor.MiddleLeft, 54);
-        }
     }
 
     private void AddDungeonLegendItem(Transform parent, string symbol, string label, Color color)
     {
         var item = AddFlatPanel("Map Legend " + label, parent, Color.clear);
-        AddLayoutSize(item, 88, 54);
+        ConstrainLayoutSize(item, 105f, 40f);
         item.GetComponent<Image>().raycastTarget = false;
         var layout = item.gameObject.AddComponent<HorizontalLayoutGroup>();
-        layout.spacing = 5;
+        layout.spacing = 6f;
         layout.childAlignment = TextAnchor.MiddleLeft;
         layout.childControlWidth = true;
         layout.childControlHeight = true;
@@ -1915,12 +1969,13 @@ public sealed partial class AetheriaGame : MonoBehaviour
         layout.childForceExpandHeight = false;
 
         var icon = AddFlatPanel("Map Legend Icon " + label, item, new Color(color.r, color.g, color.b, 0.94f));
-        AddLayoutSize(icon, 34, 34);
+        ConstrainLayoutSize(icon, 26f, 26f);
         icon.GetComponent<Image>().sprite = MapCircleSprite();
         icon.GetComponent<Image>().raycastTarget = false;
-        var iconText = AddText(icon, symbol, 17, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, 34);
+        var iconText = AddText(icon, symbol, 14, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, 26f);
         Stretch(iconText.GetComponent<RectTransform>(), 0, 0, 0, 0);
-        AddText(item, label, 18, FontStyle.Bold, textColor, TextAnchor.MiddleLeft, 42);
+        var labelText = AddText(item, label, 16, FontStyle.Bold, textColor, TextAnchor.MiddleLeft, 34f);
+        AddLayoutSize(labelText.rectTransform, -1f, 34f);
     }
 
     private void AddDungeonMapStatusOverlay(RectTransform portalPage, string title, string detail)
@@ -1932,10 +1987,10 @@ public sealed partial class AetheriaGame : MonoBehaviour
         statusPanel.anchorMax = new Vector2(0f, 0f);
         statusPanel.pivot = new Vector2(0f, 0f);
         statusPanel.anchoredPosition = new Vector2(14f, 14f);
-        statusPanel.sizeDelta = new Vector2(720f, 78f);
-        AddVertical(statusPanel, 1, TextAnchor.MiddleCenter, new RectOffset(14, 14, 7, 7));
-        AddText(statusPanel, title, 20, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, 26);
-        AddText(statusPanel, detail, 18, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, 26);
+        statusPanel.sizeDelta = new Vector2(720f, 104f);
+        AddVertical(statusPanel, 2, TextAnchor.MiddleCenter, new RectOffset(14, 14, 10, 10));
+        AddText(statusPanel, title, 20, FontStyle.Bold, textColor, TextAnchor.MiddleCenter, 32);
+        AddText(statusPanel, detail, 18, FontStyle.Normal, textColor, TextAnchor.MiddleCenter, 40);
     }
 
     private void AddDungeonQuickStartOverlay(RectTransform portalPage, List<DungeonData> dungeons)
@@ -2629,11 +2684,16 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddLayoutSize(titleText.GetComponent<RectTransform>(), -1, 58);
         var statePlate = AddFlatPanel("Dungeon State Badge", header, new Color(statusColor.r, statusColor.g, statusColor.b, DungeonMapPlateAlpha));
         ConstrainLayoutSize(statePlate, 184f, 48f);
-        ApplyOpaqueTextPanel(statePlate, OpaqueTextPanelKind.Body);
+        ApplyOpaqueTextPanel(statePlate, OpaqueTextPanelKind.Compact);
         var stateText = AddText(statePlate, statusText, 18, FontStyle.Bold, statusColor, TextAnchor.MiddleCenter, 48);
         Stretch(stateText.GetComponent<RectTransform>(), 10, 3, 10, 3);
 
         var facts = AddDungeonPopupGlassPanel(safeContent, "Expedition Modal Facts Surface", 64f, region != null ? region.color : manaColor);
+        // This row is fixed information, not a stretchable detail area.  Its
+        // child layout previously advertised flexible height, so the outer
+        // vertical layout gave it the free space intended for the scrollable
+        // detail section and crushed that section beneath it.
+        ConstrainLayoutSize(facts, -1f, 64f);
         var factsLayout = facts.gameObject.AddComponent<HorizontalLayoutGroup>();
         factsLayout.spacing = 12;
         factsLayout.padding = new RectOffset(12, 12, 4, 4);
@@ -2641,52 +2701,50 @@ public sealed partial class AetheriaGame : MonoBehaviour
         factsLayout.childControlWidth = true;
         factsLayout.childControlHeight = true;
         factsLayout.childForceExpandWidth = true;
-        factsLayout.childForceExpandHeight = true;
+        factsLayout.childForceExpandHeight = false;
         AddDungeonPopupFact(facts, DungeonRegionGlyph(region != null ? region.key : ""), "지역", region != null ? region.name : "미지의 대륙", region != null ? region.color : manaColor);
         AddDungeonPopupFact(facts, "Lv", "권장", "Lv." + dungeon.recommendedLevel, underLevel ? goldColor : goodColor);
         AddDungeonPopupFact(facts, "층", "구역", DungeonFloorCount(dungeon) + "개", manaColor);
-
-        var routeSurface = AddDungeonPopupGlassPanel(safeContent, "Expedition Modal Route Surface", 64f, statusColor);
-        AddVertical(routeSurface, 0, TextAnchor.MiddleCenter, new RectOffset(8, 8, 5, 5));
-        AddDungeonRoutePreview(routeSurface, DungeonFloorCount(dungeon), statusColor, bossCleared);
 
         var descriptionSurface = AddDungeonPopupGlassPanel(safeContent, "Expedition Modal Description Surface", 70f, statusColor);
         var descriptionText = AddText(descriptionSurface, dungeon.description, 19, FontStyle.Normal, textColor, TextAnchor.MiddleLeft, 54);
         Stretch(descriptionText.GetComponent<RectTransform>(), 18, 8, 18, 8);
 
-        var details = AddRow("Dungeon Popup Details", safeContent, 14, TextAnchor.UpperCenter);
-        AddLayoutSize(details, -1, -1);
+        // On 768px-tall screens the fixed header, facts and footer leave less
+        // room than the complete reward copy needs. Keep the footer reachable
+        // and scroll only this long-form two-column detail area.
+        var detailsContent = AddScrollList("Dungeon Popup Details", safeContent, Color.clear, -1, -1, 0, new RectOffset(0, 0, 0, 0));
+        var details = AddRow("Dungeon Popup Details Content", detailsContent, 14, TextAnchor.UpperCenter);
+        // These are ornate body frames, not plain cards. Reserve a real
+        // no-copy zone for their top crest and side pillars; the detail row
+        // therefore needs enough height for the reward copy before it enters
+        // the surrounding scroll viewport on shorter displays.
+        ConstrainLayoutSize(details, -1f, 438f);
         var detailsLayout = details.GetComponent<HorizontalLayoutGroup>();
         detailsLayout.childForceExpandWidth = true;
         detailsLayout.childForceExpandHeight = true;
 
         var preparation = AddDungeonPopupGlassPanel(details, "Expedition Modal Preparation Surface", -1f, statusColor);
-        AddVertical(preparation, 6, TextAnchor.UpperLeft, new RectOffset(18, 18, 12, 12));
+        AddVertical(preparation, 6, TextAnchor.UpperLeft, new RectOffset(52, 52, 42, 38));
         AddText(preparation, "원정 준비", 22, FontStyle.Bold, statusColor, TextAnchor.MiddleLeft, 30);
-        AddText(preparation, DungeonRecommendedPowerText(dungeon), 18, FontStyle.Bold, underLevel ? goldColor : textColor, TextAnchor.UpperLeft, 76);
+        AddDungeonPopupReadableBodyText(preparation, DungeonRecommendedPowerText(dungeon), TextAnchor.UpperLeft, 76);
         AddText(preparation, "적 정보", 20, FontStyle.Bold, manaColor, TextAnchor.MiddleLeft, 28);
-        AddText(
+        AddDungeonPopupReadableBodyText(
             preparation,
             "일반  " + DungeonMonsterSummary(dungeon) + "\n보스  " + DungeonBossName(dungeon),
-            18,
-            FontStyle.Bold,
-            textColor,
             TextAnchor.UpperLeft,
             88);
 
         var rewards = AddDungeonPopupGlassPanel(details, "Expedition Modal Rewards Surface", -1f, RarityColor(MaxRarityForDungeon(dungeon.number)));
-        AddVertical(rewards, 6, TextAnchor.UpperLeft, new RectOffset(18, 18, 12, 12));
+        AddVertical(rewards, 6, TextAnchor.UpperLeft, new RectOffset(52, 52, 42, 38));
         AddText(rewards, "예상 전리품", 22, FontStyle.Bold, RarityColor(MaxRarityForDungeon(dungeon.number)), TextAnchor.MiddleLeft, 30);
-        AddText(rewards, DungeonLootRarityText(dungeon), 18, FontStyle.Bold, textColor, TextAnchor.UpperLeft, 82);
-        AddText(rewards, DungeonRewardAndDangerText(dungeon), 18, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 112);
+        AddDungeonPopupReadableBodyText(rewards, DungeonLootRarityText(dungeon), TextAnchor.UpperLeft, 82);
+        AddDungeonPopupReadableBodyText(rewards, DungeonRewardAndDangerText(dungeon), TextAnchor.UpperLeft, 122);
         AddText(rewards, "현재 영웅", 20, FontStyle.Bold, manaColor, TextAnchor.MiddleLeft, 28);
-        AddText(
+        AddDungeonPopupReadableBodyText(
             rewards,
             "Lv." + player.level + "  HP " + player.hp + "/" + MaxHp() + "  MP " + player.mp + "/" + MaxMp()
                 + "\n공격 " + Attack() + "  ·  마력 " + Magic() + "  ·  방어 " + Defense() + "  ·  속도 " + Speed(),
-            18,
-            FontStyle.Bold,
-            textColor,
             TextAnchor.UpperLeft,
             66);
 
@@ -2707,14 +2765,15 @@ public sealed partial class AetheriaGame : MonoBehaviour
             Destroy(dimmer.gameObject);
         };
         dimmerButton.onClick.AddListener(() => closePopup());
-        var closeButton = AddObjectActionButton(buttons, "닫기", () => closePopup(), panelAltColor, VisualActionRole.Back, "back", 190, 58);
-        var enterButton = AddObjectActionButton(buttons, unlocked ? "전투 시작" : "경로 잠금", () => StartCombat(dungeon, false), goodColor, VisualActionRole.Portal, "portal", 280, 58);
+        var closeButton = AddObjectActionButton(buttons, "닫기", () => closePopup(), panelAltColor, VisualActionRole.Back, "back", UiPopupActionButtonWidth, UiPopupActionButtonHeight);
+        var enterButton = AddObjectActionButton(buttons, unlocked ? "전투 시작" : "경로 잠금", () => StartCombat(dungeon, false), goodColor, VisualActionRole.Portal, "portal", UiPopupActionButtonWidth, UiPopupActionButtonHeight);
         enterButton.interactable = unlocked && HasDungeonEncounter(dungeon);
         if (EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(
                 (enterButton.interactable ? enterButton : closeButton).gameObject);
         }
+        QueueVisualPolishRefresh();
     }
 
     private RectTransform AddDungeonPopupGlassPanel(Transform parent, string name, float preferredHeight, Color accent)
@@ -2723,19 +2782,47 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var image = panel.GetComponent<Image>();
         image.sprite = null;
         image.raycastTarget = false;
-        AddLayoutSize(panel, -1f, preferredHeight > 0f ? preferredHeight : -1f);
+        if (preferredHeight > 0f)
+        {
+            // Header, fact, description and footer surfaces are fixed
+            // rows. Do not let their child layout report flexible height to
+            // the popup's vertical stack.
+            ConstrainLayoutSize(panel, -1f, preferredHeight);
+        }
+        else
+        {
+            // The two long-form detail cards intentionally fill the scroll
+            // content's available height.
+            AddLayoutSize(panel, -1f, -1f);
+        }
         if (!name.Contains("Footer", StringComparison.Ordinal))
         {
             var kind = name.Contains("Header", StringComparison.Ordinal)
                 ? OpaqueTextPanelKind.Title
                 : name.Contains("Facts", StringComparison.Ordinal)
-                    || name.Contains("Route", StringComparison.Ordinal)
                     || name.Contains("Description", StringComparison.Ordinal)
                     ? OpaqueTextPanelKind.Compact
                     : OpaqueTextPanelKind.Body;
             ApplyOpaqueTextPanel(panel, kind);
         }
         return panel;
+    }
+
+    private Text AddDungeonPopupReadableBodyText(
+        Transform parent,
+        string value,
+        TextAnchor alignment,
+        float preferredHeight)
+    {
+        // This modal is usually viewed at a downscaled desktop resolution.
+        // Its supporting copy must stay as solid ink, rather than becoming
+        // thin pale grey beside the coloured headings.
+        var label = AddText(parent, value, 19, FontStyle.Bold, textColor, alignment, preferredHeight);
+        label.color = Rgb(18, 33, 47);
+        label.resizeTextMinSize = 15;
+        label.resizeTextMaxSize = 19;
+        label.lineSpacing = value != null && value.Contains("\n") ? 1.10f : 1.05f;
+        return label;
     }
 
     private void SelectFirstDungeonMapButton(RectTransform mapParent, int preferredDungeonNumber)
@@ -3088,13 +3175,17 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var labelImage = label.GetComponent<Image>();
         labelImage.sprite = MapRoundedRectSprite();
         labelImage.raycastTarget = false;
+        // Map labels are short horizontal strips. Apply the matching compact
+        // frame here so the later global pass cannot substitute the tall body
+        // panel artwork and crush its ornaments.
+        ApplyOpaqueTextPanel(label, OpaqueTextPanelKind.Compact);
         var labelText = AddText(label, DungeonPinStateLabel(unlocked, bossCleared, isCurrent, isRecommended) + "  " + dungeon.number + ". " + dungeon.name, 18, FontStyle.Bold, unlocked ? textColor : mutedColor, TextAnchor.MiddleCenter, 48);
         labelText.raycastTarget = false;
         labelText.resizeTextForBestFit = true;
-        labelText.resizeTextMinSize = 16;
+        labelText.resizeTextMinSize = 13;
         labelText.horizontalOverflow = HorizontalWrapMode.Wrap;
         labelText.verticalOverflow = VerticalWrapMode.Truncate;
-        Stretch(labelText.GetComponent<RectTransform>(), 10, 0, 10, 0);
+        Stretch(labelText.GetComponent<RectTransform>(), 46, 5, 46, 5);
         return button;
     }
 
@@ -3117,7 +3208,9 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
     private void ConfigureDungeonPinLabel(RectTransform label, Vector2 percent)
     {
-        label.sizeDelta = new Vector2(258f, 50f);
+        // Leave room for the compact frame's horizontal corner ornaments as
+        // well as an 18px Korean dungeon name at its intended font size.
+        label.sizeDelta = new Vector2(306f, 56f);
 
         if (percent.x > 84f)
         {
@@ -3257,18 +3350,17 @@ public sealed partial class AetheriaGame : MonoBehaviour
         return mapRoundedRectSprite;
     }
 
-    private void TryApplyStreamingSprite(RectTransform target, string relativePath)
+    private Sprite LoadStreamingSprite(string relativePath)
     {
-        var image = target.GetComponent<Image>();
-        if (image == null)
+        if (string.IsNullOrEmpty(relativePath))
         {
-            return;
+            return null;
         }
 
         var path = Path.Combine(Application.streamingAssetsPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
         if (!File.Exists(path))
         {
-            return;
+            return null;
         }
 
         if (!streamingSpriteCache.TryGetValue(path, out var sprite) || sprite == null)
@@ -3277,7 +3369,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             if (!texture.LoadImage(File.ReadAllBytes(path)))
             {
                 Destroy(texture);
-                return;
+                return null;
             }
 
             texture.wrapMode = TextureWrapMode.Clamp;
@@ -3287,9 +3379,47 @@ public sealed partial class AetheriaGame : MonoBehaviour
             streamingSpriteCache[path] = sprite;
         }
 
+        return sprite;
+    }
+
+    private void TryApplyStreamingSprite(RectTransform target, string relativePath)
+    {
+        var image = target == null ? null : target.GetComponent<Image>();
+        if (image == null)
+        {
+            return;
+        }
+
+        var sprite = LoadStreamingSprite(relativePath);
+        if (sprite == null)
+        {
+            return;
+        }
+
         image.sprite = sprite;
         image.preserveAspect = true;
         image.color = Color.white;
+    }
+
+    private void ReleaseStreamingSprites()
+    {
+        foreach (var entry in streamingSpriteCache)
+        {
+            var sprite = entry.Value;
+            if (sprite == null)
+            {
+                continue;
+            }
+
+            var texture = sprite.texture;
+            Destroy(sprite);
+            if (texture != null)
+            {
+                Destroy(texture);
+            }
+        }
+
+        streamingSpriteCache.Clear();
     }
 
     private DungeonData NextRecommendedDungeon(List<DungeonData> dungeons)
@@ -4400,11 +4530,11 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddVertical(summary, 10, TextAnchor.UpperLeft, new RectOffset(16, 16, 10, 10));
 
         var messagePlate = AddPanel("Victory Message Read Plate", summary, Color.clear);
-        AddLayoutSize(messagePlate, -1, 126);
+        AddLayoutSize(messagePlate, -1, 134);
         AddResultReadPlate(messagePlate, Rgb(235, 248, 240));
         AddVertical(messagePlate, 4, TextAnchor.MiddleLeft, new RectOffset(18, 18, 12, 12));
         AddText(messagePlate, "전투 결과", 21, FontStyle.Bold, goodColor, TextAnchor.MiddleLeft, 30);
-        AddText(messagePlate, message, 20, FontStyle.Bold, textColor, TextAnchor.UpperLeft, 68);
+        AddText(messagePlate, message, 20, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 76);
 
         AddOpaqueSectionHeading(summary, "Victory Rewards Heading", "획득 보상", goldColor, 42);
         var rewardGrid = AddPanel("Victory Reward Icons", summary, Color.clear);
@@ -4505,11 +4635,11 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddVertical(summary, 10, TextAnchor.UpperLeft, new RectOffset(16, 16, 10, 10));
 
         var messagePlate = AddPanel("Defeat Message Read Plate", summary, Color.clear);
-        AddLayoutSize(messagePlate, -1, 136);
+        AddLayoutSize(messagePlate, -1, 140);
         AddResultReadPlate(messagePlate, Rgb(248, 236, 238));
         AddVertical(messagePlate, 4, TextAnchor.MiddleLeft, new RectOffset(18, 18, 12, 12));
         AddText(messagePlate, "차원 구조대가 귀환시켰습니다", 22, FontStyle.Bold, dangerColor, TextAnchor.MiddleLeft, 34);
-        AddText(messagePlate, "치료비와 탈출 비용으로 " + lostGold + "G를 잃었습니다.\n장비와 진행 기록은 안전하게 보존되었습니다.", 20, FontStyle.Bold, textColor, TextAnchor.UpperLeft, 76);
+        AddText(messagePlate, "치료비와 탈출 비용으로 " + lostGold + "G를 잃었습니다.\n장비와 진행 기록은 안전하게 보존되었습니다.", 20, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 76);
 
         AddOpaqueSectionHeading(summary, "Defeat Loss Heading", "손실과 구조 상태", dangerColor, 42);
         var lossGrid = AddPanel("Defeat Loss Icons", summary, Color.clear);
@@ -4570,11 +4700,11 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddVertical(summary, 8, TextAnchor.UpperLeft, new RectOffset(36, 36, 28, 28));
 
         var messagePlate = AddPanel("Game Clear Message Read Plate", summary, Color.clear);
-        AddLayoutSize(messagePlate, -1, 102);
+        AddLayoutSize(messagePlate, -1, 110);
         AddResultReadPlate(messagePlate, Rgb(251, 246, 229));
         AddVertical(messagePlate, 3, TextAnchor.MiddleLeft, new RectOffset(18, 18, 10, 10));
         AddText(messagePlate, "최종 균열 봉인", 22, FontStyle.Bold, goldColor, TextAnchor.MiddleLeft, 28);
-        AddText(messagePlate, message, 20, FontStyle.Bold, textColor, TextAnchor.UpperLeft, 50);
+        AddText(messagePlate, message, 20, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 58);
 
         AddOpaqueSectionHeading(summary, "Game Clear Region Heading", "9개 차원 정복 기록", goldColor, 42);
         var regionGrid = AddPanel("Game Clear Region Seals", summary, Color.clear);
@@ -4603,7 +4733,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddResultChip(finalStatus, "G", "보유 골드", player.gold + " G", goldColor, 280, 88);
         AddResultChip(finalStatus, "BAG", "전리품", InventoryCountLabel(), neonPurple, 280, 88);
 
-        AddText(summary, "정복 이후에도 마을에서 초월 세팅을 완성할 수 있습니다.", 18, FontStyle.Bold, mutedColor, TextAnchor.MiddleLeft, 30);
+        AddText(summary, "정복 이후에도 마을에서 초월 세팅을 완성할 수 있습니다.", 18, FontStyle.Normal, mutedColor, TextAnchor.MiddleLeft, 30);
         var buttons = AddRow("Game Clear Object Buttons", summary, 14, TextAnchor.MiddleLeft);
         AddLayoutSize(buttons, -1, 100);
         buttons.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
@@ -4646,9 +4776,10 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
         var copy = AddPanel("Result Chip Copy", chip, Color.clear);
         AddLayoutSize(copy, -1, -1);
-        AddVertical(copy, 1, TextAnchor.MiddleLeft, new RectOffset(0, 0, 0, 0));
-        AddText(copy, label, 18, FontStyle.Bold, mutedColor, TextAnchor.MiddleLeft, 23);
-        AddText(copy, value, 20, FontStyle.Bold, accent, TextAnchor.MiddleLeft, 27);
+        var compact = height <= 70f;
+        AddVertical(copy, compact ? 0 : 1, TextAnchor.MiddleLeft, new RectOffset(0, 0, 0, 0));
+        AddText(copy, label, 18, FontStyle.Bold, mutedColor, TextAnchor.MiddleLeft, compact ? 21 : 23);
+        AddText(copy, value, 20, FontStyle.Bold, accent, TextAnchor.MiddleLeft, compact ? 25 : 27);
         return chip;
     }
 
@@ -7976,6 +8107,45 @@ public sealed partial class AetheriaGame : MonoBehaviour
         return string.Join("\n", lines.ToArray());
     }
 
+    private string FieldJournalRecentText()
+    {
+        EnsurePlayerData();
+        if (player.generalLogs.Count == 0)
+        {
+            return "아직 기록된 소식이 없습니다.";
+        }
+
+        var lines = new List<string>();
+        for (var i = player.generalLogs.Count - 1; i >= 0 && lines.Count < 3; i--)
+        {
+            lines.Add("- " + TruncateFieldJournalText(player.generalLogs[i], 18));
+        }
+        return string.Join("\n", lines.ToArray());
+    }
+
+    private string FieldJournalEquipmentLine(string label, ItemState item)
+    {
+        if (item == null)
+        {
+            return label + "  없음";
+        }
+
+        var level = item.level > 0 ? " +" + item.level : "";
+        return label + "  " + TruncateFieldJournalText(item.name, 12) + level;
+    }
+
+    private static string TruncateFieldJournalText(string value, int maximumLength)
+    {
+        if (string.IsNullOrEmpty(value) || maximumLength <= 0)
+        {
+            return "";
+        }
+
+        return value.Length <= maximumLength
+            ? value
+            : value.Substring(0, Mathf.Max(1, maximumLength - 1)) + "…";
+    }
+
     private string EnemyNameForStage(int stage)
     {
         var names = new[] { "공허의 위습", "텅 빈 경비병", "잿빛 약탈자", "수정 감시자", "균열 기사", "심연의 전령" };
@@ -8789,16 +8959,17 @@ public sealed partial class AetheriaGame : MonoBehaviour
         go.transform.SetParent(parent, false);
         var text = go.GetComponent<Text>();
         text.text = value ?? "";
-        text.font = uiFont;
+        text.font = ResolveUiTextFont(size, style);
         var parentName = parent != null ? parent.name : "";
         var compactMapLabel = currentScreen == AetheriaScreen.DungeonSelect
             && size <= 16
             && (parentName.Contains("Pin Label") || parentName.StartsWith("Region "));
-        var readableSize = compactMapLabel ? Mathf.Max(18, size) : Mathf.Max(18, size);
+        var readableSize = compactMapLabel ? Mathf.Max(15, size) : Mathf.Max(14, size);
         text.fontSize = readableSize;
-        text.fontStyle = style == FontStyle.Normal ? FontStyle.Bold : style;
+        text.fontStyle = style;
         color = ResolveCharacterThemeTextColor(color, size, style);
-        color = IsInsideOpaqueTextPanel(parent)
+        var insideOpaqueTextPanel = IsInsideOpaqueTextPanel(parent);
+        color = insideOpaqueTextPanel
             ? ResolveOpaqueTextPanelColor(color, readableSize, text.fontStyle)
             : EnsureHighContrastTextColor(color);
         text.color = color;
@@ -8807,23 +8978,44 @@ public sealed partial class AetheriaGame : MonoBehaviour
         text.horizontalOverflow = HorizontalWrapMode.Wrap;
         text.verticalOverflow = VerticalWrapMode.Truncate;
         text.resizeTextForBestFit = true;
-        text.resizeTextMinSize = Mathf.Min(16, readableSize);
+        text.resizeTextMinSize = readableSize >= 30
+            ? 16
+            : readableSize >= 22
+                ? 14
+                : insideOpaqueTextPanel ? 13 : 12;
         text.resizeTextMaxSize = readableSize;
-        text.lineSpacing = value != null && value.Contains("\n") ? 1.18f : 1f;
+        text.lineSpacing = value != null && value.Contains("\n") ? 1.12f : 1.03f;
 
-        // All generic UX boxes are invisible, so use one unambiguous edge cue.
-        // Varying the thin outline by text size prevents small Korean glyph
-        // counters from filling in without creating a doubled drop-shadow edge.
-        var stroke = readableSize >= 32 ? 1.40f : readableSize >= 22 ? 1.15f : 0.90f;
-        var outline = go.AddComponent<Outline>();
-        var darkGlyph = color.r * 0.2126f + color.g * 0.7152f + color.b * 0.0722f < 0.54f;
-        outline.effectColor = darkGlyph
-            ? new Color(1f, 1f, 1f, 0.82f)
-            : new Color(0.01f, 0.02f, 0.035f, 0.90f);
-        outline.effectDistance = new Vector2(stroke, -stroke);
+        if (insideOpaqueTextPanel)
+        {
+            // Dark ink on an opaque, quiet surface is sharper than a white
+            // outline. Mark it now so the later global polish pass leaves it
+            // as one clean glyph instead of adding a fuzzy double edge.
+            go.AddComponent<UiOpaqueTextLabel>();
+        }
+        else
+        {
+            // Text placed directly on illustration still needs one unambiguous
+            // edge cue. Varying this thin outline by size keeps Korean glyph
+            // counters from filling in without a doubled drop-shadow edge.
+            var stroke = readableSize >= 32 ? 1.30f : readableSize >= 22 ? 1.00f : 0.70f;
+            var outline = go.AddComponent<Outline>();
+            var darkGlyph = color.r * 0.2126f + color.g * 0.7152f + color.b * 0.0722f < 0.54f;
+            outline.effectColor = darkGlyph
+                ? new Color(1f, 1f, 1f, 0.82f)
+                : new Color(0.01f, 0.02f, 0.035f, 0.90f);
+            outline.effectDistance = new Vector2(stroke, -stroke);
+        }
 
         AddLayoutSize(go.GetComponent<RectTransform>(), -1, preferredHeight);
         return text;
+    }
+
+    private Font ResolveUiTextFont(int size, FontStyle style)
+    {
+        return style == FontStyle.Bold && size >= 30 && uiHeadingFont != null
+            ? uiHeadingFont
+            : uiFont;
     }
 
     private static Color EnsureHighContrastTextColor(Color color)
@@ -8911,7 +9103,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         {
             AddSideAccent(rect, accent);
         }
-        AddLayoutSize(rect, 260, 62);
+        AddLayoutSize(rect, UiStandardButtonWidth, UiStandardButtonHeight);
 
         var textSize = ButtonTextSize(label);
         var resolvedButtonTextColor = hasCharacterThemeSkin
@@ -8920,8 +9112,8 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var resolvedDisabledTextColor = hasCharacterThemeSkin
             ? Rgb(196, 205, 216)
             : disabledButtonTextColor;
-        var labelText = AddText(go.transform, label, textSize, FontStyle.Bold, resolvedButtonTextColor, TextAnchor.MiddleCenter, 62);
-        labelText.resizeTextMinSize = 17;
+        var labelText = AddText(go.transform, label, textSize, FontStyle.Bold, resolvedButtonTextColor, TextAnchor.MiddleCenter, UiStandardButtonHeight);
+        labelText.resizeTextMinSize = 13;
         Stretch(labelText.GetComponent<RectTransform>(), 34, 4, 34, 4);
         var labelOutline = labelText.GetComponent<Outline>();
         if (labelOutline != null)
@@ -8993,11 +9185,11 @@ public sealed partial class AetheriaGame : MonoBehaviour
         AddCharacterArt(parent, portraitName, "idle", size, size);
     }
 
-    private void AddBar(Transform parent, int value, int max, Color color, string label)
+    private void AddBar(Transform parent, int value, int max, Color color, string label, float preferredHeight = 34f)
     {
         var frame = AddPanel(label + " Bar", parent, Rgb(12, 15, 23));
         frame.GetComponent<Image>().raycastTarget = false;
-        AddLayoutSize(frame, -1, 34);
+        AddLayoutSize(frame, -1, preferredHeight);
 
         var safeMax = Mathf.Max(0, max);
         var fill = AddPanel("Fill", frame, color);
@@ -9008,7 +9200,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         fill.offsetMin = Vector2.zero;
         fill.offsetMax = Vector2.zero;
 
-        var text = AddText(frame, label + " " + Mathf.Max(0, value) + "/" + safeMax, 18, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, 34);
+        var text = AddText(frame, label + " " + Mathf.Max(0, value) + "/" + safeMax, 18, FontStyle.Bold, Color.white, TextAnchor.MiddleCenter, preferredHeight);
         Stretch(text.GetComponent<RectTransform>(), 0, 0, 0, 0);
     }
 

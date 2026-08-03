@@ -47,18 +47,42 @@ public sealed partial class AetheriaGame
 
     private void ApplyKoreanReadability(Text label)
     {
-        if (label == null || label.GetComponent<UiKoreanReadabilityMarker>() != null || !ContainsKorean(label.text))
+        if (label == null
+            || UsesTitleDisplayTypography(label)
+            || label.GetComponent<UiTextPolishExempt>() != null)
+        {
+            return;
+        }
+
+        // Opaque reading surfaces deliberately use dark, unoutlined ink. Do
+        // this before the Korean-only overlay pass so every scene keeps the
+        // same clean copy treatment without a second shadow/outline.
+        if (IsInsideOpaqueTextPanel(label.transform.parent))
+        {
+            ApplyOpaqueTextLabelStyle(label);
+            return;
+        }
+
+        if (label.GetComponent<UiKoreanReadabilityMarker>() != null
+            || !ContainsKorean(label.text))
         {
             return;
         }
 
         label.gameObject.AddComponent<UiKoreanReadabilityMarker>();
-        label.fontSize = Mathf.Max(18, label.fontSize);
-        label.resizeTextMaxSize = label.fontSize;
-        label.resizeTextMinSize = Mathf.Clamp(Mathf.Max(16, label.resizeTextMinSize), 16, label.resizeTextMaxSize);
-        label.lineSpacing = label.text.IndexOf('\n') >= 0
-            ? Mathf.Max(1.18f, label.lineSpacing)
-            : Mathf.Max(1.05f, label.lineSpacing);
+        // Keep the size selected by the component that owns this label. A global
+        // 18px minimum made compact map, combat and chip copy overflow its slot.
+        label.fontSize = Mathf.Max(14, label.fontSize);
+        label.resizeTextForBestFit = true;
+        label.resizeTextMaxSize = Mathf.Max(label.fontSize, label.resizeTextMaxSize);
+        // A card, log or menu can deliberately require a larger readable
+        // minimum than a compact chip. Preserve that authored budget here;
+        // screen-specific compact controls explicitly choose their own lower
+        // minimum when their fixed geometry needs it.
+        var authoredMinimum = label.resizeTextMinSize > 0
+            ? label.resizeTextMinSize
+            : label.fontSize >= 30 ? 16 : label.fontSize >= 22 ? 14 : 12;
+        label.resizeTextMinSize = Mathf.Clamp(authoredMinimum, 10, label.resizeTextMaxSize);
 
         Outline outline = null;
         Shadow shadow = null;
@@ -98,6 +122,43 @@ public sealed partial class AetheriaGame
         // Outline and drop shadow together made Korean glyphs look doubled on
         // detailed backgrounds. Keep the thinner outline as the single edge cue.
         shadow.enabled = false;
+    }
+
+    private static void ApplyTextOverflowPolicy(Text label)
+    {
+        if (label == null
+            || string.IsNullOrEmpty(label.text)
+            || UsesTitleDisplayTypography(label)
+            || label.GetComponent<UiTextPolishExempt>() != null)
+        {
+            return;
+        }
+
+        // All gameplay copy remains inside its own hit target/read plate. The
+        // legacy Text best-fit pass handles the final scale after layout settles.
+        label.horizontalOverflow = HorizontalWrapMode.Wrap;
+        label.verticalOverflow = VerticalWrapMode.Truncate;
+        label.resizeTextForBestFit = true;
+
+        var maxSize = Mathf.Max(12, Mathf.Max(label.fontSize, label.resizeTextMaxSize));
+        var authoredMinimum = label.resizeTextMinSize > 0
+            ? label.resizeTextMinSize
+            : label.fontSize >= 30 ? 16 : label.fontSize >= 22 ? 14 : 12;
+        label.resizeTextMaxSize = maxSize;
+        label.resizeTextMinSize = Mathf.Clamp(authoredMinimum, 10, maxSize);
+    }
+
+    private static bool UsesTitleDisplayTypography(Text label)
+    {
+        for (var current = label != null ? label.transform : null; current != null; current = current.parent)
+        {
+            if (current.name == "Title Logo Composition" || current.name == "Title Start Prompt")
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool ContainsKorean(string value)
@@ -482,6 +543,10 @@ public sealed partial class AetheriaGame
             return;
         }
 
+        // The town showcase now has an illustrated frame with its own floor and
+        // depth. Keep the class portrait aligned to that floor instead of adding
+        // the generic oval shadow and fog used by unframed portraits.
+        var hasTownHeroFrame = IsTownHeroPortraitWithFrame(host);
         var accent = CharacterPresentationAccent(image.sprite);
         var outline = image.GetComponent<Outline>();
         if (outline == null)
@@ -494,7 +559,9 @@ public sealed partial class AetheriaGame
             : new Vector2(2.6f, -2.6f);
         outline.useGraphicAlpha = true;
 
-        if (host.Find("Character Grounding Shadow") == null && host.Find("Combat Ground Shadow") == null)
+        if (!hasTownHeroFrame
+            && host.Find("Character Grounding Shadow") == null
+            && host.Find("Combat Ground Shadow") == null)
         {
             var shadow = AddFlatPanel("Character Grounding Shadow", host, new Color(0.025f, 0.045f, 0.065f, 0.28f));
             shadow.anchorMin = new Vector2(0.18f, 0.025f);
@@ -510,7 +577,14 @@ public sealed partial class AetheriaGame
 
         Image fogImage = null;
         var existingFog = host.Find("Character Shallow Fog");
-        if (existingFog == null)
+        if (hasTownHeroFrame)
+        {
+            if (existingFog != null)
+            {
+                Destroy(existingFog.gameObject);
+            }
+        }
+        else if (existingFog == null)
         {
             var fog = AddFlatPanel("Character Shallow Fog", host, new Color(accent.r, accent.g, accent.b, isCombatCharacter ? 0.13f : 0.11f));
             fog.anchorMin = new Vector2(0.05f, -0.02f);
@@ -585,11 +659,17 @@ public sealed partial class AetheriaGame
 
         private void Scan()
         {
-            var interval = rapidScansRemaining > 0 ? 0.18f : 4f;
+            var scanAfterLayout = rapidScansRemaining > 0;
+            var interval = scanAfterLayout ? 0.18f : 4f;
             nextScanTime = Time.unscaledTime + interval;
             if (rapidScansRemaining > 0)
             {
                 rapidScansRemaining--;
+            }
+
+            if (scanAfterLayout)
+            {
+                Canvas.ForceUpdateCanvases();
             }
 
             var buttons = scope.GetComponentsInChildren<Button>(true);
@@ -608,6 +688,7 @@ public sealed partial class AetheriaGame
             for (var i = 0; i < labels.Length; i++)
             {
                 owner.ApplyKoreanReadability(labels[i]);
+                AetheriaGame.ApplyTextOverflowPolicy(labels[i]);
             }
 
             var images = scope.GetComponentsInChildren<Image>(true);
@@ -777,6 +858,7 @@ public sealed partial class AetheriaGame
             }
 
             var targetScale = owner.CharacterPresentationScale(characterImage.sprite, fallbackScale);
+            targetScale = owner.TownHeroPortraitFrameScale(host, targetScale);
             var hostWidth = Mathf.Max(1f, host.rect.width);
             var hostHeight = Mathf.Max(1f, host.rect.height);
             var textureAspect = characterImage.sprite != null
@@ -790,7 +872,8 @@ public sealed partial class AetheriaGame
                 Vector3.one * targetScale,
                 blend);
             var position = characterImage.rectTransform.anchoredPosition;
-            position.y = Mathf.Lerp(position.y, targetY, blend);
+            var townFrameOffset = owner.TownHeroPortraitFrameVerticalOffset(host, characterImage.sprite);
+            position.y = Mathf.Lerp(position.y, targetY + townFrameOffset, blend);
             characterImage.rectTransform.anchoredPosition = position;
 
             if (fog != null)
@@ -808,6 +891,10 @@ public sealed partial class AetheriaGame
     }
 
     private sealed class UiKoreanReadabilityMarker : MonoBehaviour
+    {
+    }
+
+    private sealed class UiTextPolishExempt : MonoBehaviour
     {
     }
 }

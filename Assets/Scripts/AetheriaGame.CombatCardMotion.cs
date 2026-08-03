@@ -451,8 +451,6 @@ public sealed partial class AetheriaGame
         private int cardIndex;
         private bool ready;
         private bool dealt;
-        private bool hovered;
-        private bool focused;
         private bool pressed;
         private bool skipDealAnimation;
         private Navigation baseNavigation;
@@ -581,7 +579,6 @@ public sealed partial class AetheriaGame
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            hovered = true;
             if (owner != null && button != null && button.interactable)
             {
                 owner.SetCombatCardHovered(this, true);
@@ -590,7 +587,6 @@ public sealed partial class AetheriaGame
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            hovered = false;
             pressed = false;
             if (owner != null)
             {
@@ -610,7 +606,6 @@ public sealed partial class AetheriaGame
 
         public void OnSelect(BaseEventData eventData)
         {
-            focused = true;
             if (owner != null && button != null && button.interactable)
             {
                 owner.SetCombatCardFocused(this, true);
@@ -619,7 +614,6 @@ public sealed partial class AetheriaGame
 
         public void OnDeselect(BaseEventData eventData)
         {
-            focused = false;
             pressed = false;
             if (owner != null)
             {
@@ -680,8 +674,6 @@ public sealed partial class AetheriaGame
 
         private void OnDisable()
         {
-            hovered = false;
-            focused = false;
             pressed = false;
             if (owner != null)
             {

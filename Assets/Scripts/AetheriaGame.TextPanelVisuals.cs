@@ -32,25 +32,47 @@ public sealed partial class AetheriaGame
             image = target.gameObject.AddComponent<Image>();
         }
 
-        var sprite = LoadGeneratedSprite(TextPanelResourcePath(kind), TextPanelBorder(kind));
-        if (sprite == null)
-        {
-            return false;
-        }
-
-        image.sprite = sprite;
+        // The generated panel artwork contains a deliberately translucent
+        // parchment center.  That works as decoration, but it must never be
+        // the only surface behind gameplay copy: its 30% alpha lets a busy
+        // backdrop bleed through every HUD, log and modal.  Use a fully opaque
+        // rounded surface for the actual readable area, then place the artwork
+        // above it as a border-only ornament.
+        var ornamentSprite = LoadGeneratedSprite(TextPanelResourcePath(kind), TextPanelBorder(kind));
+        image.sprite = MapRoundedRectSprite();
         image.type = Image.Type.Sliced;
         image.preserveAspect = false;
-        image.pixelsPerUnitMultiplier = TextPanelPixelsPerUnit(kind);
+        image.pixelsPerUnitMultiplier = 1f;
         image.raycastTarget = false;
 
         var characterKey = string.IsNullOrEmpty(characterKeyOverride)
             ? ScreenCharacterThemeKey()
             : characterKeyOverride;
         var accent = TextPanelCharacterAccent(characterKey, manaColor);
-        var tintStrength = kind == OpaqueTextPanelKind.Body ? 0.055f : 0.075f;
-        var surface = Color.Lerp(Color.white, new Color(accent.r, accent.g, accent.b, 1f), tintStrength);
+        var baseSurface = OpaqueTextPanelSurface(kind);
+        var tintStrength = kind == OpaqueTextPanelKind.Title ? 0.07f : 0.045f;
+        var surface = Color.Lerp(baseSurface, new Color(accent.r, accent.g, accent.b, 1f), tintStrength);
         image.color = new Color(surface.r, surface.g, surface.b, 1f);
+
+        var ornament = target.Find("Text Ornament") as RectTransform;
+        if (ornament == null)
+        {
+            ornament = AddFlatPanel("Text Ornament", target, Color.white);
+            ornament.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+        }
+        ornament.gameObject.SetActive(ornamentSprite != null);
+        if (ornamentSprite != null)
+        {
+            Stretch(ornament, 0f, 0f, 0f, 0f);
+            ornament.SetAsFirstSibling();
+            var ornamentImage = ornament.GetComponent<Image>();
+            ornamentImage.sprite = ornamentSprite;
+            ornamentImage.type = Image.Type.Sliced;
+            ornamentImage.preserveAspect = false;
+            ornamentImage.pixelsPerUnitMultiplier = TextPanelPixelsPerUnit(kind);
+            ornamentImage.color = Color.white;
+            ornamentImage.raycastTarget = false;
+        }
 
         var marker = target.GetComponent<UiOpaqueTextPanel>();
         if (marker == null)
@@ -78,6 +100,19 @@ public sealed partial class AetheriaGame
 
         ApplyOpaqueTextPanelTypography(target);
         return true;
+    }
+
+    private static Color OpaqueTextPanelSurface(OpaqueTextPanelKind kind)
+    {
+        switch (kind)
+        {
+            case OpaqueTextPanelKind.Title:
+                return Rgb(244, 246, 239);
+            case OpaqueTextPanelKind.Compact:
+                return Rgb(248, 247, 240);
+            default:
+                return Rgb(250, 248, 241);
+        }
     }
 
     private void ApplyOpaqueTextPanelsForScreen(RectTransform page)
@@ -132,7 +167,7 @@ public sealed partial class AetheriaGame
 
         var titleLabel = AddText(panel, title, 38, FontStyle.Bold, titleColor, TextAnchor.MiddleLeft, preferredHeight - 24f);
         AddLayoutSize(titleLabel.rectTransform, titleWidth, preferredHeight - 24f);
-        var detailLabel = AddText(panel, detail, 21, FontStyle.Bold, detailColor, TextAnchor.MiddleLeft, preferredHeight - 24f);
+        var detailLabel = AddText(panel, detail, 21, FontStyle.Normal, detailColor, TextAnchor.MiddleLeft, preferredHeight - 24f);
         AddLayoutSize(detailLabel.rectTransform, detailWidth, preferredHeight - 24f);
         return panel;
     }
@@ -168,11 +203,19 @@ public sealed partial class AetheriaGame
 
         if (objectName.StartsWith("Visual Status Chip", StringComparison.Ordinal)
             || objectName.StartsWith("Growth Badge ", StringComparison.Ordinal)
-            || (objectName.StartsWith("Result Chip ", StringComparison.Ordinal)
-                && objectName != "Result Chip Emblem"
-                && objectName != "Result Chip Copy")
             || objectName.StartsWith("Pin Label ", StringComparison.Ordinal)
             || objectName == "Dungeon State Badge")
+        {
+            // These are horizontal labels/badges. The Body source artwork is
+            // a tall panel, so slicing it onto a 38–68px row crushes its
+            // corner ornaments. Use the landscape compact artwork instead.
+            kind = OpaqueTextPanelKind.Compact;
+            return true;
+        }
+
+        if (objectName.StartsWith("Result Chip ", StringComparison.Ordinal)
+            && objectName != "Result Chip Emblem"
+            && objectName != "Result Chip Copy")
         {
             kind = OpaqueTextPanelKind.Body;
             return true;
@@ -197,7 +240,6 @@ public sealed partial class AetheriaGame
         }
 
         if (objectName.EndsWith(" Backplate", StringComparison.Ordinal)
-            || objectName == "Dungeon Map Legend"
             || objectName == "Dungeon Quick Start"
             || objectName == "Action Prompt"
             || objectName == "Player Combat Status HUD"
@@ -300,36 +342,20 @@ public sealed partial class AetheriaGame
             return;
         }
 
-        label.color = ResolveOpaqueTextPanelColor(label.color, label.fontSize, label.fontStyle);
+        if (label.GetComponent<UiOpaqueTextLabel>() == null)
+        {
+            label.color = ResolveOpaqueTextPanelColor(label.color, label.fontSize, label.fontStyle);
+            label.gameObject.AddComponent<UiOpaqueTextLabel>();
+        }
 
         var shadows = label.GetComponents<Shadow>();
-        Outline outline = null;
         for (var i = 0; i < shadows.Length; i++)
         {
-            var candidate = shadows[i];
-            if (candidate is Outline)
+            if (shadows[i] != null)
             {
-                if (outline == null)
-                {
-                    outline = candidate as Outline;
-                }
-                continue;
-            }
-            if (candidate != null)
-            {
-                candidate.enabled = false;
+                shadows[i].enabled = false;
             }
         }
-
-        if (outline == null)
-        {
-            outline = label.gameObject.AddComponent<Outline>();
-        }
-        var stroke = label.fontSize >= 32 ? 1.15f : label.fontSize >= 22 ? 0.90f : 0.70f;
-        outline.effectColor = new Color(1f, 1f, 1f, 0.80f);
-        outline.effectDistance = new Vector2(stroke, -stroke);
-        outline.useGraphicAlpha = true;
-        outline.enabled = true;
     }
 
     private Color ResolveOpaqueTextPanelColor(Color source, int size, FontStyle style)
@@ -438,5 +464,9 @@ public sealed partial class AetheriaGame
     private sealed class UiOpaqueTextPanel : MonoBehaviour
     {
         public OpaqueTextPanelKind kind;
+    }
+
+    private sealed class UiOpaqueTextLabel : MonoBehaviour
+    {
     }
 }

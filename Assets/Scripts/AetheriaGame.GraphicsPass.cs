@@ -167,62 +167,6 @@ public sealed partial class AetheriaGame
         return image;
     }
 
-    private void AddDungeonRoutePreview(Transform parent, int floorCount, Color accent, bool completed)
-    {
-        if (parent == null)
-        {
-            return;
-        }
-
-        var preview = AddFlatPanel("Dungeon Route Preview", parent, Color.clear);
-        AddLayoutSize(preview, -1f, 54f);
-        preview.GetComponent<Image>().raycastTarget = false;
-        var layout = preview.gameObject.AddComponent<HorizontalLayoutGroup>();
-        layout.spacing = 8f;
-        layout.padding = new RectOffset(26, 26, 4, 4);
-        layout.childAlignment = TextAnchor.MiddleCenter;
-        layout.childControlWidth = true;
-        layout.childControlHeight = true;
-        layout.childForceExpandWidth = false;
-        layout.childForceExpandHeight = false;
-
-        var count = Mathf.Clamp(floorCount, 2, 4);
-        for (var index = 0; index < count; index++)
-        {
-            var bossNode = index == count - 1;
-            var nodeColor = bossNode
-                ? (completed ? goodColor : goldColor)
-                : Color.Lerp(accent, Color.white, 0.18f);
-            var node = AddFlatPanel(
-                bossNode ? "Dungeon Route Boss Node" : "Dungeon Route Stage Node",
-                preview,
-                new Color(nodeColor.r, nodeColor.g, nodeColor.b, 0.30f));
-            AddLayoutSize(node, 46f, 46f);
-            var nodeImage = node.GetComponent<Image>();
-            nodeImage.sprite = MapCircleSprite();
-            nodeImage.raycastTarget = false;
-            var nodeLabel = AddText(
-                node,
-                bossNode ? "B" : (index + 1).ToString(),
-                18,
-                FontStyle.Bold,
-                nodeColor,
-                TextAnchor.MiddleCenter,
-                46f);
-            Stretch(nodeLabel.GetComponent<RectTransform>(), 0f, 0f, 0f, 0f);
-
-            if (!bossNode)
-            {
-                var connector = AddFlatPanel(
-                    "Dungeon Route Connector " + (index + 1),
-                    preview,
-                    new Color(accent.r, accent.g, accent.b, 0.58f));
-                AddLayoutSize(connector, count >= 4 ? 74f : 112f, 4f);
-                connector.GetComponent<Image>().raycastTarget = false;
-            }
-        }
-    }
-
     private void AddGameClearSealNetwork(RectTransform grid)
     {
         if (grid == null || grid.Find("Game Clear Constellation") != null)

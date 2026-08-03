@@ -202,7 +202,16 @@ public sealed partial class AetheriaGame
             return;
         }
 
-        var sprite = LoadGeneratedSprite(resourcePath, Vector4.zero);
+        // The map itself is supplied from StreamingAssets. Reuse it behind the
+        // interactive map surface so a missing Resources-only backdrop cannot
+        // expose the generic menu art around a map transition or aspect change.
+        var sprite = currentScreen == AetheriaScreen.DungeonSelect
+            ? LoadStreamingSprite(DungeonMapSpritePath)
+            : null;
+        if (sprite == null)
+        {
+            sprite = LoadGeneratedSprite(resourcePath, Vector4.zero);
+        }
         if (sprite == null)
         {
             return;
@@ -353,6 +362,48 @@ public sealed partial class AetheriaGame
         }
 
         return holder;
+    }
+
+    private void AddTownHeroPortraitFrame(RectTransform holder, string portraitName)
+    {
+        if (holder == null || holder.Find("Town Hero Portrait Frame") != null)
+        {
+            return;
+        }
+
+        var theme = CharacterThemeForKey(NormalizeCharacterThemeKey(portraitName));
+        if (theme == null)
+        {
+            return;
+        }
+
+        // This is an illustrated perimeter and pedestal, not another full-screen
+        // background. Its transparent centre preserves the town scene behind the
+        // hero while giving the portrait a grounded, intentional presentation.
+        // The bomber's crimson original artwork needs a quieter, charcoal-metal
+        // frame so the coat remains readable instead of blending into copper
+        // pipes and orange effects. Other classes retain their existing frame.
+        var sprite = theme.key == "bomber"
+            ? LoadGeneratedSprite(theme.ResourcePath("town_hero_frame_v2"), Vector4.zero)
+            : null;
+        if (sprite == null)
+        {
+            sprite = LoadGeneratedSprite(theme.ResourcePath("town_hero_frame_v1"), Vector4.zero);
+        }
+        if (sprite == null)
+        {
+            return;
+        }
+
+        var frame = AddFlatPanel("Town Hero Portrait Frame", holder, Color.white);
+        Stretch(frame, 0, 0, 0, 0);
+        frame.SetAsFirstSibling();
+        frame.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+
+        var image = frame.GetComponent<Image>();
+        image.sprite = sprite;
+        image.preserveAspect = true;
+        image.raycastTarget = false;
     }
 
     private Sprite LoadCurrentEnemyArtSprite()

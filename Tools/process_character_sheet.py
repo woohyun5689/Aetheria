@@ -28,39 +28,63 @@ def alpha_bbox(image: Image.Image, threshold: int = 8) -> tuple[int, int, int, i
     return mask.getbbox()
 
 
-def remove_spill_components(image: Image.Image, threshold: int = 8) -> Image.Image:
-    """Remove tiny disconnected fragments, especially along sprite-sheet seams."""
-    alpha = np.asarray(image.getchannel("A"))
+def separate_state_layers(
+    sheet: Image.Image,
+    x_edges: list[int],
+    y_edges: list[int],
+    threshold: int = 8,
+) -> tuple[Image.Image, ...]:
+    """Keep connected character parts with their intended state pose.
+
+    Feet, bows, and robe hems can cross a mathematical 2x3 cell boundary in an
+    AI-generated sheet.  Instead of cropping a cell and deleting its border,
+    label the full sheet first, then assign each connected component to the
+    cell containing most of its alpha pixels (with the weighted centre only as
+    a deterministic tiebreaker).
+    """
+    alpha = np.asarray(sheet.getchannel("A"))
     mask = alpha > threshold
     labels, count = ndimage.label(mask, structure=np.ones((3, 3), dtype=np.uint8))
     if count == 0:
-        return image
+        raise ValueError("No visible pixels found in character sheet")
 
+    state_alpha = [np.zeros_like(alpha) for _ in STATES]
     areas = np.bincount(labels.ravel())
-    minimum_area = max(96, round(image.width * image.height * 0.0025))
-    border_area_limit = round(image.width * image.height * 0.02)
-    edge_zone = round(min(image.size) * 0.06)
-    keep = np.zeros(count + 1, dtype=bool)
+    # Preserve detached visual details; discard only chroma-key specks.
+    minimum_area = max(8, round(sheet.width * sheet.height * 0.000002))
 
-    objects = ndimage.find_objects(labels)
-    for component_id, slices in enumerate(objects, start=1):
+    for component_id, slices in enumerate(ndimage.find_objects(labels), start=1):
         if slices is None or areas[component_id] < minimum_area:
             continue
-        y_slice, x_slice = slices
-        near_edge = (
-            x_slice.start < edge_zone
-            or y_slice.start < edge_zone
-            or x_slice.stop > image.width - edge_zone
-            or y_slice.stop > image.height - edge_zone
-        )
-        if near_edge and areas[component_id] < border_area_limit:
-            continue
-        keep[component_id] = True
 
-    filtered_alpha = np.where(keep[labels], alpha, 0).astype(np.uint8)
-    result = image.copy()
-    result.putalpha(Image.fromarray(filtered_alpha, mode="L"))
-    return result
+        y_slice, x_slice = slices
+        component_mask = labels[y_slice, x_slice] == component_id
+        component_alpha = alpha[y_slice, x_slice]
+        y_points, x_points = np.nonzero(component_mask)
+        weights = component_alpha[component_mask].astype(np.float64)
+        absolute_y = y_points + y_slice.start
+        absolute_x = x_points + x_slice.start
+        columns = np.clip(np.searchsorted(x_edges, absolute_x, side="right") - 1, 0, 1)
+        rows = np.clip(np.searchsorted(y_edges, absolute_y, side="right") - 1, 0, 2)
+        ownership = np.bincount(rows * 2 + columns, weights=weights, minlength=len(STATES))
+        candidates = np.flatnonzero(ownership == ownership.max())
+        if len(candidates) == 1:
+            state_index = int(candidates[0])
+        else:
+            centre_y = float(np.average(absolute_y, weights=weights))
+            centre_x = float(np.average(absolute_x, weights=weights))
+            column = min(1, max(0, np.searchsorted(x_edges, centre_x, side="right") - 1))
+            row = min(2, max(0, np.searchsorted(y_edges, centre_y, side="right") - 1))
+            state_index = row * 2 + column
+        destination_alpha = state_alpha[state_index][y_slice, x_slice]
+        destination_alpha[component_mask] = component_alpha[component_mask]
+
+    layers: list[Image.Image] = []
+    for state_index in range(len(STATES)):
+        layer = sheet.copy()
+        layer.putalpha(Image.fromarray(state_alpha[state_index], mode="L"))
+        layers.append(layer)
+    return tuple(layers)
 
 
 def split_sheet(
@@ -81,31 +105,14 @@ def split_sheet(
     top_margin = max(16, round(canvas_height * 0.035))
     bottom_margin = max(18, round(canvas_height * 0.04))
 
-    for index, state in enumerate(STATES):
-        column = index % 2
-        row = index // 2
-        cell = sheet.crop(
-            (
-                x_edges[column],
-                y_edges[row],
-                x_edges[column + 1],
-                y_edges[row + 1],
-            )
-        )
-        # Image generators occasionally let a few pixels spill across an exact
-        # sheet boundary. The prompt reserves a safe margin, so clearing a thin
-        # gutter removes neighboring-pose fragments without touching the sprite.
-        gutter = max(6, round(min(cell.size) * 0.02))
-        cell.paste((0, 0, 0, 0), (0, 0, cell.width, gutter))
-        cell.paste((0, 0, 0, 0), (0, cell.height - gutter, cell.width, cell.height))
-        cell.paste((0, 0, 0, 0), (0, 0, gutter, cell.height))
-        cell.paste((0, 0, 0, 0), (cell.width - gutter, 0, cell.width, cell.height))
-        cell = remove_spill_components(cell)
-        bbox = alpha_bbox(cell)
+    state_layers = separate_state_layers(sheet, x_edges, y_edges)
+
+    for state, layer in zip(STATES, state_layers):
+        bbox = alpha_bbox(layer)
         if bbox is None:
             raise ValueError(f"No visible pixels found in {state} cell")
 
-        subject = cell.crop(bbox)
+        subject = layer.crop(bbox)
         max_width = canvas_width - side_margin * 2
         max_height = min(
             canvas_height - top_margin - bottom_margin,

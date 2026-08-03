@@ -85,6 +85,7 @@ public sealed partial class AetheriaGame
         AddVertical(copy, 0, TextAnchor.MiddleCenter, new RectOffset(0, 0, 4, 4));
 
         var title = AddText(copy, "AETHERIA", 72, FontStyle.Bold, Rgb(22, 48, 74), TextAnchor.MiddleCenter, 86f);
+        title.font = TitleDisplayFont();
         ConfigureMainMenuText(title, Rgb(22, 48, 74), new Color(1f, 0.91f, 0.56f, 0.96f), 1.35f);
 
         var subtitle = AddText(copy, "빛의 원정", 31, FontStyle.Bold, Rgb(121, 72, 19), TextAnchor.MiddleCenter, 42f);

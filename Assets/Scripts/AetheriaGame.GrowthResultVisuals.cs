@@ -211,7 +211,7 @@ public sealed partial class AetheriaGame
             }
             else if (target.name.StartsWith("Fixed Skill Card ", StringComparison.Ordinal))
             {
-                CompactDirectCopy(target, 72);
+                CompactDirectCopy(target);
             }
         }
     }
@@ -226,16 +226,7 @@ public sealed partial class AetheriaGame
             {
                 continue;
             }
-            if (target.name == "Crafting Ingredient Summary")
-            {
-                ReplaceCopy(target, "네임드 장비는", "네임드 장비는 조합 재료에서 제외");
-            }
-            else if (target.name.StartsWith("Crafting Ingredient ", StringComparison.Ordinal))
-            {
-                var badge = FirstDirectChildWithPrefix(target, "Growth Badge ");
-                DecorateGrowthBadge(badge, GrowthVisualRoot + "crafting_material", 36f);
-            }
-            else if (target.name == "Crafting Material Flow")
+            if (target.name == "Crafting Material Flow")
             {
                 DecorateCraftingFlow(target);
             }
@@ -494,22 +485,25 @@ public sealed partial class AetheriaGame
         }
     }
 
-    private static void CompactDirectCopy(Transform card, int maxLength)
+    private static void CompactDirectCopy(Transform card)
     {
         for (var i = 0; i < card.childCount; i++)
         {
             var text = card.GetChild(i).GetComponent<Text>();
-            if (text == null || string.IsNullOrEmpty(text.text) || text.text.Length <= maxLength)
+            if (text == null || string.IsNullOrEmpty(text.text))
             {
                 continue;
             }
 
-            text.text = text.text.Replace("\n", " · ").Substring(0, maxLength - 1).TrimEnd() + "…";
-            var layout = text.GetComponent<LayoutElement>();
-            if (layout != null && layout.preferredHeight > 74f)
-            {
-                layout.preferredHeight = 74f;
-            }
+            // Keep the full Korean effect description. The global fit policy
+            // reduces typography within the card instead of deleting copy by
+            // character count, which was especially misleading for long skills.
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+            text.resizeTextForBestFit = true;
+            text.resizeTextMinSize = Mathf.Min(text.resizeTextMinSize > 0 ? text.resizeTextMinSize : 12, 12);
+            text.resizeTextMaxSize = Mathf.Max(text.resizeTextMaxSize, text.fontSize);
+            text.lineSpacing = Mathf.Min(text.lineSpacing, 1.10f);
         }
     }
 

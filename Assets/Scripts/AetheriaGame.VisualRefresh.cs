@@ -182,6 +182,97 @@ public sealed partial class AetheriaGame
         return button;
     }
 
+    // Feature cards are deliberately assembled from an opaque rounded surface and
+    // one character frame.  The former two-frame setup put a wide scene button
+    // illustration underneath a second, differently proportioned character frame.
+    // Both contained ornaments in their stretch regions, which distorted when a
+    // card was resized for the town grid.
+    private void ApplyObjectActionFeatureSurface(Button button, Image image, Color accent, bool danger)
+    {
+        if (button == null || image == null)
+        {
+            return;
+        }
+
+        image.sprite = MapRoundedRectSprite();
+        image.type = Image.Type.Sliced;
+        image.preserveAspect = false;
+        image.pixelsPerUnitMultiplier = 1f;
+        var baseSurface = danger ? Rgb(253, 244, 241) : Rgb(250, 248, 241);
+        var accentColor = new Color(accent.r, accent.g, accent.b, 1f);
+        var surface = Color.Lerp(baseSurface, accentColor, danger ? 0.12f : 0.075f);
+        image.color = new Color(surface.r, surface.g, surface.b, 1f);
+        image.raycastTarget = true;
+
+        button.targetGraphic = image;
+        button.transition = Selectable.Transition.ColorTint;
+        if (button.GetComponent<UiOpaqueSceneImageButton>() == null)
+        {
+            button.gameObject.AddComponent<UiOpaqueSceneImageButton>();
+        }
+
+        var colors = button.colors;
+        colors.normalColor = Color.white;
+        colors.highlightedColor = Color.Lerp(Color.white, accentColor, 0.10f);
+        colors.pressedColor = Color.Lerp(Color.white, accentColor, 0.22f);
+        colors.selectedColor = Color.Lerp(Color.white, accentColor, 0.14f);
+        colors.disabledColor = Rgb(190, 196, 202);
+        colors.colorMultiplier = 1f;
+        colors.fadeDuration = 0.08f;
+        button.colors = colors;
+
+        var oldFrame = button.transform.Find("Character Theme Button Frame");
+        if (oldFrame != null)
+        {
+            oldFrame.gameObject.SetActive(false);
+        }
+    }
+
+    private void ApplyObjectActionFeatureFrame(RectTransform target)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        var oldFrame = target.Find("Character Theme Button Frame");
+        if (oldFrame != null)
+        {
+            oldFrame.gameObject.SetActive(false);
+        }
+
+        var frame = target.Find("Object Action Feature Frame") as RectTransform;
+        var theme = CharacterThemeForKey(ScreenCharacterThemeKey());
+        var sprite = theme == null
+            ? null
+            : LoadGeneratedSprite(theme.ResourcePath("panel_frame"), new Vector4(180f, 180f, 180f, 180f));
+        if (sprite == null)
+        {
+            if (frame != null)
+            {
+                frame.gameObject.SetActive(false);
+            }
+            return;
+        }
+
+        if (frame == null)
+        {
+            frame = AddFlatPanel("Object Action Feature Frame", target, Color.white);
+            frame.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+        }
+
+        frame.gameObject.SetActive(true);
+        Stretch(frame, 2f, 2f, 2f, 2f);
+        frame.SetAsFirstSibling();
+        var frameImage = frame.GetComponent<Image>();
+        frameImage.sprite = sprite;
+        frameImage.type = Image.Type.Sliced;
+        frameImage.preserveAspect = false;
+        frameImage.pixelsPerUnitMultiplier = 6f;
+        frameImage.color = Color.white;
+        frameImage.raycastTarget = false;
+    }
+
     private bool ApplyObjectActionButtonStyle(Button button, VisualActionRole role, string iconKey, Color accent)
     {
         if (button == null)
@@ -211,7 +302,9 @@ public sealed partial class AetheriaGame
         }
 
         var danger = role == VisualActionRole.Cancel;
-        ApplyOpaqueSceneButtonSkin(hitImage, accent, danger);
+        var isTownFeatureCard = rect.parent != null && rect.parent.name == "Town Action Grid";
+        ApplyObjectActionFeatureSurface(button, hitImage, accent, danger);
+        ApplyObjectActionFeatureFrame(rect);
 
         var oldVisual = rect.Find("Object Action Visual");
         RectTransform visual;
@@ -262,19 +355,44 @@ public sealed partial class AetheriaGame
             visualImage = oldVisual.GetComponent<Image>();
         }
 
+        if (isTownFeatureCard)
+        {
+            // The town deck uses broad action cards. Let the artwork carry the
+            // left third and reserve a deliberate entry cue at the right edge,
+            // instead of leaving a large unowned patch of card surface.
+            visual.anchorMin = new Vector2(0.04f, 0.10f);
+            visual.anchorMax = new Vector2(0.36f, 0.90f);
+            visual.offsetMin = Vector2.zero;
+            visual.offsetMax = Vector2.zero;
+        }
+
         if (label != null)
         {
             var labelRect = label.GetComponent<RectTransform>();
-            labelRect.anchorMin = new Vector2(0.27f, 0.12f);
-            labelRect.anchorMax = new Vector2(0.98f, 0.88f);
-            labelRect.offsetMin = new Vector2(14f, 0f);
-            labelRect.offsetMax = new Vector2(-8f, 0f);
+            if (isTownFeatureCard)
+            {
+                labelRect.anchorMin = new Vector2(0.39f, 0.18f);
+                labelRect.anchorMax = new Vector2(0.84f, 0.82f);
+                labelRect.offsetMin = new Vector2(8f, 0f);
+                labelRect.offsetMax = Vector2.zero;
+                label.fontSize = 24;
+                label.resizeTextMinSize = 17;
+                label.resizeTextMaxSize = 24;
+                AddTownFeatureEntryCue(rect, accent);
+            }
+            else
+            {
+                labelRect.anchorMin = new Vector2(0.27f, 0.12f);
+                labelRect.anchorMax = new Vector2(0.98f, 0.88f);
+                labelRect.offsetMin = new Vector2(14f, 0f);
+                labelRect.offsetMax = new Vector2(-8f, 0f);
+                label.resizeTextMinSize = 17;
+                label.resizeTextMaxSize = Mathf.Max(20, label.fontSize);
+            }
             var buttonInk = CharacterThemeButtonText(ScreenCharacterThemeKey(), Rgb(24, 45, 64));
             buttonInk = Color.Lerp(buttonInk, new Color(accent.r, accent.g, accent.b, 1f), danger ? 0.12f : 0.06f);
             label.color = new Color(buttonInk.r, buttonInk.g, buttonInk.b, 1f);
             label.alignment = TextAnchor.MiddleLeft;
-            label.resizeTextMinSize = 17;
-            label.resizeTextMaxSize = Mathf.Max(20, label.fontSize);
 
             var labelPlate = rect.Find("Text Readability Plate Object Button");
             if (labelPlate != null)
@@ -282,10 +400,10 @@ public sealed partial class AetheriaGame
                 labelPlate.gameObject.SetActive(false);
             }
             visual.SetAsFirstSibling();
-            var characterFrame = rect.Find("Character Theme Button Frame");
-            if (characterFrame != null)
+            var featureFrame = rect.Find("Object Action Feature Frame");
+            if (featureFrame != null)
             {
-                characterFrame.SetSiblingIndex(Mathf.Min(1, rect.childCount - 1));
+                featureFrame.SetSiblingIndex(Mathf.Min(1, rect.childCount - 1));
             }
             label.transform.SetAsLastSibling();
 
@@ -303,6 +421,36 @@ public sealed partial class AetheriaGame
         }
         presenter.Configure(button, visual, visualImage, accent);
         return true;
+    }
+
+    private void AddTownFeatureEntryCue(RectTransform parent, Color accent)
+    {
+        if (parent == null)
+        {
+            return;
+        }
+
+        var cue = parent.Find("Town Feature Entry Cue") as RectTransform;
+        if (cue == null)
+        {
+            cue = AddFlatPanel("Town Feature Entry Cue", parent, Color.white);
+            cue.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            var cueLabel = AddText(cue, "→", 28, FontStyle.Bold, accent, TextAnchor.MiddleCenter, 44f);
+            Stretch(cueLabel.rectTransform, 2f, 2f, 2f, 2f);
+        }
+
+        cue.anchorMin = new Vector2(0.88f, 0.24f);
+        cue.anchorMax = new Vector2(0.96f, 0.76f);
+        cue.offsetMin = Vector2.zero;
+        cue.offsetMax = Vector2.zero;
+        var cueImage = cue.GetComponent<Image>();
+        cueImage.sprite = MapRoundedRectSprite();
+        cueImage.type = Image.Type.Sliced;
+        cueImage.preserveAspect = false;
+        cueImage.pixelsPerUnitMultiplier = 1f;
+        var surface = Color.Lerp(Rgb(246, 245, 237), new Color(accent.r, accent.g, accent.b, 1f), 0.16f);
+        cueImage.color = new Color(surface.r, surface.g, surface.b, 1f);
+        cueImage.raycastTarget = false;
     }
 
     private static string ObjectActionFallbackVisualPath(VisualActionRole role)
@@ -617,7 +765,7 @@ public sealed partial class AetheriaGame
         var accent = VisualStatusColor(tone);
         var chip = AddFlatPanel("Visual Status Chip " + (label ?? ""), parent, Color.white);
         ConstrainLayoutSize(chip, preferredWidth, preferredHeight);
-        ApplyOpaqueTextPanel(chip, OpaqueTextPanelKind.Body);
+        ApplyOpaqueTextPanel(chip, OpaqueTextPanelKind.Compact);
 
         var row = chip.gameObject.AddComponent<HorizontalLayoutGroup>();
         row.spacing = 6f;

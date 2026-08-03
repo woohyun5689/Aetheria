@@ -67,6 +67,10 @@ public sealed partial class AetheriaGame
     private float nextCombatRejectTime;
     private bool combatLogExpanded;
     private const float CombatActionCardIconSize = 100f;
+    // The arena is a fixed 574px high band. This leaves exactly enough room
+    // for the art, its status HUD and panel padding at the 1080px reference
+    // layout, without pushing the HUD below the visible combat stage.
+    private const float CombatArtSlotHeight = 326f;
 
     private void BuildCombatScreen(bool resultBackdrop)
     {
@@ -212,7 +216,7 @@ public sealed partial class AetheriaGame
             CombatPhaseAccent(phase),
             TextAnchor.MiddleLeft,
             40);
-        AddText(commandPrompt, "카드를 선택해 적을 공격하세요  ·  마우스 또는 패드 조작  ·  ESC 후퇴", 17, FontStyle.Bold, mutedColor, TextAnchor.MiddleLeft, 25);
+        AddText(commandPrompt, "카드를 선택해 적을 공격하세요  ·  마우스 또는 패드 조작  ·  ESC 후퇴", 17, FontStyle.Normal, mutedColor, TextAnchor.MiddleLeft, 25);
 
         var logToggle = AddCombatLogToggle(commandHeader, canChooseAction);
         AddLayoutSize(logToggle.GetComponent<RectTransform>(), 580, 90);
@@ -586,7 +590,7 @@ public sealed partial class AetheriaGame
         var resourceLabel = AddText(copy, resource, 19, FontStyle.Bold, costColor, TextAnchor.MiddleLeft, 25f);
         ConfigureCombatCardCopyText(resourceLabel, costColor, 17, 19, 1f);
 
-        var descriptionLabel = AddText(copy, safeDescription, 18, FontStyle.Bold, cardInk, TextAnchor.MiddleLeft, 72f);
+        var descriptionLabel = AddText(copy, safeDescription, 18, FontStyle.Normal, cardInk, TextAnchor.MiddleLeft, 72f);
         ConfigureCombatCardCopyText(descriptionLabel, cardInk, 16, 18, 1.08f);
 
         var accentRail = AddFlatPanel("Action Card Accent", rect, new Color(accent.r, accent.g, accent.b, 0.88f));
@@ -667,7 +671,7 @@ public sealed partial class AetheriaGame
 
         var content = AddFlatPanel("Compact Combat Log Content", go.transform, Color.clear);
         content.GetComponent<Image>().raycastTarget = false;
-        Stretch(content, 32f, 10f, 32f, 10f);
+        Stretch(content, 32f, 8f, 32f, 8f);
         AddVertical(content, 2, TextAnchor.MiddleLeft, new RectOffset(0, 0, 0, 0));
 
         var heading = AddText(content, combatLogExpanded ? "전투 기록  ▴" : "전투 기록  ▾", 18, FontStyle.Bold, textColor, TextAnchor.MiddleLeft, 24);
@@ -714,7 +718,10 @@ public sealed partial class AetheriaGame
         for (var index = start; index < lines.Count; index++)
         {
             var compact = (lines[index] ?? "").Replace("\r", " ").Replace("\n", " ").Trim();
-            var maxLength = combatLogExpanded ? 42 : 58;
+            // An expanded preview shows two single lines. Cap the copy to the
+            // actual available width instead of letting a 42-character Korean
+            // line wrap and get vertically truncated in a 22px slot.
+            var maxLength = combatLogExpanded ? 28 : 52;
             if (compact.Length > maxLength)
             {
                 compact = compact.Substring(0, maxLength - 1) + "…";
@@ -727,7 +734,7 @@ public sealed partial class AetheriaGame
     private void AddHeroCombatArt(Transform parent)
     {
         var holder = AddFlatPanel("Hero Combat Art Slot", parent, new Color(0f, 0f, 0f, 0f));
-        AddLayoutSize(holder, 520f, 340f);
+        AddLayoutSize(holder, 520f, CombatArtSlotHeight);
         holder.GetComponent<Image>().raycastTarget = false;
         var heroGlowAlpha = combatPresentationPhase == CombatPresentationPhase.EnemyResolving ? 0.07f : 0.28f;
         var heroTheme = ActiveCharacterAccent(manaColor);
@@ -756,7 +763,7 @@ public sealed partial class AetheriaGame
     private void AddEnemyCombatArt(Transform parent)
     {
         var holder = AddFlatPanel("Enemy Combat Art Slot", parent, new Color(0f, 0f, 0f, 0f));
-        AddLayoutSize(holder, 520f, 340f);
+        AddLayoutSize(holder, 520f, CombatArtSlotHeight);
         holder.GetComponent<Image>().raycastTarget = false;
         var theme = currentEnemyIsBoss ? goldColor : EnemyThemeColor();
         var enemyTurn = combatPresentationPhase == CombatPresentationPhase.EnemyResolving;
@@ -1524,6 +1531,9 @@ public sealed partial class AetheriaGame
         }
         var go = new GameObject("Combat Floating Text", typeof(RectTransform), typeof(Text), typeof(Outline), typeof(Shadow));
         go.transform.SetParent(combatFxLayer, false);
+        // This is a short-lived VFX label with its own deliberate glow/shadow
+        // treatment. Do not let the regular UI copy pass replace it.
+        go.AddComponent<UiTextPolishExempt>();
         var rect = go.GetComponent<RectTransform>();
         var anchor = CombatFxAnchorFor(targetIsPlayer, 0.035f);
         rect.anchorMin = anchor;

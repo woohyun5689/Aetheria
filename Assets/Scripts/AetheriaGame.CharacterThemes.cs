@@ -556,6 +556,68 @@ public sealed partial class AetheriaGame
         }
     }
 
+    private bool IsTownHeroPortraitWithFrame(RectTransform portraitHolder)
+    {
+        return currentScreen == AetheriaScreen.Town
+            && portraitHolder != null
+            && portraitHolder.parent != null
+            && portraitHolder.parent.name == "Hero Showcase"
+            && portraitHolder.Find("Town Hero Portrait Frame") != null;
+    }
+
+    private float TownHeroPortraitFrameScale(RectTransform portraitHolder, float scale)
+    {
+        // Skill and rest poses were previously allowed to grow beyond their
+        // showcase slot. The themed pillars now provide a visible boundary, so
+        // keep every pose inside it without changing combat or class-select art.
+        return IsTownHeroPortraitWithFrame(portraitHolder)
+            ? Mathf.Min(scale, 1f)
+            : scale;
+    }
+
+    private float TownHeroPortraitFrameVerticalOffset(RectTransform portraitHolder, Sprite sprite)
+    {
+        if (!IsTownHeroPortraitWithFrame(portraitHolder))
+        {
+            return 0f;
+        }
+
+        // Each illustrated frame has a different pedestal height. Anchor the V2
+        // character footline to its own contact surface, rather than the lower
+        // edge of the transparent portrait canvas.
+        var floorOffset = 40f;
+
+        string key;
+        string state;
+        bool normalizedSet;
+        if (!TryCharacterArtIdentity(sprite, out key, out state, out normalizedSet)
+            || !normalizedSet)
+        {
+            return floorOffset;
+        }
+
+        switch (key)
+        {
+            case "archer": floorOffset = 33f; break;
+            case "bomber": floorOffset = 30f; break;
+            case "knight": floorOffset = 29f; break;
+            case "mage": floorOffset = 43f; break;
+            case "monk": floorOffset = 45f; break;
+            case "priest": floorOffset = 37f; break;
+            case "rogue": floorOffset = 29f; break;
+            case "spirit": floorOffset = 57f; break;
+        }
+
+        if (key == "spirit" && state == "rest")
+        {
+            // This seated pose has extra transparent pixels below its artwork.
+            // Lower it slightly so the cloak meets the rune instead of floating.
+            floorOffset -= 15f;
+        }
+
+        return floorOffset;
+    }
+
     private float CharacterPresentationScale(Sprite sprite, float fallback)
     {
         string key;
@@ -566,57 +628,57 @@ public sealed partial class AetheriaGame
             return fallback;
         }
 
-        // CharactersV2 uses one 2:3 canvas. These small per-pose corrections were
-        // measured from the alpha bounds so feet share a baseline without clipping
-        // wide combat poses or making crouched victory/defeat art jump in size.
+        // CharactersV2 uses one 2:3 canvas. Idle art is the shared roster and
+        // showcase pose, so it is normalized to the same visible height and floor
+        // line for every class. Other poses keep their safe per-pose framing.
         float correction;
         switch (key + "/" + state)
         {
             case "archer/combat": correction = 0.964f; break;
             case "archer/defeat": correction = 1.100f; break;
-            case "archer/idle": correction = 0.920f; break;
+            case "archer/idle": correction = 0.903f; break;
             case "archer/rest": correction = 1.100f; break;
             case "archer/skill": correction = 1.100f; break;
             case "archer/victory": correction = 0.962f; break;
             case "bomber/combat": correction = 1.100f; break;
             case "bomber/defeat": correction = 1.102f; break;
-            case "bomber/idle": correction = 0.920f; break;
+            case "bomber/idle": correction = 0.903f; break;
             case "bomber/rest": correction = 1.100f; break;
             case "bomber/skill": correction = 1.100f; break;
             case "bomber/victory": correction = 1.100f; break;
             case "knight/combat": correction = 1.036f; break;
             case "knight/defeat": correction = 1.100f; break;
-            case "knight/idle": correction = 0.947f; break;
+            case "knight/idle": correction = 0.903f; break;
             case "knight/rest": correction = 1.100f; break;
             case "knight/skill": correction = 0.920f; break;
             case "knight/victory": correction = 1.038f; break;
             case "mage/combat": correction = 1.100f; break;
             case "mage/defeat": correction = 1.100f; break;
-            case "mage/idle": correction = 0.920f; break;
+            case "mage/idle": correction = 0.903f; break;
             case "mage/rest": correction = 1.100f; break;
             case "mage/skill": correction = 1.102f; break;
             case "mage/victory": correction = 0.920f; break;
             case "monk/combat": correction = 1.083f; break;
             case "monk/defeat": correction = 1.029f; break;
-            case "monk/idle": correction = 0.920f; break;
+            case "monk/idle": correction = 0.903f; break;
             case "monk/rest": correction = 1.100f; break;
             case "monk/skill": correction = 1.100f; break;
             case "monk/victory": correction = 1.024f; break;
             case "priest/combat": correction = 1.100f; break;
             case "priest/defeat": correction = 1.100f; break;
-            case "priest/idle": correction = 1.010f; break;
+            case "priest/idle": correction = 1.000f; break;
             case "priest/rest": correction = 1.074f; break;
             case "priest/skill": correction = 1.017f; break;
             case "priest/victory": correction = 1.102f; break;
             case "rogue/combat": correction = 1.005f; break;
             case "rogue/defeat": correction = 1.029f; break;
-            case "rogue/idle": correction = 0.920f; break;
+            case "rogue/idle": correction = 0.903f; break;
             case "rogue/rest": correction = 0.920f; break;
             case "rogue/skill": correction = 1.102f; break;
             case "rogue/victory": correction = 0.920f; break;
             case "spirit/combat": correction = 1.021f; break;
             case "spirit/defeat": correction = 1.102f; break;
-            case "spirit/idle": correction = 0.920f; break;
+            case "spirit/idle": correction = 0.903f; break;
             case "spirit/rest": correction = 0.920f; break;
             case "spirit/skill": correction = 1.100f; break;
             case "spirit/victory": correction = 0.920f; break;
@@ -666,6 +728,7 @@ public sealed partial class AetheriaGame
         {
             state = state.Substring(0, extensionIndex);
         }
+
         return !string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(state);
     }
 }

@@ -52,7 +52,7 @@ public sealed partial class AetheriaGame
         AddVertical(copy, 0, TextAnchor.MiddleLeft, new RectOffset(0, 0, 0, 0));
 
         AddText(copy, EnemyIntentTitle(phase), 20, FontStyle.Bold, accent, TextAnchor.MiddleLeft, 29f);
-        AddText(copy, EnemyIntentDetail(phase), 17, FontStyle.Bold, mutedColor, TextAnchor.MiddleLeft, 26f);
+        AddText(copy, EnemyIntentDetail(phase), 17, FontStyle.Normal, mutedColor, TextAnchor.MiddleLeft, 26f);
         AddText(copy, EnemyIntentForecast(phase), 24, FontStyle.Bold, EnemyIntentForecastColor(phase, accent), TextAnchor.MiddleLeft, 35f);
     }
 
@@ -257,9 +257,10 @@ public sealed partial class AetheriaGame
             var label = AddText(chip, StatusName(effect.type) + " " + value, 15, FontStyle.Bold, tint, TextAnchor.MiddleLeft, 42f);
             Stretch(label.GetComponent<RectTransform>(), 35f, 0f, 4f, 0f);
             label.resizeTextForBestFit = true;
-            label.resizeTextMinSize = 13;
+            label.resizeTextMinSize = 11;
             label.resizeTextMaxSize = 15;
-            label.horizontalOverflow = HorizontalWrapMode.Overflow;
+            label.horizontalOverflow = HorizontalWrapMode.Wrap;
+            label.verticalOverflow = VerticalWrapMode.Truncate;
         }
 
         if (orderedEffects.Count > visibleCount)
