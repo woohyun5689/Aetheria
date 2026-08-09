@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public sealed partial class AetheriaGame
 {
-    private const string MainMenuCrestV2Path = "UI/VisualRefresh/MainMenu/main_crest_v2";
+    private const string AetheriaLogoV2Path = "UI/VisualRefresh/Brand/aetheria_logo_v2";
     private const string MainMenuSaveSlotV2Path = "UI/VisualRefresh/MainMenu/save_slot_v2";
     private const string MainMenuActionButtonV2Path = "UI/VisualRefresh/MainMenu/action_button_v2";
     private const string MainMenuSectionBannerV2Path = "UI/VisualRefresh/MainMenu/section_banner_v2";
@@ -59,40 +59,16 @@ public sealed partial class AetheriaGame
     private void AddMainMenuTitleStage(Transform parent)
     {
         var stage = AddFlatPanel("Main Menu Title Stage", parent, Color.clear);
-        ConstrainLayoutSize(stage, 1060f, 190f);
+        ConstrainLayoutSize(stage, 1060f, 330f);
         stage.GetComponent<Image>().raycastTarget = false;
 
-        var stageLayout = stage.gameObject.AddComponent<HorizontalLayoutGroup>();
-        stageLayout.spacing = 18f;
-        stageLayout.padding = new RectOffset(24, 24, 0, 0);
-        stageLayout.childAlignment = TextAnchor.MiddleCenter;
-        stageLayout.childControlWidth = true;
-        stageLayout.childControlHeight = true;
-        stageLayout.childForceExpandWidth = false;
-        stageLayout.childForceExpandHeight = false;
-
-        var crest = AddFlatPanel("Main Menu Crest V2", stage, Color.white);
-        AddLayoutSize(crest, 146f, 184f);
-        var crestImage = crest.GetComponent<Image>();
-        crestImage.sprite = LoadGeneratedSprite(MainMenuCrestV2Path, Vector4.zero);
-        crestImage.preserveAspect = true;
-        crestImage.raycastTarget = false;
-        crest.gameObject.AddComponent<UiMainMenuCrestMotion>();
-
-        var copy = AddFlatPanel("Main Menu Title Copy", stage, Color.clear);
-        AddLayoutSize(copy, 760f, 184f);
-        copy.GetComponent<Image>().raycastTarget = false;
-        AddVertical(copy, 0, TextAnchor.MiddleCenter, new RectOffset(0, 0, 4, 4));
-
-        var title = AddText(copy, "AETHERIA", 72, FontStyle.Bold, Rgb(22, 48, 74), TextAnchor.MiddleCenter, 86f);
-        title.font = TitleDisplayFont();
-        ConfigureMainMenuText(title, Rgb(22, 48, 74), new Color(1f, 0.91f, 0.56f, 0.96f), 1.35f);
-
-        var subtitle = AddText(copy, "빛의 원정", 31, FontStyle.Bold, Rgb(121, 72, 19), TextAnchor.MiddleCenter, 42f);
-        ConfigureMainMenuText(subtitle, Rgb(121, 72, 19), new Color(1f, 0.98f, 0.88f, 0.96f), 1.05f);
-
-        var tagline = AddText(copy, "영웅을 선택하고 아에테리아의 원정을 이어가세요", 19, FontStyle.Bold, Rgb(24, 55, 78), TextAnchor.MiddleCenter, 32f);
-        ConfigureMainMenuText(tagline, Rgb(24, 55, 78), new Color(1f, 1f, 1f, 0.92f), 0.9f);
+        var logo = AddFlatPanel("Aetheria Main Logo Artwork", stage, Color.white);
+        SetAnchoredRect(logo, new Vector2(0.5f, 0.5f), new Vector2(700f, 330f));
+        var logoImage = logo.GetComponent<Image>();
+        logoImage.sprite = LoadGeneratedSprite(AetheriaLogoV2Path, Vector4.zero);
+        logoImage.preserveAspect = true;
+        logoImage.raycastTarget = false;
+        logo.gameObject.AddComponent<UiMainMenuCrestMotion>();
     }
 
     private RectTransform AddMainMenuSectionBanner(Transform parent, string label)

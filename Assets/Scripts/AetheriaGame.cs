@@ -677,24 +677,20 @@ public sealed partial class AetheriaGame : MonoBehaviour
         // sit directly on top of the journal title and section copy. Reserve
         // that inset as layout space, instead of trying to solve it with text
         // offsets that would break at a different aspect ratio.
-        AddVertical(fieldJournal, 10, TextAnchor.UpperLeft, new RectOffset(48, 42, 44, 36));
-        AddText(fieldJournal, "원정 기록", 28, FontStyle.Bold, Color.white, TextAnchor.MiddleLeft, 38);
+        AddVertical(fieldJournal, 8, TextAnchor.UpperLeft, new RectOffset(48, 42, 44, 36));
+        AddText(fieldJournal, "장비 상세", 28, FontStyle.Bold, Color.white, TextAnchor.MiddleLeft, 38);
         AddDivider(fieldJournal, Rgba(111, 211, 255, 135));
-        AddText(fieldJournal, "진행도", 19, FontStyle.Bold, goldColor, TextAnchor.MiddleLeft, 28);
-        AddText(fieldJournal, "해금 던전  " + unlockedDungeonLabel + "\n보유 골드  " + player.gold + " G\n장비 전투력  " + EquippedPowerTotal(player), 15, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 72);
+        AddText(fieldJournal, "부위별 장비", 19, FontStyle.Bold, goldColor, TextAnchor.MiddleLeft, 28);
+        AddFieldJournalEquipmentDetail(fieldJournal, "무기", player.weapon);
+        AddFieldJournalEquipmentDetail(fieldJournal, "방어구", player.armor);
+        AddFieldJournalEquipmentDetail(fieldJournal, "장신구 1", player.charm);
+        AddFieldJournalEquipmentDetail(fieldJournal, "장신구 2", player.charm2);
+        AddFieldJournalEquipmentDetail(fieldJournal, "장신구 3", player.charm3);
+        AddFieldJournalEquipmentDetail(fieldJournal, "장신구 4", player.charm4);
         AddDivider(fieldJournal, Rgba(111, 211, 255, 95));
-        AddText(fieldJournal, "착용 장비", 19, FontStyle.Bold, goldColor, TextAnchor.MiddleLeft, 28);
-        AddText(fieldJournal,
-            FieldJournalEquipmentLine("무기", player.weapon) + "\n"
-            + FieldJournalEquipmentLine("방어", player.armor) + "\n"
-            + FieldJournalEquipmentLine("장신 1", player.charm) + "\n"
-            + FieldJournalEquipmentLine("장신 2", player.charm2) + "\n"
-            + FieldJournalEquipmentLine("장신 3", player.charm3) + "\n"
-            + FieldJournalEquipmentLine("장신 4", player.charm4),
-            14, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 132);
-        AddDivider(fieldJournal, Rgba(111, 211, 255, 95));
-        AddText(fieldJournal, "최근 소식", 19, FontStyle.Bold, neonPurple, TextAnchor.MiddleLeft, 28);
-        AddText(fieldJournal, FieldJournalRecentText(), 14, FontStyle.Normal, Color.white, TextAnchor.UpperLeft, 96);
+        AddText(fieldJournal, "장비 총 증가량", 19, FontStyle.Bold, neonPurple, TextAnchor.MiddleLeft, 28);
+        var equipmentBonusSummary = AddText(fieldJournal, FieldJournalEquipmentBonusSummary(player), 14, FontStyle.Normal, Color.white, TextAnchor.UpperLeft, 165);
+        equipmentBonusSummary.gameObject.name = "장비 총 증가량 상세";
         ApplyVisualRefreshToScreen(page);
     }
 
@@ -947,6 +943,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             selectedInventoryIndex = index;
             ShowInventory(item.name + "을(를) 선택했습니다.");
         }, selectedInventoryIndex == index ? goldColor : panelAltColor);
+        selectButton.gameObject.name = "Inventory Item Select Button";
         AddLayoutSize(selectButton.GetComponent<RectTransform>(), 310, 64);
         var selectLabel = selectButton.GetComponentInChildren<Text>();
         if (selectLabel != null)
@@ -954,9 +951,9 @@ public sealed partial class AetheriaGame : MonoBehaviour
             selectLabel.resizeTextForBestFit = true;
             selectLabel.resizeTextMinSize = 13;
         }
-        AddGrowthBadge(row, TypeLabel(item.type), Rgb(74, 112, 138), 68, 56);
-        AddGrowthBadge(row, RarityLabel(item.rarity), RarityColor(item.rarity), 78, 56);
-        AddGrowthBadge(row, "전투력\n+" + item.power, goldColor, 96, 56);
+        AddGrowthBadge(row, TypeLabel(item.type), Rgb(74, 112, 138), 68, 56).gameObject.name = "Inventory Item Type Badge";
+        AddGrowthBadge(row, RarityLabel(item.rarity), RarityColor(item.rarity), 78, 56).gameObject.name = "Inventory Item Rarity Badge";
+        AddGrowthBadge(row, "전투력\n+" + item.power, goldColor, 96, 56).gameObject.name = "Inventory Item Power Badge";
     }
 
     private void AddSelectedInventoryComparison(Transform parent, ItemState item)
@@ -974,9 +971,9 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var badgeRow = AddRow("Selected Item Badges", header, 8, TextAnchor.MiddleLeft);
         AddLayoutSize(badgeRow, -1, 42);
         badgeRow.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
-        AddGrowthBadge(badgeRow, TypeLabel(item.type), Rgb(74, 112, 138), 110, 36);
-        AddGrowthBadge(badgeRow, RarityLabel(item.rarity), RarityColor(item.rarity), 110, 36);
-        AddGrowthBadge(badgeRow, "전투력 +" + item.power, goldColor, 150, 36);
+        AddGrowthBadge(badgeRow, TypeLabel(item.type), Rgb(74, 112, 138), 110, 36).gameObject.name = "Selected Item Type Badge";
+        AddGrowthBadge(badgeRow, RarityLabel(item.rarity), RarityColor(item.rarity), 110, 36).gameObject.name = "Selected Item Rarity Badge";
+        AddGrowthBadge(badgeRow, "전투력 +" + item.power, goldColor, 150, 36).gameObject.name = "Selected Item Power Badge";
 
         var comparisonTarget = EquippedItemForReplacement(item.type, item.type == "Charm" ? 1 : 0);
         var comparison = AddPanel("Power Comparison Read Plate", parent, Color.clear);
@@ -1002,26 +999,28 @@ public sealed partial class AetheriaGame : MonoBehaviour
             layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             layout.constraintCount = 2;
             layout.childAlignment = TextAnchor.UpperCenter;
-            AddButton(slotGrid, AccessorySlotButtonLabel(item, 1, player.charm), () => EquipItemToSlot(selectedInventoryIndex, 1), goodColor);
-            AddButton(slotGrid, AccessorySlotButtonLabel(item, 2, player.charm2), () => EquipItemToSlot(selectedInventoryIndex, 2), goodColor);
-            AddButton(slotGrid, AccessorySlotButtonLabel(item, 3, player.charm3), () => EquipItemToSlot(selectedInventoryIndex, 3), goodColor);
-            AddButton(slotGrid, AccessorySlotButtonLabel(item, 4, player.charm4), () => EquipItemToSlot(selectedInventoryIndex, 4), goodColor);
+            AddButton(slotGrid, AccessorySlotButtonLabel(item, 1, player.charm), () => EquipItemToSlot(selectedInventoryIndex, 1), goodColor).gameObject.name = "Accessory Slot Button 1";
+            AddButton(slotGrid, AccessorySlotButtonLabel(item, 2, player.charm2), () => EquipItemToSlot(selectedInventoryIndex, 2), goodColor).gameObject.name = "Accessory Slot Button 2";
+            AddButton(slotGrid, AccessorySlotButtonLabel(item, 3, player.charm3), () => EquipItemToSlot(selectedInventoryIndex, 3), goodColor).gameObject.name = "Accessory Slot Button 3";
+            AddButton(slotGrid, AccessorySlotButtonLabel(item, 4, player.charm4), () => EquipItemToSlot(selectedInventoryIndex, 4), goodColor).gameObject.name = "Accessory Slot Button 4";
         }
         else
         {
             var equipButton = AddButton(parent, "장착   " + GrowthArrow(item.power - currentPower), () => EquipItem(selectedInventoryIndex), goodColor);
+            equipButton.gameObject.name = "Selected Item Equip Button";
             AddLayoutSize(equipButton.GetComponent<RectTransform>(), -1, 58);
         }
 
         var actionRow = AddRow("Selected Item Actions", parent, 10, TextAnchor.MiddleLeft);
         AddLayoutSize(actionRow, -1, 58);
-        AddButton(actionRow, "대장간에서 강화", () => ShowEnhancement("착용 중인 장비를 선택해 강화할 수 있습니다."), goldColor);
-        AddButton(actionRow, "판매  " + SellValue(item) + " G", () =>
+        AddButton(actionRow, "대장간에서 강화", () => ShowEnhancement("착용 중인 장비를 선택해 강화할 수 있습니다."), goldColor).gameObject.name = "Selected Item Enhance Button";
+        var sellButton = AddButton(actionRow, "판매  " + SellValue(item) + " G", () =>
         {
             var sellMessage = SellItem(selectedInventoryIndex);
             selectedInventoryIndex = -1;
             ShowInventory(sellMessage);
         }, dangerColor);
+        sellButton.gameObject.name = "Selected Item Sell Button";
     }
 
     private void AddEquipmentSlotCard(Transform parent, string slotLabel, string slotKey, ItemState item, ItemState selectedItem)
@@ -1033,6 +1032,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var label = slotLabel + "  ·  " + rarity + "\n" + itemName + "\n" + power + comparison + (item != null ? "   ·   클릭하여 해제" : "");
         label = label.Replace("클릭하여 해제", "해제");
         var button = AddButton(parent, label, () => UnequipItem(slotKey), item != null ? RarityColor(item.rarity) : mutedColor);
+        button.gameObject.name = "Equipped Slot " + slotKey;
         AddLayoutSize(button.GetComponent<RectTransform>(), -1, 120);
         button.interactable = item != null;
     }
@@ -1080,6 +1080,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             selectedInventoryIndex = -1;
             ShowInventory(label + " 기준으로 가방을 정렬했습니다.");
         }, active ? goldColor : panelAltColor);
+        button.gameObject.name = "Inventory Sort Button " + mode;
         AddLayoutSize(button.GetComponent<RectTransform>(), 170, 50);
     }
 
@@ -8120,15 +8121,70 @@ public sealed partial class AetheriaGame : MonoBehaviour
         return string.Join("\n", lines.ToArray());
     }
 
-    private string FieldJournalEquipmentLine(string label, ItemState item)
+    private void AddFieldJournalEquipmentDetail(Transform parent, string label, ItemState item)
+    {
+        var detail = AddText(parent, FieldJournalEquipmentDetailText(label, item), 14, FontStyle.Normal, textColor, TextAnchor.UpperLeft, 58);
+        detail.gameObject.name = label + " 상세";
+    }
+
+    private string FieldJournalEquipmentDetailText(string label, ItemState item)
     {
         if (item == null)
         {
-            return label + "  없음";
+            return label + "  비어 있음\n  추가 능력치 없음";
         }
 
         var level = item.level > 0 ? " +" + item.level : "";
-        return label + "  " + TruncateFieldJournalText(item.name, 12) + level;
+        return label + "  " + TruncateFieldJournalText(item.name, 14) + level
+            + "  [" + RarityLabel(item.rarity) + "]  ·  전투력 +" + ItemPower(item)
+            + "\n  " + FieldJournalItemStatText(item);
+    }
+
+    private string FieldJournalItemStatText(ItemState item)
+    {
+        if (item == null)
+        {
+            return "추가 능력치 없음";
+        }
+
+        var parts = new List<string>();
+        if (item.maxHp > 0) parts.Add("HP +" + item.maxHp);
+        if (item.maxMp > 0) parts.Add("MP +" + item.maxMp);
+        if (item.attack > 0) parts.Add("공격 +" + item.attack);
+        if (item.magic > 0) parts.Add("마력 +" + item.magic);
+        if (item.defense > 0) parts.Add("방어 +" + item.defense);
+        if (item.speed > 0) parts.Add("속도 +" + item.speed);
+        if (item.critRate > 0f) parts.Add("치명 +" + EquipmentPercent(item.critRate));
+        if (item.critDamage > 0f) parts.Add("치피 +" + EquipmentPercent(item.critDamage));
+        if (item.evasion > 0f) parts.Add("회피 +" + EquipmentPercent(item.evasion));
+        if (item.damageReduction > 0f) parts.Add("피감 +" + EquipmentPercent(item.damageReduction));
+        if (item.lifeSteal > 0f) parts.Add("흡혈 +" + EquipmentPercent(item.lifeSteal));
+        if (item.manaRegen > 0f) parts.Add("MP 재생 +" + EquipmentPercent(item.manaRegen));
+        if (item.statusPower > 0f) parts.Add("상태 피해 +" + EquipmentPercent(item.statusPower));
+        if (item.itemFind > 0f) parts.Add("아이템 발견 +" + EquipmentPercent(item.itemFind));
+        return parts.Count == 0 ? "추가 능력치 없음" : string.Join(" · ", parts.ToArray());
+    }
+
+    private string FieldJournalEquipmentBonusSummary(PlayerState state)
+    {
+        return "총 전투력  +" + EquippedPowerTotal(state)
+            + "\nHP +" + ItemStatInt(state, "maxHp") + "  ·  MP +" + ItemStatInt(state, "maxMp")
+            + "\n공격 +" + ItemStatInt(state, "attack") + "  ·  마력 +" + ItemStatInt(state, "magic")
+            + "  ·  방어 +" + ItemStatInt(state, "defense") + "  ·  속도 +" + ItemStatInt(state, "speed")
+            + "\n\n<b>퍼센트 증가</b>"
+            + "\n치명타 +" + EquipmentPercent(ItemStatFloat(state, "critRate"))
+            + "  ·  치명 피해 +" + EquipmentPercent(ItemStatFloat(state, "critDamage"))
+            + "\n회피 +" + EquipmentPercent(ItemStatFloat(state, "evasion"))
+            + "  ·  피해 감소 +" + EquipmentPercent(ItemStatFloat(state, "damageReduction"))
+            + "\n흡혈 +" + EquipmentPercent(ItemStatFloat(state, "lifeSteal"))
+            + "  ·  MP 재생 +" + EquipmentPercent(ItemStatFloat(state, "manaRegen"))
+            + "\n상태 피해 +" + EquipmentPercent(ItemStatFloat(state, "statusPower"))
+            + "  ·  아이템 발견 +" + EquipmentPercent(ItemStatFloat(state, "itemFind"));
+    }
+
+    private string EquipmentPercent(float value)
+    {
+        return RoundToGameInt(Mathf.Max(0f, value) * 100f) + "%";
     }
 
     private static string TruncateFieldJournalText(string value, int maximumLength)
@@ -8529,7 +8585,9 @@ public sealed partial class AetheriaGame : MonoBehaviour
         InvalidateCombatView();
         for (var i = root.childCount - 1; i >= 0; i--)
         {
-            Destroy(root.GetChild(i).gameObject);
+            var outgoing = root.GetChild(i).gameObject;
+            outgoing.SetActive(false);
+            Destroy(outgoing);
         }
 
         AddGeneratedScreenBackdrop();

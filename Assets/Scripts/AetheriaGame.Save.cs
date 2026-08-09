@@ -462,6 +462,12 @@ public sealed partial class AetheriaGame
 
     private void SaveGame()
     {
+#if UNITY_EDITOR
+        if (hudEditorPreviewMode)
+        {
+            return;
+        }
+#endif
         if (player == null)
         {
             return;

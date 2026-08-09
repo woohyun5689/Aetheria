@@ -1,0 +1,497 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+[CreateAssetMenu(fileName = "AetheriaHudLayoutProfile", menuName = "Aetheria/HUD Layout Profile")]
+public sealed class AetheriaHudLayoutProfile : ScriptableObject
+{
+    public List<AetheriaHudLayoutEntry> entries = new List<AetheriaHudLayoutEntry>();
+}
+
+[Serializable]
+public sealed class AetheriaHudLayoutEntry
+{
+    public string screenName;
+    public string hierarchyPath;
+    public string hierarchyNamePath;
+    public string displayName;
+    public string frozenLayoutPath;
+    public string frozenLayoutNamePath;
+
+    public Vector2 anchorMin;
+    public Vector2 anchorMax;
+    public Vector2 pivot;
+    public Vector2 anchoredPosition;
+    public Vector2 sizeDelta;
+    public Vector3 localEulerAngles;
+    public Vector3 localScale = Vector3.one;
+
+    public bool overrideRenderOrder;
+    public int renderOrder;
+
+    public bool overrideImage;
+    public Sprite imageSprite;
+    public Color imageColor = Color.white;
+    public bool preserveImageAspect;
+
+    public bool overrideText;
+    [TextArea(2, 8)] public string text;
+    public Color textColor = Color.white;
+    public int fontSize = 18;
+
+    public bool overrideParticle;
+    public float particleSimulationSpeed = 1f;
+    public float particleStartSize = 1f;
+    public float particleStartSpeed = 1f;
+    public float particleEmissionRate = 10f;
+}
+
+public static class AetheriaHudLayoutRuntime
+{
+    public const string ResourcesPath = "UI/AetheriaHudLayoutProfile";
+
+    private static AetheriaHudLayoutProfile cachedProfile;
+
+    public static void InvalidateCache()
+    {
+        cachedProfile = null;
+    }
+
+    public static void LockManualSize(RectTransform target)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        var parent = target.parent as RectTransform;
+        if (parent == null)
+        {
+            return;
+        }
+
+        if ((target.anchorMax - target.anchorMin).sqrMagnitude <= 0.000001f)
+        {
+            return;
+        }
+
+        var size = target.rect.size;
+        var worldPivot = target.position;
+        var parentRect = parent.rect;
+        var localPivot = parent.InverseTransformPoint(worldPivot);
+        var anchor = new Vector2(
+            parentRect.width > 0.001f
+                ? Mathf.Clamp01((localPivot.x - parentRect.xMin) / parentRect.width)
+                : 0.5f,
+            parentRect.height > 0.001f
+                ? Mathf.Clamp01((localPivot.y - parentRect.yMin) / parentRect.height)
+                : 0.5f);
+
+        target.anchorMin = anchor;
+        target.anchorMax = anchor;
+        target.position = worldPivot;
+        target.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Mathf.Max(0f, size.x));
+        target.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Max(0f, size.y));
+    }
+
+    public static void ApplyRenderOrder(RectTransform target, int renderOrder)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        var canvas = target.GetComponent<Canvas>();
+        if (renderOrder > 0)
+        {
+            if (canvas == null)
+            {
+                canvas = target.gameObject.AddComponent<Canvas>();
+            }
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = Mathf.Clamp(renderOrder, 1, 32767);
+        }
+        else if (canvas != null)
+        {
+            canvas.overrideSorting = false;
+            canvas.sortingOrder = 0;
+        }
+    }
+
+    public static void ApplyToScreen(RectTransform screenRoot)
+    {
+        if (screenRoot == null)
+        {
+            return;
+        }
+
+        var profile = cachedProfile != null
+            ? cachedProfile
+            : Resources.Load<AetheriaHudLayoutProfile>(ResourcesPath);
+        cachedProfile = profile;
+        ApplyToScreen(screenRoot, profile);
+    }
+
+    public static void ApplyToScreen(RectTransform screenRoot, AetheriaHudLayoutProfile profile)
+    {
+        if (screenRoot == null || profile == null || profile.entries == null || profile.entries.Count == 0)
+        {
+            return;
+        }
+
+        var screenEntries = new List<AetheriaHudLayoutEntry>();
+        for (var i = 0; i < profile.entries.Count; i++)
+        {
+            var entry = profile.entries[i];
+            if (entry != null && entry.screenName == screenRoot.name)
+            {
+                screenEntries.Add(entry);
+            }
+        }
+
+        if (screenEntries.Count == 0)
+        {
+            return;
+        }
+
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(screenRoot);
+
+        // Capture the layout result once, then detach edited items from automatic sibling reflow.
+        var frozenLayouts = new HashSet<LayoutGroup>();
+        for (var i = 0; i < screenEntries.Count; i++)
+        {
+            var entry = screenEntries[i];
+            var layout = ResolveFrozenLayout(screenRoot, entry);
+            if (layout == null || !frozenLayouts.Add(layout))
+            {
+                continue;
+            }
+
+            layout.enabled = false;
+            var fitter = layout.GetComponent<ContentSizeFitter>();
+            if (fitter != null)
+            {
+                fitter.enabled = false;
+            }
+        }
+
+        for (var i = 0; i < screenEntries.Count; i++)
+        {
+            ApplyEntry(screenRoot, screenEntries[i]);
+        }
+
+        Canvas.ForceUpdateCanvases();
+    }
+
+    private static LayoutGroup ResolveFrozenLayout(RectTransform screenRoot, AetheriaHudLayoutEntry entry)
+    {
+        if (!string.IsNullOrEmpty(entry.frozenLayoutPath)
+            || !string.IsNullOrEmpty(entry.frozenLayoutNamePath))
+        {
+            var layoutTransform = ResolveRelativePath(
+                screenRoot,
+                entry.frozenLayoutPath,
+                entry.frozenLayoutNamePath);
+            return layoutTransform != null ? layoutTransform.GetComponent<LayoutGroup>() : null;
+        }
+
+        // The root itself has an empty relative path. Distinguish that valid path
+        // from entries that were edited without any parent layout to freeze.
+        var target = ResolveRelativePath(
+            screenRoot,
+            entry.hierarchyPath,
+            entry.hierarchyNamePath);
+        for (var current = target != null ? target.parent : null;
+             current != null;
+             current = current.parent)
+        {
+            var layout = current.GetComponent<LayoutGroup>();
+            if (layout != null)
+            {
+                return current == screenRoot ? layout : null;
+            }
+            if (current == screenRoot)
+            {
+                break;
+            }
+        }
+        return null;
+    }
+
+    public static string BuildRelativePath(Transform target, Transform root)
+    {
+        if (target == null || root == null || target == root)
+        {
+            return string.Empty;
+        }
+
+        var segments = new List<string>();
+        for (var current = target; current != null && current != root; current = current.parent)
+        {
+            segments.Add(current.GetSiblingIndex().ToString());
+        }
+        segments.Reverse();
+        return string.Join("/", segments.ToArray());
+    }
+
+    public static string BuildRelativeNamePath(Transform target, Transform root)
+    {
+        if (target == null || root == null || target == root)
+        {
+            return string.Empty;
+        }
+
+        var segments = new List<string>();
+        for (var current = target; current != null && current != root; current = current.parent)
+        {
+            var occurrence = 0;
+            if (current.parent != null)
+            {
+                for (var i = 0; i < current.GetSiblingIndex(); i++)
+                {
+                    if (current.parent.GetChild(i).name == current.name)
+                    {
+                        occurrence++;
+                    }
+                }
+            }
+            segments.Add(EscapeSegment(current.name) + "#" + occurrence);
+        }
+        segments.Reverse();
+        return string.Join("/", segments.ToArray());
+    }
+
+    public static Transform ResolveRelativePath(
+        Transform root,
+        string indexedPath,
+        string namePath = null)
+    {
+        if (root == null)
+        {
+            return null;
+        }
+
+        var resolved = ResolveIndexedPath(root, indexedPath);
+        if (resolved != null &&
+            (string.IsNullOrEmpty(namePath)
+             || BuildRelativeNamePath(resolved, root) == namePath
+             || IsLegacyStablePathMatch(BuildRelativeNamePath(resolved, root), namePath)))
+        {
+            return resolved;
+        }
+
+        return ResolveNamePath(root, namePath);
+    }
+
+    private static bool IsLegacyStablePathMatch(string currentPath, string savedPath)
+    {
+        if (string.IsNullOrEmpty(currentPath) || string.IsNullOrEmpty(savedPath))
+        {
+            return false;
+        }
+
+        var currentSegments = currentPath.Split('/');
+        var savedSegments = savedPath.Split('/');
+        if (currentSegments.Length != savedSegments.Length)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < currentSegments.Length; i++)
+        {
+            if (currentSegments[i] == savedSegments[i])
+            {
+                continue;
+            }
+
+            var separator = currentSegments[i].LastIndexOf('#');
+            var escapedName = separator >= 0
+                ? currentSegments[i].Substring(0, separator)
+                : currentSegments[i];
+            var currentName = UnescapeSegment(escapedName);
+            if (!IsStableDynamicHudName(currentName))
+            {
+                return false;
+            }
+
+            var currentOccurrence = separator >= 0
+                ? currentSegments[i].Substring(separator + 1)
+                : "0";
+            var savedSeparator = savedSegments[i].LastIndexOf('#');
+            var savedOccurrence = savedSeparator >= 0
+                ? savedSegments[i].Substring(savedSeparator + 1)
+                : "0";
+            if (currentOccurrence != savedOccurrence)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static bool IsStableDynamicHudName(string name)
+    {
+        return name.StartsWith("Inventory Sort Button ", StringComparison.Ordinal)
+            || name == "Inventory Item Select Button"
+            || name.StartsWith("Inventory Item ", StringComparison.Ordinal) && name.EndsWith(" Badge", StringComparison.Ordinal)
+            || name.StartsWith("Selected Item ", StringComparison.Ordinal) && (name.EndsWith(" Badge", StringComparison.Ordinal) || name.EndsWith(" Button", StringComparison.Ordinal))
+            || name.StartsWith("Accessory Slot Button ", StringComparison.Ordinal)
+            || name.StartsWith("Equipped Slot ", StringComparison.Ordinal);
+    }
+
+    private static void ApplyEntry(RectTransform screenRoot, AetheriaHudLayoutEntry entry)
+    {
+        var target = ResolveRelativePath(screenRoot, entry.hierarchyPath, entry.hierarchyNamePath) as RectTransform;
+        if (target == null)
+        {
+            return;
+        }
+
+        var fitter = target.GetComponent<ContentSizeFitter>();
+        if (fitter != null)
+        {
+            fitter.enabled = false;
+        }
+        var aspect = target.GetComponent<AspectRatioFitter>();
+        if (aspect != null)
+        {
+            aspect.enabled = false;
+        }
+
+        target.anchorMin = entry.anchorMin;
+        target.anchorMax = entry.anchorMax;
+        target.pivot = entry.pivot;
+        target.anchoredPosition = entry.anchoredPosition;
+        target.sizeDelta = entry.sizeDelta;
+        target.localEulerAngles = entry.localEulerAngles;
+        target.localScale = entry.localScale;
+        LockManualSize(target);
+
+        if (entry.overrideRenderOrder)
+        {
+            ApplyRenderOrder(target, entry.renderOrder);
+        }
+
+        if (entry.overrideImage)
+        {
+            var image = target.GetComponent<Image>();
+            if (image != null)
+            {
+                image.sprite = entry.imageSprite;
+                image.color = entry.imageColor;
+                image.preserveAspect = entry.preserveImageAspect;
+            }
+        }
+
+        if (entry.overrideText)
+        {
+            var label = target.GetComponent<Text>();
+            if (label != null)
+            {
+                label.text = entry.text ?? string.Empty;
+                label.color = entry.textColor;
+                label.fontSize = Mathf.Max(1, entry.fontSize);
+                label.resizeTextMaxSize = Mathf.Max(label.resizeTextMinSize, label.fontSize);
+            }
+        }
+
+        if (entry.overrideParticle)
+        {
+            var particles = target.GetComponent<ParticleSystem>();
+            if (particles != null)
+            {
+                var main = particles.main;
+                main.simulationSpeed = Mathf.Max(0f, entry.particleSimulationSpeed);
+                main.startSizeMultiplier = Mathf.Max(0f, entry.particleStartSize);
+                main.startSpeedMultiplier = entry.particleStartSpeed;
+                var emission = particles.emission;
+                emission.rateOverTimeMultiplier = Mathf.Max(0f, entry.particleEmissionRate);
+            }
+        }
+    }
+
+    private static Transform ResolveIndexedPath(Transform root, string path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return root;
+        }
+
+        var current = root;
+        var segments = path.Split('/');
+        for (var i = 0; i < segments.Length; i++)
+        {
+            int index;
+            if (!int.TryParse(segments[i], out index) || index < 0 || index >= current.childCount)
+            {
+                return null;
+            }
+            current = current.GetChild(index);
+        }
+        return current;
+    }
+
+    private static Transform ResolveNamePath(Transform root, string path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return root;
+        }
+
+        var current = root;
+        var segments = path.Split('/');
+        for (var i = 0; i < segments.Length; i++)
+        {
+            var separator = segments[i].LastIndexOf('#');
+            var escapedName = separator >= 0 ? segments[i].Substring(0, separator) : segments[i];
+            var name = UnescapeSegment(escapedName);
+            var requestedOccurrence = 0;
+            if (separator >= 0)
+            {
+                int.TryParse(segments[i].Substring(separator + 1), out requestedOccurrence);
+            }
+
+            Transform match = null;
+            var occurrence = 0;
+            for (var childIndex = 0; childIndex < current.childCount; childIndex++)
+            {
+                var child = current.GetChild(childIndex);
+                if (child.name != name)
+                {
+                    continue;
+                }
+                if (occurrence == requestedOccurrence)
+                {
+                    match = child;
+                    break;
+                }
+                occurrence++;
+            }
+
+            if (match == null)
+            {
+                return null;
+            }
+            current = match;
+        }
+        return current;
+    }
+
+    private static string EscapeSegment(string value)
+    {
+        return (value ?? string.Empty)
+            .Replace("%", "%25")
+            .Replace("/", "%2F")
+            .Replace("#", "%23");
+    }
+
+    private static string UnescapeSegment(string value)
+    {
+        return (value ?? string.Empty)
+            .Replace("%23", "#")
+            .Replace("%2F", "/")
+            .Replace("%25", "%");
+    }
+}

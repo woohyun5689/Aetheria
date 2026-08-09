@@ -156,13 +156,26 @@ public sealed partial class AetheriaGame
         }
 
         AddLayoutSize(plate, -1f, preferredHeight);
-        ApplyOpaqueTextPanel(
-            plate,
-            preferredHeight <= 68f
-                ? OpaqueTextPanelKind.Compact
-                : ReadabilityPanelKindFromName(plate.gameObject.name));
+        var panelKind = preferredHeight <= 68f
+            ? OpaqueTextPanelKind.Compact
+            : ReadabilityPanelKindFromName(plate.gameObject.name);
+        ApplyOpaqueTextPanel(plate, panelKind);
         var label = AddText(plate, value, size, style, textTint, alignment, preferredHeight);
-        Stretch(label.GetComponent<RectTransform>(), 22f, 10f, 22f, 10f);
+        var horizontalInset = panelKind == OpaqueTextPanelKind.Body ? 36f : 24f;
+        var verticalInset = panelKind == OpaqueTextPanelKind.Body ? 10f : 8f;
+        var contentLayout = plate.gameObject.AddComponent<VerticalLayoutGroup>();
+        contentLayout.padding = new RectOffset(
+            Mathf.RoundToInt(horizontalInset),
+            Mathf.RoundToInt(horizontalInset),
+            Mathf.RoundToInt(verticalInset),
+            Mathf.RoundToInt(verticalInset));
+        contentLayout.spacing = 0f;
+        contentLayout.childAlignment = alignment;
+        contentLayout.childControlWidth = true;
+        contentLayout.childControlHeight = true;
+        contentLayout.childForceExpandWidth = true;
+        contentLayout.childForceExpandHeight = true;
+        label.lineSpacing = 1f;
         return plate;
     }
 
@@ -858,6 +871,7 @@ public sealed partial class AetheriaGame
         EnsureVisualPolishDriver();
         ApplyOpaqueTextPanelsForScreen(page);
         HideGenericUxBoxes(page);
+        AetheriaHudLayoutRuntime.ApplyToScreen(page);
     }
 
     private void HideGenericUxBoxes(Transform scope)

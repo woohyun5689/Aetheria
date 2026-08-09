@@ -97,45 +97,26 @@ public sealed partial class AetheriaGame
         }
 
         var logo = AddFlatPanel("Title Logo Composition", page, Color.clear);
-        SetAnchoredRect(logo, new Vector2(0.5f, 0.805f), new Vector2(1080f, 270f));
+        SetAnchoredRect(logo, new Vector2(0.5f, 0.76f), new Vector2(1160f, 500f));
         logo.GetComponent<Image>().raycastTarget = false;
         var logoGroup = logo.gameObject.AddComponent<CanvasGroup>();
 
         var crestGlow = AddTitleFx(
             logo,
-            "Title Crest Glow",
+            "Title Logo Glow",
             null,
-            new Vector2(0.18f, 0.51f),
-            new Vector2(270f, 270f),
-            new Color(0.46f, 0.84f, 1f, 0.16f),
+            new Vector2(0.5f, 0.5f),
+            new Vector2(1100f, 520f),
+            new Color(0.46f, 0.84f, 1f, 0.10f),
             true);
         var crest = AddTitleFx(
             logo,
-            "Title Crest",
-            MainMenuCrestV2Path,
-            new Vector2(0.18f, 0.51f),
-            new Vector2(190f, 236f),
+            "Aetheria Title Logo Artwork",
+            AetheriaLogoV2Path,
+            new Vector2(0.5f, 0.5f),
+            new Vector2(1040f, 500f),
             Color.white,
             false);
-
-        var title = AddText(logo, "AETHERIA", 96, FontStyle.Bold, Rgb(19, 48, 78), TextAnchor.MiddleCenter, 116f);
-        SetAnchoredRect(title.rectTransform, new Vector2(0.62f, 0.65f), new Vector2(760f, 126f));
-        title.font = TitleDisplayFont();
-        title.resizeTextMinSize = 68;
-        title.resizeTextMaxSize = 96;
-        ConfigureTitleDisplayText(title, new Color(0.98f, 0.75f, 0.20f, 1f), new Color(0.01f, 0.08f, 0.16f, 0.60f), 2.1f);
-
-        var subtitle = AddText(logo, "빛의 원정", 34, FontStyle.Bold, Rgb(132, 73, 14), TextAnchor.MiddleCenter, 50f);
-        SetAnchoredRect(subtitle.rectTransform, new Vector2(0.62f, 0.30f), new Vector2(540f, 56f));
-        subtitle.resizeTextMinSize = 27;
-        subtitle.resizeTextMaxSize = 34;
-        ConfigureTitleDisplayText(subtitle, new Color(1f, 0.98f, 0.88f, 0.96f), new Color(0.18f, 0.07f, 0.01f, 0.42f), 1.15f);
-
-        var tagline = AddText(logo, "아홉 대륙을 잇는 빛의 여정", 20, FontStyle.Bold, Rgb(27, 66, 93), TextAnchor.MiddleCenter, 36f);
-        SetAnchoredRect(tagline.rectTransform, new Vector2(0.62f, 0.10f), new Vector2(630f, 38f));
-        tagline.resizeTextMinSize = 17;
-        tagline.resizeTextMaxSize = 20;
-        ConfigureTitleDisplayText(tagline, new Color(1f, 1f, 1f, 0.88f), new Color(0.01f, 0.05f, 0.10f, 0.52f), 0.9f);
 
         var prompt = AddFlatPanel("Title Start Prompt", page, Color.clear);
         SetAnchoredRect(prompt, new Vector2(0.5f, 0.075f), new Vector2(930f, 82f));
