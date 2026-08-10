@@ -8,10 +8,17 @@ using UnityEngine;
 public static class AetheriaContestBuild
 {
     private const string OutputEnvironmentVariable = "AETHERIA_CONTEST_WEBGL_OUTPUT";
+    private static readonly string[] RequiredWebVisuals =
+    {
+        "WebVersion/assets/world-map-v2",
+        "WebVersion/assets/closed-bound-scroll"
+    };
 
     [MenuItem("Aetheria/Build Contest WebGL", priority = 80)]
     public static void BuildWebGL()
     {
+        ValidateRequiredWebVisuals();
+
         var outputPath = ResolveOutputPath();
         var scenes = EditorBuildSettings.scenes
             .Where(scene => scene.enabled)
@@ -45,6 +52,19 @@ public static class AetheriaContestBuild
         Debug.Log(
             "[Aetheria] Contest WebGL build completed: " + outputPath
             + " (" + report.summary.totalSize + " bytes)");
+    }
+
+    private static void ValidateRequiredWebVisuals()
+    {
+        foreach (var resourcePath in RequiredWebVisuals)
+        {
+            if (Resources.Load<Texture2D>(resourcePath) == null
+                && Resources.Load<Sprite>(resourcePath) == null)
+            {
+                throw new InvalidOperationException(
+                    "Required WebGL visual is missing from Resources: " + resourcePath);
+            }
+        }
     }
 
     private static string ResolveOutputPath()

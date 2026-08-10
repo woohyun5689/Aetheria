@@ -8,3 +8,4 @@
 
 `Build`, `StreamingAssets`, `TemplateData` 폴더는 WebGL 실행에 필요한 배포 파일입니다.
 Windows에서는 `Start_Aetheria_Local.cmd`를 더블클릭하면 사용 가능한 로컬 포트를 찾아 브라우저를 자동으로 엽니다.
+지도와 닫힌 두루마리 이미지는 WebGL에서도 표시되도록 `Resources/WebVersion/assets`에 함께 패키징됩니다.

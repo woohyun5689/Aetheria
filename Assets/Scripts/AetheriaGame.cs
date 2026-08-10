@@ -3418,6 +3418,20 @@ public sealed partial class AetheriaGame : MonoBehaviour
             return null;
         }
 
+        // StreamingAssets is exposed as an HTTP URL in WebGL, so File.Exists
+        // and File.ReadAllBytes cannot load it there. Keep a Resources copy of
+        // these visual assets and prefer that synchronous, build-safe path.
+        var resourcePath = Path.ChangeExtension(relativePath, null).Replace('\\', '/');
+        var bundledSprite = LoadGeneratedSprite(resourcePath, Vector4.zero);
+        if (bundledSprite != null)
+        {
+            return bundledSprite;
+        }
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        return null;
+#else
+
         var path = Path.Combine(Application.streamingAssetsPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
         if (!File.Exists(path))
         {
@@ -3441,6 +3455,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         }
 
         return sprite;
+#endif
     }
 
     private void TryApplyStreamingSprite(RectTransform target, string relativePath)

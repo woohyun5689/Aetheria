@@ -202,9 +202,9 @@ public sealed partial class AetheriaGame
             return;
         }
 
-        // The map itself is supplied from StreamingAssets. Reuse it behind the
-        // interactive map surface so a missing Resources-only backdrop cannot
-        // expose the generic menu art around a map transition or aspect change.
+        // Reuse the packaged map behind the interactive surface so a missing
+        // regional backdrop cannot expose generic menu art during transitions
+        // or browser aspect changes.
         var sprite = currentScreen == AetheriaScreen.DungeonSelect
             ? LoadStreamingSprite(DungeonMapSpritePath)
             : null;
