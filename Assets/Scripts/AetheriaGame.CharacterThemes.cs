@@ -415,6 +415,17 @@ public sealed partial class AetheriaGame
             return false;
         }
 
+        if (button.name == "Selected Item Enhance Button"
+            || button.name == "Selected Item Sell Button")
+        {
+            var unusedFrame = button.transform.Find("Character Theme Button Frame");
+            if (unusedFrame != null)
+            {
+                unusedFrame.gameObject.SetActive(false);
+            }
+            return false;
+        }
+
         var key = string.IsNullOrEmpty(keyOverride) ? ScreenCharacterThemeKey() : keyOverride;
         var theme = CharacterThemeForKey(key);
         if (theme == null)

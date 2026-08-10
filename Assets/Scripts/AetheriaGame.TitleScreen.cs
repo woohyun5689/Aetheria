@@ -24,6 +24,7 @@ public sealed partial class AetheriaGame
         CancelTitleScreenPresentation();
         titleScreenActive = true;
         currentScreen = AetheriaScreen.MainMenu;
+        SetAetheriaMusic(AetheriaMusic.Title);
         ResetCombatState(true);
         selectedHeroClassName = "";
         activeSlot = Mathf.Clamp(activeSlot, 0, SaveSlotCount - 1);
@@ -245,11 +246,9 @@ public sealed partial class AetheriaGame
     {
         if (titleDisplayFont == null)
         {
-            titleDisplayFont = Font.CreateDynamicFontFromOSFont(
-                new[] { "Cinzel SemiBold", "Georgia", "Times New Roman", "Malgun Gothic" },
-                96);
+            titleDisplayFont = uiHeadingFont != null ? uiHeadingFont : uiFont;
         }
-        return titleDisplayFont != null ? titleDisplayFont : uiFont;
+        return titleDisplayFont;
     }
 
     private static void ConfigureTitleDisplayText(Text text, Color outlineColor, Color shadowColor, float outlineSize)
@@ -285,6 +284,7 @@ public sealed partial class AetheriaGame
             return;
         }
 
+        PlayTitleStartSound();
         titleScreenTransitioning = true;
         titleScreenTransitionCoroutine = StartCoroutine(PlayTitleScreenExit());
     }
@@ -358,7 +358,6 @@ public sealed partial class AetheriaGame
         CancelTitleScreenPresentation();
         if (titleDisplayFont != null)
         {
-            Destroy(titleDisplayFont);
             titleDisplayFont = null;
         }
     }

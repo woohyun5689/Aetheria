@@ -47,9 +47,43 @@ public sealed class AetheriaHudLayoutEntry
     public float particleEmissionRate = 10f;
 }
 
+[DisallowMultipleComponent]
+public sealed class AetheriaHudTextColorOverride : MonoBehaviour
+{
+    [SerializeField] private bool hasOverride;
+    [SerializeField] private Color overrideColor = Color.white;
+
+    public bool HasOverride
+    {
+        get { return hasOverride; }
+    }
+
+    public Color OverrideColor
+    {
+        get { return overrideColor; }
+    }
+
+    public void Set(Color color)
+    {
+        hasOverride = true;
+        overrideColor = color;
+    }
+
+    public void Clear()
+    {
+        hasOverride = false;
+    }
+}
+
 public static class AetheriaHudLayoutRuntime
 {
     public const string ResourcesPath = "UI/AetheriaHudLayoutProfile";
+
+    private const string CharacterThemeButtonFrameName = "Character Theme Button Frame";
+    private const string ObjectActionFeatureFrameName = "Object Action Feature Frame";
+    private const string InventoryScreenName = "Inventory";
+    private const string InventoryItemRowName = "Inventory Item Row";
+    private const int InventoryItemRowTemplateIndex = 1;
 
     private static AetheriaHudLayoutProfile cachedProfile;
 
@@ -119,6 +153,17 @@ public static class AetheriaHudLayoutRuntime
         }
     }
 
+    public static bool IsButtonAttachedDecoration(RectTransform target)
+    {
+        if (target == null || target.parent == null || target.parent.GetComponent<Button>() == null)
+        {
+            return false;
+        }
+
+        return target.name == CharacterThemeButtonFrameName
+            || target.name == ObjectActionFeatureFrameName;
+    }
+
     public static void ApplyToScreen(RectTransform screenRoot)
     {
         if (screenRoot == null)
@@ -163,6 +208,15 @@ public static class AetheriaHudLayoutRuntime
         for (var i = 0; i < screenEntries.Count; i++)
         {
             var entry = screenEntries[i];
+            var entryTarget = ResolveRelativePath(
+                screenRoot,
+                entry.hierarchyPath,
+                entry.hierarchyNamePath) as RectTransform;
+            if (IsButtonAttachedDecoration(entryTarget))
+            {
+                continue;
+            }
+
             var layout = ResolveFrozenLayout(screenRoot, entry);
             if (layout == null || !frozenLayouts.Add(layout))
             {
@@ -182,7 +236,129 @@ public static class AetheriaHudLayoutRuntime
             ApplyEntry(screenRoot, screenEntries[i]);
         }
 
+        ApplyInventoryItemRowTemplate(screenRoot);
+
         Canvas.ForceUpdateCanvases();
+    }
+
+    private static void ApplyInventoryItemRowTemplate(RectTransform screenRoot)
+    {
+        if (screenRoot.name != InventoryScreenName)
+        {
+            return;
+        }
+
+        var allRects = screenRoot.GetComponentsInChildren<RectTransform>(true);
+        var rows = new List<RectTransform>();
+        for (var i = 0; i < allRects.Length; i++)
+        {
+            if (allRects[i] != null && allRects[i].name == InventoryItemRowName)
+            {
+                rows.Add(allRects[i]);
+            }
+        }
+        if (rows.Count == 0)
+        {
+            return;
+        }
+
+        var template = rows[Mathf.Min(InventoryItemRowTemplateIndex, rows.Count - 1)];
+        for (var i = 0; i < rows.Count; i++)
+        {
+            var row = rows[i];
+            if (row == null || row == template)
+            {
+                continue;
+            }
+
+            CopyInventoryRowLayout(template, row);
+        }
+    }
+
+    private static void CopyInventoryRowLayout(RectTransform template, RectTransform destination)
+    {
+        CopyLayoutElement(template, destination);
+        CopyHorizontalLayout(template, destination);
+
+        var childCount = Mathf.Min(template.childCount, destination.childCount);
+        for (var i = 0; i < childCount; i++)
+        {
+            CopyInventoryRowChildLayout(
+                template.GetChild(i) as RectTransform,
+                destination.GetChild(i) as RectTransform);
+        }
+    }
+
+    private static void CopyInventoryRowChildLayout(RectTransform template, RectTransform destination)
+    {
+        if (template == null || destination == null)
+        {
+            return;
+        }
+
+        destination.anchorMin = template.anchorMin;
+        destination.anchorMax = template.anchorMax;
+        destination.pivot = template.pivot;
+        destination.anchoredPosition = template.anchoredPosition;
+        destination.sizeDelta = template.sizeDelta;
+        destination.localEulerAngles = template.localEulerAngles;
+        destination.localScale = template.localScale;
+
+        CopyLayoutElement(template, destination);
+        CopyHorizontalLayout(template, destination);
+
+        var childCount = Mathf.Min(template.childCount, destination.childCount);
+        for (var i = 0; i < childCount; i++)
+        {
+            CopyInventoryRowChildLayout(
+                template.GetChild(i) as RectTransform,
+                destination.GetChild(i) as RectTransform);
+        }
+    }
+
+    private static void CopyLayoutElement(RectTransform template, RectTransform destination)
+    {
+        var source = template.GetComponent<LayoutElement>();
+        var target = destination.GetComponent<LayoutElement>();
+        if (source == null || target == null)
+        {
+            return;
+        }
+
+        target.ignoreLayout = source.ignoreLayout;
+        target.minWidth = source.minWidth;
+        target.minHeight = source.minHeight;
+        target.preferredWidth = source.preferredWidth;
+        target.preferredHeight = source.preferredHeight;
+        target.flexibleWidth = source.flexibleWidth;
+        target.flexibleHeight = source.flexibleHeight;
+        target.layoutPriority = source.layoutPriority;
+    }
+
+    private static void CopyHorizontalLayout(RectTransform template, RectTransform destination)
+    {
+        var source = template.GetComponent<HorizontalLayoutGroup>();
+        var target = destination.GetComponent<HorizontalLayoutGroup>();
+        if (source == null || target == null)
+        {
+            return;
+        }
+
+        target.padding = new RectOffset(
+            source.padding.left,
+            source.padding.right,
+            source.padding.top,
+            source.padding.bottom);
+        target.spacing = source.spacing;
+        target.childAlignment = source.childAlignment;
+        target.childControlWidth = source.childControlWidth;
+        target.childControlHeight = source.childControlHeight;
+        target.childForceExpandWidth = source.childForceExpandWidth;
+        target.childForceExpandHeight = source.childForceExpandHeight;
+        target.childScaleWidth = source.childScaleWidth;
+        target.childScaleHeight = source.childScaleHeight;
+        target.reverseArrangement = source.reverseArrangement;
+        target.enabled = source.enabled;
     }
 
     private static LayoutGroup ResolveFrozenLayout(RectTransform screenRoot, AetheriaHudLayoutEntry entry)
@@ -349,27 +525,36 @@ public static class AetheriaHudLayoutRuntime
             return;
         }
 
-        var fitter = target.GetComponent<ContentSizeFitter>();
-        if (fitter != null)
+        var attachedDecoration = IsButtonAttachedDecoration(target);
+
+        if (attachedDecoration)
         {
-            fitter.enabled = false;
+            ResetButtonAttachedDecoration(target);
         }
-        var aspect = target.GetComponent<AspectRatioFitter>();
-        if (aspect != null)
+        else
         {
-            aspect.enabled = false;
+            var fitter = target.GetComponent<ContentSizeFitter>();
+            if (fitter != null)
+            {
+                fitter.enabled = false;
+            }
+            var aspect = target.GetComponent<AspectRatioFitter>();
+            if (aspect != null)
+            {
+                aspect.enabled = false;
+            }
+
+            target.anchorMin = entry.anchorMin;
+            target.anchorMax = entry.anchorMax;
+            target.pivot = entry.pivot;
+            target.anchoredPosition = entry.anchoredPosition;
+            target.sizeDelta = entry.sizeDelta;
+            target.localEulerAngles = entry.localEulerAngles;
+            target.localScale = entry.localScale;
+            LockManualSize(target);
         }
 
-        target.anchorMin = entry.anchorMin;
-        target.anchorMax = entry.anchorMax;
-        target.pivot = entry.pivot;
-        target.anchoredPosition = entry.anchoredPosition;
-        target.sizeDelta = entry.sizeDelta;
-        target.localEulerAngles = entry.localEulerAngles;
-        target.localScale = entry.localScale;
-        LockManualSize(target);
-
-        if (entry.overrideRenderOrder)
+        if (!attachedDecoration && entry.overrideRenderOrder)
         {
             ApplyRenderOrder(target, entry.renderOrder);
         }
@@ -394,6 +579,24 @@ public static class AetheriaHudLayoutRuntime
                 label.color = entry.textColor;
                 label.fontSize = Mathf.Max(1, entry.fontSize);
                 label.resizeTextMaxSize = Mathf.Max(label.resizeTextMinSize, label.fontSize);
+
+                // Button state presenters refresh every frame, so keep an explicit
+                // HUD color marker they can honor after this one-time profile pass.
+                var colorOverride = label.GetComponent<AetheriaHudTextColorOverride>();
+                if (colorOverride == null)
+                {
+                    colorOverride = label.gameObject.AddComponent<AetheriaHudTextColorOverride>();
+                }
+                colorOverride.Set(entry.textColor);
+            }
+        }
+        else
+        {
+            var label = target.GetComponent<Text>();
+            var colorOverride = label != null ? label.GetComponent<AetheriaHudTextColorOverride>() : null;
+            if (colorOverride != null)
+            {
+                colorOverride.Clear();
             }
         }
 
@@ -409,6 +612,24 @@ public static class AetheriaHudLayoutRuntime
                 var emission = particles.emission;
                 emission.rateOverTimeMultiplier = Mathf.Max(0f, entry.particleEmissionRate);
             }
+        }
+    }
+
+    private static void ResetButtonAttachedDecoration(RectTransform target)
+    {
+        var inset = target.name == ObjectActionFeatureFrameName ? 2f : 0f;
+        target.anchorMin = Vector2.zero;
+        target.anchorMax = Vector2.one;
+        target.pivot = new Vector2(0.5f, 0.5f);
+        target.offsetMin = new Vector2(inset, inset);
+        target.offsetMax = new Vector2(-inset, -inset);
+        target.localEulerAngles = Vector3.zero;
+        target.localScale = Vector3.one;
+
+        var layoutElement = target.GetComponent<LayoutElement>();
+        if (layoutElement != null)
+        {
+            layoutElement.ignoreLayout = true;
         }
     }
 

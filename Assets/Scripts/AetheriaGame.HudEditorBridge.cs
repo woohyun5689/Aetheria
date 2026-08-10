@@ -5,6 +5,7 @@ using UnityEngine;
 public sealed partial class AetheriaGame
 {
     private bool hudEditorPreviewMode;
+    private bool hudEditorDungeonInfoPreview;
 
     public RectTransform EditorHudRoot
     {
@@ -53,7 +54,10 @@ public sealed partial class AetheriaGame
                 case AetheriaScreen.Enhancement: return "Enhancement";
                 case AetheriaScreen.SkillTraining: return "SkillTraining";
                 case AetheriaScreen.Crafting: return "Crafting";
-                case AetheriaScreen.DungeonSelect: return "DungeonSelect";
+                case AetheriaScreen.DungeonSelect:
+                    return hudEditorDungeonInfoPreview && EditorDungeonInfoPopupOpen(page)
+                        ? "DungeonInfo"
+                        : "DungeonSelect";
                 case AetheriaScreen.Combat: return "Combat";
                 case AetheriaScreen.Victory: return "Victory";
                 case AetheriaScreen.Defeat: return "Defeat";
@@ -71,6 +75,7 @@ public sealed partial class AetheriaGame
     public void EditorOpenHudPreview(string screenName)
     {
         hudEditorPreviewMode = true;
+        hudEditorDungeonInfoPreview = false;
         switch (screenName)
         {
             case "Title":
@@ -109,6 +114,11 @@ public sealed partial class AetheriaGame
                 EnsureHudEditorPlayer(false);
                 ShowDungeonSelect(false);
                 break;
+            case "DungeonInfo":
+                EnsureHudEditorPlayer(false);
+                hudEditorDungeonInfoPreview = true;
+                OpenHudEditorDungeonInfoPreview();
+                break;
             case "Combat":
                 EnsureHudEditorPlayer(false);
                 OpenHudEditorCombatPreview();
@@ -136,6 +146,7 @@ public sealed partial class AetheriaGame
     public void EditorEndHudPreview()
     {
         hudEditorPreviewMode = false;
+        hudEditorDungeonInfoPreview = false;
     }
 
     private void StabilizeHudEditorScreen()
@@ -257,6 +268,48 @@ public sealed partial class AetheriaGame
             return;
         }
         StartCombat(dungeons[0], false);
+    }
+
+    private void OpenHudEditorDungeonInfoPreview()
+    {
+        var dungeons = Dungeons();
+        if (dungeons.Count == 0)
+        {
+            ShowDungeonSelect(false);
+            return;
+        }
+
+        var dungeon = NextRecommendedDungeon(dungeons) ?? dungeons[0];
+        selectedDungeonRegionKey = DungeonRegionKey(dungeon);
+        dungeonMapScrollOpened = true;
+        dungeonMapScrollOpening = false;
+        dungeonMapZoomed = true;
+        dungeonMapZoom = DungeonMapRegionZoom;
+        dungeonMapPan = Vector2.zero;
+        ShowDungeonSelect(false);
+
+        var page = EditorCurrentHudPage;
+        var mapImage = page != null
+            ? page.Find("Dungeon World Map Panel/Dungeon World Map Image") as RectTransform
+            : null;
+        if (mapImage == null)
+        {
+            return;
+        }
+
+        var region = FindDungeonMapRegion(selectedDungeonRegionKey);
+        if (region != null)
+        {
+            FocusDungeonMapRegion(region, mapImage);
+            ApplyDungeonMapView(mapImage);
+        }
+        ShowDungeonInfoPopup(mapImage, dungeon, new Vector2(50f, 50f));
+    }
+
+    private static bool EditorDungeonInfoPopupOpen(RectTransform page)
+    {
+        return page != null
+            && page.Find("Dungeon World Map Panel/Dungeon Info Popup") != null;
     }
 }
 #endif

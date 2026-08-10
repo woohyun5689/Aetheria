@@ -48,6 +48,7 @@ public sealed class AetheriaHudEditorWindow : EditorWindow
         "SkillTraining",
         "Crafting",
         "DungeonSelect",
+        "DungeonInfo",
         "Combat",
         "Victory",
         "Defeat",
@@ -66,6 +67,7 @@ public sealed class AetheriaHudEditorWindow : EditorWindow
         "스킬 수련",
         "제작소",
         "던전 선택",
+        "던전 상세",
         "전투",
         "승리",
         "패배",
@@ -944,13 +946,17 @@ public sealed class AetheriaHudEditorWindow : EditorWindow
             }
 
             var rect = RectToGui(text.rectTransform);
+            style.font = text.font;
             style.alignment = text.alignment;
             style.fontStyle = text.fontStyle;
             style.fontSize = Mathf.Max(8, Mathf.RoundToInt(text.fontSize * scale));
             style.wordWrap = text.horizontalOverflow == HorizontalWrapMode.Wrap;
             style.clipping = TextClipping.Clip;
 
-            var color = text.color;
+            var colorOverride = text.GetComponent<AetheriaHudTextColorOverride>();
+            var color = colorOverride != null && colorOverride.HasOverride
+                ? colorOverride.OverrideColor
+                : text.color;
             color.a *= InheritedCanvasAlpha(text.transform);
             if (color.a <= 0.001f)
             {
@@ -1086,7 +1092,9 @@ public sealed class AetheriaHudEditorWindow : EditorWindow
         var rects = previewPage.GetComponentsInChildren<RectTransform>(true);
         for (var i = 0; i < rects.Length; i++)
         {
-            if (rects[i] != null && rects[i] != previewPage)
+            if (rects[i] != null
+                && rects[i] != previewPage
+                && !AetheriaHudLayoutRuntime.IsButtonAttachedDecoration(rects[i]))
             {
                 editableRects.Add(rects[i]);
             }

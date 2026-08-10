@@ -697,7 +697,7 @@ public sealed partial class AetheriaGame
         Stretch(content, 32f, 8f, 32f, 8f);
         AddVertical(content, 2, TextAnchor.MiddleLeft, new RectOffset(0, 0, 0, 0));
 
-        var heading = AddText(content, combatLogExpanded ? "전투 기록  ▴" : "전투 기록  ▾", 18, FontStyle.Bold, textColor, TextAnchor.MiddleLeft, 24);
+        var heading = AddText(content, combatLogExpanded ? "전투 기록  ▲" : "전투 기록  ▼", 18, FontStyle.Bold, textColor, TextAnchor.MiddleLeft, 24);
         ConfigureCompactCombatLogText(heading, 18, 24);
         var previewLines = CombatLogPreviewLines();
         var previewHeight = combatLogExpanded ? 22f : 38f;

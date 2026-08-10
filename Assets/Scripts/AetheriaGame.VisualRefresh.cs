@@ -642,7 +642,7 @@ public sealed partial class AetheriaGame
             case VisualActionRole.Attack: return "공";
             case VisualActionRole.Skill: return "기";
             case VisualActionRole.Reward: return "보";
-            case VisualActionRole.Confirm: return "✓";
+            case VisualActionRole.Confirm: return "◆";
             case VisualActionRole.Cancel: return "×";
             case VisualActionRole.Back: return "←";
             default: return "·";

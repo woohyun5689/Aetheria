@@ -67,6 +67,8 @@ public sealed partial class AetheriaGame : MonoBehaviour
     private const float UiFeatureActionButtonHeight = 156f;
     private const float UiPopupActionButtonWidth = 240f;
     private const float UiPopupActionButtonHeight = 58f;
+    private const string UiBodyFontResourcePath = "UI/Fonts/GowunDodum-Regular";
+    private const string UiHeadingFontResourcePath = "UI/Fonts/GowunBatang-Bold";
     private static AetheriaGame instance;
     private static readonly int[] CraftingRecipeCosts = { 40, 80, 150, 280, 520, 900, 1500, 2400, 3600, 5200, 7600 };
     private static readonly int[] RaritySellValues = { 8, 14, 24, 50, 120, 260, 520, 1000, 1600, 2600, 4200, 6500, 9000 };
@@ -158,21 +160,37 @@ public sealed partial class AetheriaGame : MonoBehaviour
         DontDestroyOnLoad(gameObject);
         InitializeAetheriaAudio();
         LoadGameDatabase();
-        uiFont = Font.CreateDynamicFontFromOSFont(new[] { "Noto Sans KR", "Malgun Gothic", "맑은 고딕", "Arial" }, 20);
-        if (uiFont == null)
-        {
-            uiFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        }
-        uiHeadingFont = Font.CreateDynamicFontFromOSFont(
-            new[] { "HCR Batang", "HAN Batang", "Batang", "Noto Sans KR", "Malgun Gothic" },
-            22);
-        if (uiHeadingFont == null)
-        {
-            uiHeadingFont = uiFont;
-        }
+        LoadUiFonts();
 
         CreateCanvas();
         ShowTitleScreen();
+    }
+
+    private void LoadUiFonts()
+    {
+        uiFont = Resources.Load<Font>(UiBodyFontResourcePath);
+        if (uiFont == null)
+        {
+            uiFont = Font.CreateDynamicFontFromOSFont(
+                new[] { "Noto Sans KR", "Malgun Gothic", "맑은 고딕", "Arial" },
+                20);
+            if (uiFont == null)
+            {
+                uiFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            }
+        }
+
+        uiHeadingFont = Resources.Load<Font>(UiHeadingFontResourcePath);
+        if (uiHeadingFont == null)
+        {
+            uiHeadingFont = Font.CreateDynamicFontFromOSFont(
+                new[] { "HCR Batang", "HAN Batang", "Batang", "Noto Sans KR", "Malgun Gothic" },
+                22);
+            if (uiHeadingFont == null)
+            {
+                uiHeadingFont = uiFont;
+            }
+        }
     }
 
     private void OnDestroy()
@@ -222,6 +240,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
     {
         CancelTitleScreenPresentation();
         currentScreen = AetheriaScreen.MainMenu;
+        SetAetheriaMusic(AetheriaMusic.Menu);
         ResetCombatState(true);
         selectedHeroClassName = "";
         activeSlot = Mathf.Clamp(activeSlot, 0, SaveSlotCount - 1);
@@ -314,6 +333,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
     private void ShowClassSelect(int slot)
     {
         currentScreen = AetheriaScreen.ClassSelect;
+        SetAetheriaMusic(AetheriaMusic.Menu);
         activeSlot = slot;
         var heroClasses = HeroClasses();
         if (string.IsNullOrEmpty(selectedHeroClassName) && heroClasses.Count > 0)
@@ -375,7 +395,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             cardButton.targetGraphic = card.GetComponent<Image>();
             cardButton.onClick.AddListener(() =>
             {
-                PlayUiClickSound();
+                PlayCharacterSelectSound();
                 selectedHeroClassName = localHeroClass.name;
                 ShowClassSelect(activeSlot);
             });
@@ -447,6 +467,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             return;
         }
 
+        PlayCharacterConfirmSound();
         player = CreatePlayer(selectedHeroClass);
         MarkPlayerDataDirty();
         selectedHeroClassName = "";
@@ -458,6 +479,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
     {
         guideReturnToMainMenu = returnToMainMenu || player == null;
         currentScreen = AetheriaScreen.Guide;
+        SetAetheriaMusic(AetheriaMusic.Menu);
 
         ClearRoot();
         var page = AddPanel("How To Play", root, pageColor);
@@ -580,6 +602,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
     {
         EnsurePlayerData();
         currentScreen = AetheriaScreen.Town;
+        SetAetheriaMusic(AetheriaMusic.Town);
         ResetCombatState(true);
         selectedInventoryIndex = -1;
         ClearRoot();
@@ -629,6 +652,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var saveButton = AddObjectActionButton(topActions, "저장", () =>
         {
             SaveGame();
+            PlaySaveSound();
             ShowTown("슬롯 " + (activeSlot + 1) + "에 저장했습니다.");
         }, neonPurple, VisualActionRole.Journal, "save", UiCompactActionButtonWidth, UiCompactActionButtonHeight);
         var guideButton = AddObjectActionButton(topActions, "방법", () => ShowHowToPlay(false), goodColor, VisualActionRole.Guide, "guide", UiCompactActionButtonWidth, UiCompactActionButtonHeight);
@@ -664,10 +688,26 @@ public sealed partial class AetheriaGame : MonoBehaviour
         actionLayout.childAlignment = TextAnchor.MiddleCenter;
 
         AddObjectActionButton(actionGrid, "던전 탐험\n추천 원정지 선택", EnterDungeonSelectFromTown, goodColor, VisualActionRole.Portal, "portal", UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
-        AddObjectActionButton(actionGrid, "가방 · 장비\n전투 세팅", () => ShowInventory("가방과 착용 장비를 정비합니다."), panelAltColor, VisualActionRole.Satchel, "satchel", UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
-        AddObjectActionButton(actionGrid, "대장간\n장비 강화", () => ShowEnhancement("착용 장비를 부위별로 강화합니다."), goldColor, VisualActionRole.Anvil, "anvil", UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
-        AddObjectActionButton(actionGrid, "스킬 수련\n기술 강화", () => ShowSkillTraining("골드로 직업 스킬을 강화합니다."), manaColor, VisualActionRole.Tome, "skill_tome", UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
-        AddObjectActionButton(actionGrid, "장비 조합\n상위 등급 제작", () => ShowCrafting("같은 등급 장비 3개를 다음 등급으로 조합합니다."), neonPurple, VisualActionRole.Alchemy, "alchemy", UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
+        AddObjectActionButton(actionGrid, "가방 · 장비\n전투 세팅", () =>
+        {
+            PlayPageOpenSound();
+            ShowInventory("가방과 착용 장비를 정비합니다.");
+        }, panelAltColor, VisualActionRole.Satchel, "satchel", UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
+        AddObjectActionButton(actionGrid, "대장간\n장비 강화", () =>
+        {
+            PlayPageOpenSound();
+            ShowEnhancement("착용 장비를 부위별로 강화합니다.");
+        }, goldColor, VisualActionRole.Anvil, "anvil", UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
+        AddObjectActionButton(actionGrid, "스킬 수련\n기술 강화", () =>
+        {
+            PlayPageOpenSound();
+            ShowSkillTraining("골드로 직업 스킬을 강화합니다.");
+        }, manaColor, VisualActionRole.Tome, "skill_tome", UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
+        AddObjectActionButton(actionGrid, "장비 조합\n상위 등급 제작", () =>
+        {
+            PlayPageOpenSound();
+            ShowCrafting("같은 등급 장비 3개를 다음 등급으로 조합합니다.");
+        }, neonPurple, VisualActionRole.Alchemy, "alchemy", UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
         AddObjectActionButton(actionGrid, "여관 휴식\nHP · MP 회복", Rest, dangerColor, VisualActionRole.Inn, "inn", UiFeatureActionButtonWidth, UiFeatureActionButtonHeight);
 
         var fieldJournal = AddReadabilityPlate(body, "Field Journal", Rgb(9, 25, 47));
@@ -697,6 +737,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
     private void ShowTownLegacy(string message)
     {
         currentScreen = AetheriaScreen.Town;
+        SetAetheriaMusic(AetheriaMusic.Town);
         ResetCombatState(true);
         selectedInventoryIndex = -1;
         ClearRoot();
@@ -838,6 +879,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
     private void ShowInventory(string message)
     {
         currentScreen = AetheriaScreen.Inventory;
+        SetAetheriaMusic(AetheriaMusic.Town);
         EnsurePlayerData();
         ClampSelectedInventoryIndex();
         SaveGame();
@@ -941,6 +983,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var selectButton = AddButton(row, item.name + enhanceLabel, () =>
         {
             selectedInventoryIndex = index;
+            PlayItemSelectSound();
             ShowInventory(item.name + "을(를) 선택했습니다.");
         }, selectedInventoryIndex == index ? goldColor : panelAltColor);
         selectButton.gameObject.name = "Inventory Item Select Button";
@@ -1013,7 +1056,11 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
         var actionRow = AddRow("Selected Item Actions", parent, 10, TextAnchor.MiddleLeft);
         AddLayoutSize(actionRow, -1, 58);
-        AddButton(actionRow, "대장간에서 강화", () => ShowEnhancement("착용 중인 장비를 선택해 강화할 수 있습니다."), goldColor).gameObject.name = "Selected Item Enhance Button";
+        AddButton(actionRow, "대장간에서 강화", () =>
+        {
+            PlayPageOpenSound();
+            ShowEnhancement("착용 중인 장비를 선택해 강화할 수 있습니다.");
+        }, goldColor).gameObject.name = "Selected Item Enhance Button";
         var sellButton = AddButton(actionRow, "판매  " + SellValue(item) + " G", () =>
         {
             var sellMessage = SellItem(selectedInventoryIndex);
@@ -1074,10 +1121,11 @@ public sealed partial class AetheriaGame : MonoBehaviour
     private void AddInventorySortButton(Transform parent, string label, InventorySortMode mode)
     {
         var active = inventorySortMode == mode;
-        var button = AddButton(parent, active ? label + " ✓" : label, () =>
+        var button = AddButton(parent, active ? label + " ◆" : label, () =>
         {
             inventorySortMode = mode;
             selectedInventoryIndex = -1;
+            PlayInventorySortSound();
             ShowInventory(label + " 기준으로 가방을 정렬했습니다.");
         }, active ? goldColor : panelAltColor);
         button.gameObject.name = "Inventory Sort Button " + mode;
@@ -1196,6 +1244,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
     private void ShowEnhancement(string message)
     {
         currentScreen = AetheriaScreen.Enhancement;
+        SetAetheriaMusic(AetheriaMusic.Town);
         EnsurePlayerData();
         SaveGame();
         ClearRoot();
@@ -1246,6 +1295,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
     private void ShowSkillTraining(string message)
     {
         currentScreen = AetheriaScreen.SkillTraining;
+        SetAetheriaMusic(AetheriaMusic.Town);
         EnsurePlayerData();
         SaveGame();
         ClearRoot();
@@ -1350,6 +1400,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
     private void ShowCrafting(string message)
     {
         currentScreen = AetheriaScreen.Crafting;
+        SetAetheriaMusic(AetheriaMusic.Town);
         EnsurePlayerData();
         SaveGame();
         ClearRoot();
@@ -1570,6 +1621,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         }
 
         currentScreen = AetheriaScreen.DungeonSelect;
+        SetAetheriaMusic(AetheriaMusic.Dungeon);
         if (saveBeforeDraw)
         {
             SaveGame();
@@ -1647,6 +1699,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
     private void EnterDungeonSelectFromTown()
     {
+        PlayMapOpenSound();
         ResetDungeonMapView();
         dungeonMapScrollOpened = true;
         dungeonMapScrollOpening = false;
@@ -1666,6 +1719,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             return;
         }
 
+        PlayMapOpenSound();
         ResetDungeonMapView();
         dungeonMapScrollOpening = true;
         ShowDungeonSelect();
@@ -2590,6 +2644,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             return;
         }
 
+        PlayDungeonInspectSound();
         ClearDungeonInfoPopups(mapParent);
 
         var unlocked = IsDungeonUnlocked(dungeon);
@@ -2771,7 +2826,15 @@ public sealed partial class AetheriaGame : MonoBehaviour
             EventSystem.current.SetSelectedGameObject(
                 (enterButton.interactable ? enterButton : closeButton).gameObject);
         }
-        QueueVisualPolishRefresh();
+        var portalPage = popupParent.parent as RectTransform;
+        if (portalPage != null)
+        {
+            ApplyVisualRefreshToScreen(portalPage);
+        }
+        else
+        {
+            QueueVisualPolishRefresh();
+        }
     }
 
     private RectTransform AddDungeonPopupGlassPanel(Transform parent, string name, float preferredHeight, Color accent)
@@ -3938,7 +4001,14 @@ public sealed partial class AetheriaGame : MonoBehaviour
         battleLog.Add(actionLocked
             ? "기습! 적의 속도(" + enemySpeed + ")가 플레이어(" + playerSpeed + ")보다 빠릅니다."
             : "선공 획득! 플레이어의 속도(" + playerSpeed + ")가 적(" + enemySpeed + ")보다 빠릅니다.");
-        PlayEncounterSound();
+        if (currentEnemyIsBoss)
+        {
+            PlayBossEncounterSound();
+        }
+        else
+        {
+            PlayEncounterSound();
+        }
         ShowCombat();
         PlayTurnSound(actionLocked);
         if (actionLocked)
@@ -3966,6 +4036,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         {
             currentScreen = AetheriaScreen.Combat;
         }
+        SetAetheriaMusic(currentEnemyIsBoss ? AetheriaMusic.BossCombat : AetheriaMusic.Combat);
         ClearRoot();
         BuildCombatScreen(resultBackdrop);
     }
@@ -4497,9 +4568,12 @@ public sealed partial class AetheriaGame : MonoBehaviour
     {
         EnsurePlayerData();
         currentScreen = AetheriaScreen.Victory;
+        SetAetheriaMusic(AetheriaMusic.Victory);
         ClearRoot();
-        PlayVictorySound();
         message = message ?? "";
+        var lootEarned = message.Contains("발견했습니다") || message.Contains("전환했습니다") || message.Contains("[");
+        var leveledUp = message.Contains("레벨 업");
+        PlayVictoryRewardSounds(lootEarned, leveledUp);
 
         var page = AddPanel("Victory Result", root, pageColor);
         Stretch(page, 0, 0, 0, 0);
@@ -4545,8 +4619,6 @@ public sealed partial class AetheriaGame : MonoBehaviour
         rewardLayout.childAlignment = TextAnchor.UpperLeft;
         var xpGain = ResultGainFromMessage(message, "경험치 +");
         var goldGain = ResultGainFromMessage(message, "골드 +");
-        var lootEarned = message.Contains("발견했습니다") || message.Contains("전환했습니다") || message.Contains("[");
-        var leveledUp = message.Contains("레벨 업");
         AddResultChip(rewardGrid, "XP", "경험치", xpGain > 0 ? "+" + xpGain : "획득", manaColor, 430, 88);
         AddResultChip(rewardGrid, "G", "골드", goldGain > 0 ? "+" + goldGain : "획득", goldColor, 430, 88);
         AddResultChip(rewardGrid, "ITEM", "전리품", lootEarned ? "장비 획득" : "추가 없음", lootEarned ? neonPurple : mutedColor, 430, 88);
@@ -4599,6 +4671,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
     {
         EnsurePlayerData();
         currentScreen = AetheriaScreen.Defeat;
+        SetAetheriaMusic(AetheriaMusic.Defeat);
         ClearRoot();
         PlayDefeatSound();
 
@@ -4666,7 +4739,9 @@ public sealed partial class AetheriaGame : MonoBehaviour
     {
         EnsurePlayerData();
         currentScreen = AetheriaScreen.GameClear;
+        SetAetheriaMusic(AetheriaMusic.Finale);
         ClearRoot();
+        PlayVictorySound();
         message = message ?? "";
 
         var page = AddPanel("Game Clear", root, pageColor);
@@ -4877,12 +4952,14 @@ public sealed partial class AetheriaGame : MonoBehaviour
         EnsurePlayerData();
         if (player.hp >= MaxHp() && player.mp >= MaxMp())
         {
+            PlayRejectSound();
             ShowTown("체력과 마나가 이미 가득 차 있습니다.");
             return;
         }
 
         if (player.gold < 25)
         {
+            PlayRejectSound();
             ShowTown("휴식할 골드가 부족합니다.");
             return;
         }
@@ -4891,6 +4968,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         player.hp = MaxHp();
         player.mp = MaxMp();
         SaveGame();
+        PlayRestSound();
         ShowTown("체력과 마나를 모두 회복했습니다.");
     }
 
@@ -4905,6 +4983,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         EnsurePlayerData();
         if (index < 0 || index >= player.inventory.Count)
         {
+            PlayRejectSound();
             return;
         }
 
@@ -4914,6 +4993,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             player.inventory.RemoveAt(index);
             selectedInventoryIndex = -1;
             SaveGame();
+            PlayRejectSound();
             ShowInventory("비정상 아이템을 정리했습니다.");
             return;
         }
@@ -4985,6 +5065,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
         selectedInventoryIndex = -1;
         SaveGame();
+        PlayEquipSound();
         ShowInventory(item.name + "을(를) 착용했습니다.");
     }
 
@@ -4997,6 +5078,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             item = player.weapon;
             if (item != null && !CanAddInventoryItem())
             {
+                PlayRejectSound();
                 ShowInventory("가방이 가득 차 장비를 해제할 수 없습니다.");
                 return;
             }
@@ -5007,6 +5089,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             item = player.armor;
             if (item != null && !CanAddInventoryItem())
             {
+                PlayRejectSound();
                 ShowInventory("가방이 가득 차 장비를 해제할 수 없습니다.");
                 return;
             }
@@ -5017,6 +5100,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             item = player.charm;
             if (item != null && !CanAddInventoryItem())
             {
+                PlayRejectSound();
                 ShowInventory("가방이 가득 차 장비를 해제할 수 없습니다.");
                 return;
             }
@@ -5027,6 +5111,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             item = player.charm2;
             if (item != null && !CanAddInventoryItem())
             {
+                PlayRejectSound();
                 ShowInventory("가방이 가득 차 장비를 해제할 수 없습니다.");
                 return;
             }
@@ -5037,6 +5122,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             item = player.charm3;
             if (item != null && !CanAddInventoryItem())
             {
+                PlayRejectSound();
                 ShowInventory("가방이 가득 차 장비를 해제할 수 없습니다.");
                 return;
             }
@@ -5047,6 +5133,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             item = player.charm4;
             if (item != null && !CanAddInventoryItem())
             {
+                PlayRejectSound();
                 ShowInventory("가방이 가득 차 장비를 해제할 수 없습니다.");
                 return;
             }
@@ -5057,6 +5144,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
             item = player.charm4 ?? player.charm3 ?? player.charm2 ?? player.charm;
             if (item != null && !CanAddInventoryItem())
             {
+                PlayRejectSound();
                 ShowInventory("가방이 가득 차 장비를 해제할 수 없습니다.");
                 return;
             }
@@ -5068,12 +5156,14 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
         if (item == null)
         {
+            PlayRejectSound();
             ShowInventory("해제할 장비가 없습니다.");
             return;
         }
 
         player.inventory.Add(item);
         SaveGame();
+        PlayUnequipSound();
         ShowInventory(item.name + "을(를) 해제했습니다.");
     }
 
@@ -5082,12 +5172,14 @@ public sealed partial class AetheriaGame : MonoBehaviour
         EnsurePlayerData();
         if (item == null)
         {
+            PlayRejectSound();
             ShowEnhancement(slotLabel + "에 장착된 장비가 없습니다.");
             return;
         }
 
         if (item.level >= MaxGearEnhancementLevel)
         {
+            PlayRejectSound();
             ShowEnhancement(slotLabel + "은(는) 이미 최대 강화입니다.");
             return;
         }
@@ -5095,6 +5187,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var cost = EnhancementCost(item);
         if (player.gold < cost)
         {
+            PlayRejectSound();
             ShowEnhancement(slotLabel + " 강화에 필요한 골드가 부족합니다.");
             return;
         }
@@ -5107,12 +5200,14 @@ public sealed partial class AetheriaGame : MonoBehaviour
             item.power = GearPowerFromStats(item);
             SaveGame();
             AddGeneralLog(slotLabel + " 강화 성공: " + ItemLabel(item));
+            PlayForgeSound(true);
             ShowEnhancement(slotLabel + " 강화에 성공했습니다.");
         }
         else
         {
             SaveGame();
             AddGeneralLog(slotLabel + " 강화 실패");
+            PlayForgeSound(false);
             ShowEnhancement(slotLabel + " 강화에 실패했습니다. 장비는 유지됩니다.");
         }
     }
@@ -5209,6 +5304,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         EnsurePlayerData();
         if (index < 0 || index >= player.inventory.Count)
         {
+            PlayRejectSound();
             return "판매할 아이템이 없습니다.";
         }
 
@@ -5217,6 +5313,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         {
             player.inventory.RemoveAt(index);
             SaveGame();
+            PlayRejectSound();
             return "비정상 아이템을 정리했습니다.";
         }
 
@@ -5227,6 +5324,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         SaveGame();
         var message = ItemLabel(item) + "을(를) " + value + "G에 판매했습니다.";
         AddGeneralLog(message);
+        PlayCoinSound();
         return message;
     }
 
@@ -5264,6 +5362,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         EnsurePlayerData();
         if (rarity < 0 || rarity > MaxRecipeIngredientRarity)
         {
+            PlayRejectSound();
             ShowCrafting("이 등급은 레시피 조합 대상이 아닙니다.");
             return;
         }
@@ -5271,6 +5370,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var cost = RecipeCraftCost(rarity);
         if (player.gold < cost)
         {
+            PlayRejectSound();
             ShowCrafting("레시피 조합에 필요한 골드가 부족합니다.");
             return;
         }
@@ -5287,6 +5387,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
 
         if (ingredientIndexes.Count < 3)
         {
+            PlayRejectSound();
             ShowCrafting("같은 등급 장비 3개가 필요합니다.");
             return;
         }
@@ -5306,6 +5407,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         SaveGame();
         var message = RarityLabel(rarity) + " 장비 3개를 조합해 " + ItemLabel(result) + "을(를) 만들었습니다.";
         AddGeneralLog(message);
+        PlayCraftSound();
         ShowCrafting(message);
     }
 
@@ -7375,12 +7477,14 @@ public sealed partial class AetheriaGame : MonoBehaviour
         var cost = SkillUpgradeCost(level);
         if (level >= MaxSkillLevel)
         {
+            PlayRejectSound();
             ShowSkillTraining(skillName + "은(는) 이미 최대 레벨입니다.");
             return;
         }
 
         if (player.gold < cost)
         {
+            PlayRejectSound();
             ShowSkillTraining("골드가 부족합니다.");
             return;
         }
@@ -7394,6 +7498,7 @@ public sealed partial class AetheriaGame : MonoBehaviour
         }
         entry.level = Mathf.Min(MaxSkillLevel, entry.level + 1);
         SaveGame();
+        PlaySkillUpgradeSound();
         ShowSkillTraining(skillName + " Lv." + entry.level + " 강화 완료.");
     }
 
@@ -9358,6 +9463,13 @@ public sealed partial class AetheriaGame : MonoBehaviour
         {
             if (button == null || label == null)
             {
+                return;
+            }
+
+            var colorOverride = label.GetComponent<AetheriaHudTextColorOverride>();
+            if (colorOverride != null && colorOverride.HasOverride)
+            {
+                label.color = colorOverride.OverrideColor;
                 return;
             }
 
