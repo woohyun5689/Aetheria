@@ -4745,15 +4745,15 @@ MonoBehaviour:
   - screenName: Enhancement
     hierarchyPath: 2/1/0/7
     hierarchyNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
-      Card \uBB34\uAE30#0/\uAC15\uD654   25 G#0"
-    displayName: "\uAC15\uD654   25 G"
+      Card \uBB34\uAE30#0/\uAC15\uD654   29 G#0"
+    displayName: "\uAC15\uD654   29 G"
     frozenLayoutPath: 2/1/0
     frozenLayoutNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
       Card \uBB34\uAE30#0"
     anchorMin: {x: 0, y: 1}
     anchorMax: {x: 0, y: 1}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 280.99597, y: -186.46474}
+    anchoredPosition: {x: 281.49847, y: -188.33986}
     sizeDelta: {x: 352.9022, y: 54.91358}
     localEulerAngles: {x: -0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
@@ -4925,15 +4925,15 @@ MonoBehaviour:
   - screenName: Enhancement
     hierarchyPath: 2/1/1/7
     hierarchyNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
-      Card \uBC29\uC5B4\uAD6C#0/\uAC15\uD654   29 G#0"
-    displayName: "\uAC15\uD654   29 G"
+      Card \uBC29\uC5B4\uAD6C#0/\uAC15\uD654   33 G#0"
+    displayName: "\uAC15\uD654   33 G"
     frozenLayoutPath: 2/1/1
     frozenLayoutNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
       Card \uBC29\uC5B4\uAD6C#0"
     anchorMin: {x: 0, y: 1}
     anchorMax: {x: 0, y: 1}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 282.46802, y: -186.4647}
+    anchoredPosition: {x: 283.4758, y: -190.3172}
     sizeDelta: {x: 352.9022, y: 54.91358}
     localEulerAngles: {x: -0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
@@ -5165,16 +5165,16 @@ MonoBehaviour:
   - screenName: Enhancement
     hierarchyPath: 2/1/0/2/1
     hierarchyNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
-      Card \uBB34\uAE30#0/Enhancement Card Heading#0/Growth Badge \uC77C\uBC18#0"
-    displayName: "Growth Badge \uC77C\uBC18"
+      Card \uBB34\uAE30#0/Enhancement Card Heading#0/Growth Badge \uACE0\uAE09#0"
+    displayName: "Growth Badge \uACE0\uAE09"
     frozenLayoutPath: 2/1/0/2
     frozenLayoutNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
       Card \uBB34\uAE30#0/Enhancement Card Heading#0"
     anchorMin: {x: 0, y: 1}
     anchorMax: {x: 0, y: 1}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 473.1534, y: -34.06899}
-    sizeDelta: {x: 100.04938, y: 47.323814}
+    anchoredPosition: {x: 477.15552, y: -30.43203}
+    sizeDelta: {x: 104, y: 45}
     localEulerAngles: {x: -0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
     overrideRenderOrder: 0
@@ -5373,15 +5373,15 @@ MonoBehaviour:
   - screenName: Enhancement
     hierarchyPath: 2/1/1/2/1
     hierarchyNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
-      Card \uBC29\uC5B4\uAD6C#0/Enhancement Card Heading#0/Growth Badge \uACE0\uAE09#0"
-    displayName: "Growth Badge \uACE0\uAE09"
+      Card \uBC29\uC5B4\uAD6C#0/Enhancement Card Heading#0/Growth Badge \uD76C\uADC0#0"
+    displayName: "Growth Badge \uD76C\uADC0"
     frozenLayoutPath: 2/1/1/2
     frozenLayoutNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
       Card \uBC29\uC5B4\uAD6C#0/Enhancement Card Heading#0"
     anchorMin: {x: 0, y: 1}
     anchorMax: {x: 0, y: 1}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 483.92923, y: -34.06899}
+    anchoredPosition: {x: 474.1895, y: -30.43203}
     sizeDelta: {x: 104, y: 45}
     localEulerAngles: {x: -0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
@@ -5669,15 +5669,15 @@ MonoBehaviour:
   - screenName: Enhancement
     hierarchyPath: 2/1/2/7
     hierarchyNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
-      Card \uC7A5\uC2E0\uAD6C 1#0/\uAC15\uD654   25 G#0"
-    displayName: "\uAC15\uD654   25 G"
+      Card \uC7A5\uC2E0\uAD6C 1#0/\uAC15\uD654   38 G#0"
+    displayName: "\uAC15\uD654   38 G"
     frozenLayoutPath: 2/1/2
     frozenLayoutNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
       Card \uC7A5\uC2E0\uAD6C 1#0"
     anchorMin: {x: 0, y: 1}
     anchorMax: {x: 0, y: 1}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 283.23264, y: -190}
+    anchoredPosition: {x: 281.49844, y: -193.28322}
     sizeDelta: {x: 352.9022, y: 54.91358}
     localEulerAngles: {x: -0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
@@ -5850,16 +5850,16 @@ MonoBehaviour:
   - screenName: Enhancement
     hierarchyPath: 2/1/2/2/1
     hierarchyNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
-      Card \uC7A5\uC2E0\uAD6C 1#0/Enhancement Card Heading#0/Growth Badge \uC77C\uBC18#0"
-    displayName: "Growth Badge \uC77C\uBC18"
+      Card \uC7A5\uC2E0\uAD6C 1#0/Enhancement Card Heading#0/Growth Badge \uC601\uC6C5#0"
+    displayName: "Growth Badge \uC601\uC6C5"
     frozenLayoutPath: 2/1/2/2
     frozenLayoutNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
       Card \uC7A5\uC2E0\uAD6C 1#0/Enhancement Card Heading#0"
     anchorMin: {x: 0, y: 1}
     anchorMax: {x: 0, y: 1}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 489.5706, y: -27.161657}
-    sizeDelta: {x: 104, y: 45.00908}
+    anchoredPosition: {x: 475.17816, y: -23.511328}
+    sizeDelta: {x: 104, y: 45}
     localEulerAngles: {x: -0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
     overrideRenderOrder: 0
@@ -5910,17 +5910,17 @@ MonoBehaviour:
   - screenName: Enhancement
     hierarchyPath: 2/1/1/2/1/0
     hierarchyNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
-      Card \uBC29\uC5B4\uAD6C#0/Enhancement Card Heading#0/Growth Badge \uC77C\uBC18#0/Text
+      Card \uBC29\uC5B4\uAD6C#0/Enhancement Card Heading#0/Growth Badge \uD76C\uADC0#0/Text
       Ornament#0"
     displayName: Text Ornament
     frozenLayoutPath: 2/1/1/2
     frozenLayoutNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
       Card \uBC29\uC5B4\uAD6C#0/Enhancement Card Heading#0"
-    anchorMin: {x: 0.5, y: 0.49999958}
-    anchorMax: {x: 0.5, y: 0.49999958}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 0, y: -3.9802246}
-    sizeDelta: {x: 104, y: 47.410065}
+    anchoredPosition: {x: 0.98864746, y: 0}
+    sizeDelta: {x: 105.977356, y: 45}
     localEulerAngles: {x: -0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
     overrideRenderOrder: 0
@@ -6038,7 +6038,7 @@ MonoBehaviour:
     anchorMin: {x: 0, y: 1}
     anchorMax: {x: 0, y: 1}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 282.468, y: -190}
+    anchoredPosition: {x: 281.4793, y: -190.98868}
     sizeDelta: {x: 352.9022, y: 54.91358}
     localEulerAngles: {x: -0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
@@ -6360,15 +6360,15 @@ MonoBehaviour:
   - screenName: Enhancement
     hierarchyPath: 2/1/4/7
     hierarchyNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
-      Card \uC7A5\uC2E0\uAD6C 3#0/\uAC15\uD654   25 G#0"
-    displayName: "\uAC15\uD654   25 G"
+      Card \uC7A5\uC2E0\uAD6C 3#0/\uAC15\uD654   38 G#0"
+    displayName: "\uAC15\uD654   38 G"
     frozenLayoutPath: 2/1/4
     frozenLayoutNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
       Card \uC7A5\uC2E0\uAD6C 3#0"
     anchorMin: {x: 0, y: 1}
     anchorMax: {x: 0, y: 1}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 283.92648, y: -194}
+    anchoredPosition: {x: 283.4758, y: -197.2379}
     sizeDelta: {x: 352.9022, y: 54.91358}
     localEulerAngles: {x: -0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
@@ -6419,15 +6419,15 @@ MonoBehaviour:
   - screenName: Enhancement
     hierarchyPath: 2/1/4/2/1
     hierarchyNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
-      Card \uC7A5\uC2E0\uAD6C 3#0/Enhancement Card Heading#0/Growth Badge \uC77C\uBC18#0"
-    displayName: "Growth Badge \uC77C\uBC18"
+      Card \uC7A5\uC2E0\uAD6C 3#0/Enhancement Card Heading#0/Growth Badge \uC601\uC6C5#0"
+    displayName: "Growth Badge \uC601\uC6C5"
     frozenLayoutPath: 2/1/4/2
     frozenLayoutNamePath: "Enhancement Forge Body#0/Enhancement Equipment Grid#0/Enhancement
       Card \uC7A5\uC2E0\uAD6C 3#0/Enhancement Card Heading#0"
     anchorMin: {x: 0, y: 1}
     anchorMax: {x: 0, y: 1}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 484.1946, y: -18.337603}
+    anchoredPosition: {x: 481.1102, y: -30.43203}
     sizeDelta: {x: 104, y: 45}
     localEulerAngles: {x: -0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}

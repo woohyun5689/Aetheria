@@ -85,6 +85,20 @@ public static class AetheriaHudLayoutRuntime
     private const string InventoryItemRowName = "Inventory Item Row";
     private const int InventoryItemRowTemplateIndex = 1;
 
+    private static readonly string[] DynamicHudNamePrefixes =
+    {
+        "Growth Badge ",
+        "Visual Status Chip ",
+        "Combat Action Card ",
+        "Crafting Recipe ",
+        "Result Chip ",
+        "Delta ",
+        "Item Comparison ",
+        "Dungeon Card ",
+        "Dungeon Row ",
+        "Map Dungeon "
+    };
+
     private static AetheriaHudLayoutProfile cachedProfile;
 
     public static void InvalidateCache()
@@ -450,10 +464,14 @@ public static class AetheriaHudLayoutRuntime
         }
 
         var resolved = ResolveIndexedPath(root, indexedPath);
+        var resolvedNamePath = resolved != null
+            ? BuildRelativeNamePath(resolved, root)
+            : string.Empty;
         if (resolved != null &&
             (string.IsNullOrEmpty(namePath)
-             || BuildRelativeNamePath(resolved, root) == namePath
-             || IsLegacyStablePathMatch(BuildRelativeNamePath(resolved, root), namePath)))
+             || resolvedNamePath == namePath
+             || IsLegacyStablePathMatch(resolvedNamePath, namePath)
+             || IsDataRefreshPathMatch(root, indexedPath, resolvedNamePath, namePath)))
         {
             return resolved;
         }
@@ -505,6 +523,103 @@ public static class AetheriaHudLayoutRuntime
             }
         }
         return true;
+    }
+
+    private static bool IsDataRefreshPathMatch(
+        Transform root,
+        string indexedPath,
+        string currentPath,
+        string savedPath)
+    {
+        if (root == null
+            || string.IsNullOrEmpty(indexedPath)
+            || string.IsNullOrEmpty(currentPath)
+            || string.IsNullOrEmpty(savedPath))
+        {
+            return false;
+        }
+
+        var indexes = indexedPath.Split('/');
+        var currentSegments = currentPath.Split('/');
+        var savedSegments = savedPath.Split('/');
+        if (indexes.Length != currentSegments.Length || indexes.Length != savedSegments.Length)
+        {
+            return false;
+        }
+
+        var current = root;
+        for (var i = 0; i < indexes.Length; i++)
+        {
+            int childIndex;
+            if (!int.TryParse(indexes[i], out childIndex)
+                || childIndex < 0
+                || childIndex >= current.childCount)
+            {
+                return false;
+            }
+            current = current.GetChild(childIndex);
+
+            if (currentSegments[i] == savedSegments[i])
+            {
+                continue;
+            }
+
+            string currentName;
+            string currentOccurrence;
+            SplitNamePathSegment(currentSegments[i], out currentName, out currentOccurrence);
+            string savedName;
+            string savedOccurrence;
+            SplitNamePathSegment(savedSegments[i], out savedName, out savedOccurrence);
+            if (currentOccurrence != savedOccurrence)
+            {
+                return false;
+            }
+
+            // AddButton uses its visible label as the GameObject name. Prices,
+            // availability and other live values may therefore change the name
+            // even though this is still the same button at the same path.
+            if (current.GetComponent<Button>() != null
+                || SameDynamicHudNameFamily(currentName, savedName))
+            {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void SplitNamePathSegment(string segment, out string name, out string occurrence)
+    {
+        var separator = segment.LastIndexOf('#');
+        var escapedName = separator >= 0 ? segment.Substring(0, separator) : segment;
+        name = UnescapeSegment(escapedName);
+        occurrence = separator >= 0 ? segment.Substring(separator + 1) : "0";
+    }
+
+    private static bool SameDynamicHudNameFamily(string currentName, string savedName)
+    {
+        var currentFamily = DynamicHudNameFamily(currentName);
+        return !string.IsNullOrEmpty(currentFamily)
+            && currentFamily == DynamicHudNameFamily(savedName);
+    }
+
+    private static string DynamicHudNameFamily(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return string.Empty;
+        }
+
+        for (var i = 0; i < DynamicHudNamePrefixes.Length; i++)
+        {
+            if (name.StartsWith(DynamicHudNamePrefixes[i], StringComparison.Ordinal))
+            {
+                return DynamicHudNamePrefixes[i];
+            }
+        }
+        return string.Empty;
     }
 
     private static bool IsStableDynamicHudName(string name)
